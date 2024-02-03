@@ -7,6 +7,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      GOPRIVATE: "github.com/tez-capital/*"
     steps:
       - uses: actions/checkout@v3
 
@@ -14,7 +16,11 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '>=1.21.0'
-          
+      - name: Configure git for private modules
+        env:
+          TOKEN: ${{ secrets.PAT }}
+        run: git config --global url."https://cryi:${TOKEN}@github.com".insteadOf "https://github.com"
+
       # - name: Test
       #   run: go test -v ./...
 
