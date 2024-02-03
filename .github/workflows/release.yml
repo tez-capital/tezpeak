@@ -91,7 +91,7 @@ jobs:
       - name: Ami tezpeak Repository Dispatch
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.AMI_TEZPEAK_ACCESS_TOKEN }}
+          token: ${{ secrets.TZC_AMI_TEZPEAK_ACCESS }}
           repository: tez-capital/ami-tezpeak
           event-type: tezpeak-release
           client-payload: '{ "id": "${{ steps.repository_info.outputs.ID }}", "repository": "${{github.repository}}", "version": "${{github.ref_name}}" }'
