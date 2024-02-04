@@ -13,6 +13,7 @@ type referenceNode struct {
 
 type v0 struct {
 	Version          int                       `json:"version,omitempty"`
+	Listen           string                    `json:"listen,omitempty"`
 	Bakers           []string                  `json:"bakers,omitempty"`
 	WorkingDirectory string                    `json:"working_directory,omitempty"`
 	Node             string                    `json:"node,omitempty"`
@@ -29,6 +30,7 @@ func getDefault_v0() *v0 {
 
 	return &v0{
 		Version:          0,
+		Listen:           constants.DEFAULT_LISTEN_ADDRESS,
 		Bakers:           []string{},
 		WorkingDirectory: "",
 		ReferenceNodes: &map[string]referenceNode{
@@ -68,6 +70,7 @@ func load_v0(configBytes []byte) (*v0, error) {
 
 func (v *v0) ToRuntime() *Runtime {
 	result := &Runtime{
+		Listen:           v.Listen,
 		Bakers:           v.Bakers,
 		WorkingDirectory: v.WorkingDirectory,
 		Node:             v.Node,

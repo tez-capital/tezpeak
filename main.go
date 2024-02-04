@@ -26,7 +26,6 @@ type Message struct {
 func main() {
 
 	logLevelFlag := flag.String("log-level", "info", "Log level")
-	portFlag := flag.Int("port", 8733, "Port to listen on")
 	versionFlag := flag.Bool("version", false, "Print version and exit")
 	flag.Parse()
 
@@ -122,5 +121,5 @@ func main() {
 		return nil
 	})
 
-	fmt.Println(app.Listen(fmt.Sprintf(":%d", *portFlag)))
+	fmt.Println(app.Listen(config.Listen))
 }

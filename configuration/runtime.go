@@ -2,7 +2,6 @@ package configuration
 
 import (
 	"errors"
-	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -26,6 +25,7 @@ type RuntimeReferenceNode struct {
 }
 
 type Runtime struct {
+	Listen           string
 	Bakers           []string
 	WorkingDirectory string
 	Node             string
@@ -38,6 +38,7 @@ type Runtime struct {
 
 func gerDefaultRuntime() *Runtime {
 	return &Runtime{
+		Listen:           constants.DEFAULT_LISTEN_ADDRESS,
 		WorkingDirectory: "",
 		ReferenceNodes:   make(map[string]RuntimeReferenceNode),
 		BlockWindow:      50,
@@ -108,6 +109,10 @@ func (r *Runtime) loadBakersFromNodeConfiguration() {
 }
 
 func (r *Runtime) Hydrate() *Runtime {
+	if r.Listen == "" {
+		r.Listen = constants.DEFAULT_LISTEN_ADDRESS
+	}
+
 	if r.WorkingDirectory == "" {
 		envWorkingDirectory := os.Getenv(constants.ENV_TEZBAKE_HOME)
 		if envWorkingDirectory != "" {
@@ -125,7 +130,6 @@ func (r *Runtime) Hydrate() *Runtime {
 		r.BlockWindow = 50
 	}
 
-	fmt.Println("r.ReferenceNodes", r.ReferenceNodes)
 	if len(r.ReferenceNodes) == 0 {
 		r.ReferenceNodes = map[string]RuntimeReferenceNode{
 			"Tezos Foundation": {

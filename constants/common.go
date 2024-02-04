@@ -3,6 +3,8 @@ package constants
 const (
 	TEZPEAK_VERSION = "0.0.1"
 
+	DEFAULT_LISTEN_ADDRESS = "localhost:8733"
+
 	ENV_TEZBAKE_HOME = "TEZBAKE_HOME"
 
 	MAX_SERVICES_REFRESH_INTERVAL = 300 // 5 minutes
