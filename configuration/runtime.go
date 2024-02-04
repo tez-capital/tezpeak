@@ -3,10 +3,12 @@ package configuration
 import (
 	"errors"
 	"log/slog"
+	"net/url"
 	"os"
 	"path/filepath"
 
 	"github.com/hjson/hjson-go/v4"
+	"github.com/samber/lo"
 	"github.com/tez-capital/tezpeak/constants"
 )
 
@@ -24,24 +26,35 @@ type RuntimeReferenceNode struct {
 	IsBlockProvider  bool
 }
 
+type PeakMode string
+
+const (
+	PrivatePeakMode PeakMode = "private"
+	PublicPeakMode  PeakMode = "public"
+	AutoPeakMode    PeakMode = "auto"
+)
+
 type Runtime struct {
+	Id               string
 	Listen           string
 	Bakers           []string
 	WorkingDirectory string
+	TezbakeHome      string
 	Node             string
 	ReferenceNodes   map[string]RuntimeReferenceNode
 	BlockWindow      int64
-
-	// TODO:
-	// ReadOnly       bool
+	Mode             PeakMode
 }
 
 func gerDefaultRuntime() *Runtime {
 	return &Runtime{
+		Id:               "",
 		Listen:           constants.DEFAULT_LISTEN_ADDRESS,
 		WorkingDirectory: "",
+		TezbakeHome:      "",
 		ReferenceNodes:   make(map[string]RuntimeReferenceNode),
 		BlockWindow:      50,
+		Mode:             AutoPeakMode,
 	}
 }
 
@@ -113,12 +126,29 @@ func (r *Runtime) Hydrate() *Runtime {
 		r.Listen = constants.DEFAULT_LISTEN_ADDRESS
 	}
 
-	if r.WorkingDirectory == "" {
-		envWorkingDirectory := os.Getenv(constants.ENV_TEZBAKE_HOME)
-		if envWorkingDirectory != "" {
-			r.WorkingDirectory = envWorkingDirectory
+	if r.Mode == AutoPeakMode {
+		if u, err := url.Parse(r.Listen); err == nil {
+			switch lo.Contains(constants.PRIVATE_NETWORK_HOSTS, u.Hostname()) {
+			case true:
+				r.Mode = PrivatePeakMode
+			default:
+				r.Mode = PublicPeakMode
+			}
 		} else {
-			r.WorkingDirectory, _ = os.Getwd()
+			r.Mode = PublicPeakMode
+		}
+	}
+
+	if r.WorkingDirectory == "" {
+		r.WorkingDirectory, _ = os.Getwd()
+	}
+
+	if r.TezbakeHome == "" {
+		envTezbakeHome := os.Getenv(constants.ENV_TEZBAKE_HOME)
+		if envTezbakeHome != "" {
+			r.TezbakeHome = envTezbakeHome
+		} else {
+			r.TezbakeHome, _ = os.Getwd()
 		}
 	}
 
@@ -152,6 +182,13 @@ func (r *Runtime) Hydrate() *Runtime {
 }
 
 func (r *Runtime) Validate() (*Runtime, error) {
+	if r.Listen != "" {
+		_, err := url.Parse(r.Listen)
+		if err != nil {
+			return nil, constants.ErrInvalidListenAddress
+		}
+	}
+
 	if r.WorkingDirectory == "" {
 		return nil, constants.ErrInvalidWorkingDirectory
 	}

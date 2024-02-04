@@ -1,0 +1,73 @@
+@import './typography.sass'
+@import './scroll.sass'
+@import '@starlight/style.sass'
+
+:root
+	--spacing: 15px
+	--border-radius: 10px
+	--text-color: #eee
+	--error-color: #ff5575
+	--warning-color: rgb(255, 148, 66)
+	--success-color: lime
+	--header-height: 50px
+	
+	// overrides
+	--nav-menu-size: 49px
+	--nav-menu-expanded-size: 190px
+	--nav-menu-box-shadow: unset
+	--card-box-shadow: rgba(255,255,255, 0.09) 0px 3px 6px, rgba(255, 255, 255, 0.09) 0px 3px 6px
+	//--nav-menu-item-height: 39px
+	// --card-horizontal-spacing: var(--spacing-x2)
+	// --card-vertical-spacing: var(--spacing-x2)
+
+
+
+	// fonts
+	--font-size: 1rem
+	--line-height: 1.25
+	--letter-spacing: 0.1rem
+	--header-size-factor: 0.2rem
+	--background-color: #111
+
+body
+	margin: 0px
+	font-size: var(--font-size)
+	line-height: var(--line-height)
+	background-color: var(--background-color)
+
+html, body, form, fieldset, table, tr, td, img
+	font-family: 'Lato-Light', sans-serif !important
+	letter-spacing: var(--letter-spacing)
+
+input, button, select, textarea, optgroup, option
+	font-family: inherit
+
+h5
+	font-size: calc(var(--font-size) + var(--header-size-factor))
+
+h4
+	font-size: calc(var(--font-size) + var(--header-size-factor) * 2)
+
+h3
+	font-size: calc(var(--font-size) + var(--header-size-factor) * 3)
+
+h2
+	font-size: calc(var(--font-size) + var(--header-size-factor) * 4)
+
+h1
+	font-size: calc(var(--font-size) + var(--header-size-factor) * 5)
+
+.disabled
+	pointer-events: none
+	-webkit-user-select: none
+	user-select: none
+	filter: grayscale(100%)
+	opacity: 50%
+
+.not-selectable
+	-webkit-user-select: none
+	user-select: none
+	pointer-events: none
+
+.hidden
+	display: none

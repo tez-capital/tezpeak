@@ -1,0 +1,272 @@
+:root
+	--spacing: 15px
+	@for $i from 2 through 5
+		--spacing-x#{$i}: calc(var(--spacing) * #{$i})
+	@for $i from 2 through 5
+		--spacing-f#{$i}: calc(var(--spacing) / #{$i})
+	--spacing-f2: calc(var(--spacing) / 2)
+	--border-radius: 10px
+	--text-color: #eee
+	--hint-color: #bbb
+
+	// common
+	--common-line-height: 24px
+
+	// card
+	--card-text-color: var(--text-color)
+	--card-background-color: #010101
+	--card-vertical-spacing: var(--spacing)
+	--card-horizontal-spacing: var(--spacing)
+	--card-border-radius: var(--border-radius)
+	--card-width: auto
+	--card-height: auto
+	--card-max-width: 100vw
+	--card-overflow: hidden
+
+	//menu
+	--menu-bacground-color: #292929
+	--menu-item-icon-size: var(--common-line-height)
+
+	// nav-menu
+	--nav-menu-size: 49px
+	--nav-menu-expanded-size: 200px
+	--nav-menu-background-color: var(--card-background-color)
+	--nav-menu-text-color: #eee
+	--nav-menu-box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px
+	--nav-menu-icon-size: 1.75rem
+	--nav-menu-font-size: 1rem
+	--nav-menu-spacing: var(--spacing-f2)
+	--nav-menu-border-radius-tl: 0px
+	--nav-menu-border-radius-bl: 0px
+	--nav-menu-border-radius: var(--border-radius)
+
+	// nav-menu item
+	--nav-menu-item-active-background-color: rgba(255,255,255, .9)
+	--nav-menu-item-background-color: transparent
+	--nav-menu-item-active-text-color: #000
+	--nav-menu-item-hover-background-color: rgba(255,255,255, .25)
+	--nav-menu-item-active-hover-background-color: rgba(255,255,255, .8)
+	--nav-menu-item-border-radius: var(--border-radius)
+	--nav-menu-item-transition: 0.2s
+	--nav-menu-item-active-font-weight: bold
+	--nav-menu-item-height: var(--nav-menu-size)
+
+	// dialog
+	--dialog-background-color: rgba(10,10,10, 0.85)
+
+	// general button
+	--button-text-transform: uppercase
+	--button-text-align: center
+	--button-text-color: var(--text-color)
+	--button-hover-text-color: var(--text-color)
+	--button-text-decoration: none
+	--button-text-overflow: ellipsis
+	--button-width: 100%
+
+	--button-border-radius: var(--border-radius)
+	--button-border: none
+	--button-outline: none
+	--button-background-color: #141414
+	--button-hover-background-color: #404040
+	--button-background-size: 300% auto
+	--button-background-position: unset
+
+	--button-letter-spacing: var(--letter-spacing)
+	--button-horizontal-spacing: var(--spacing)
+	--button-vertical-spacing: var(--spacing)
+	// --button-box-shadow: rgba(50,50,50, 0.16) 0px 3px 6px, rgba(50,50,50, 0.23) 0px 3px 6px
+	// --button-hover-box-shadow: rgba(50,50,50, 0.25) 0px 7px 28px, rgba(50,50,50, 0.22) 0px 5px 10px
+	// --button-active-box-shadow: rgba(50,50,50, 0.16) 0px 3px 6px, rgba(50,50,50, 0.23) 0px 3px 6px
+	--button-box-shadow: none
+	--button-hover-box-shadow: none
+	--button-active-box-shadow: none
+	--button-overflow: hidden
+	--button-font-family: inherit
+	--button-transition: 0.1s
+
+	// icon
+	--icon-size: auto
+	--icon-color: var(--text-color)
+
+	// input
+	--input-background-color: rgba(255,255,255,0.16)
+	--input-background-highlight-color: rgba(255,255,255,0.18)
+	--input-text-color: var(--text-color)
+	--input-border-radius: var(--border-radius)
+
+	--input-hint-color: var(--hint-color)
+	--input-hint-font-size: calc(var(--font-size) * .8)
+	--input-label-font-size: var(--input-hint-font-size)
+
+	--input-label-font-weight: bold
+	--input-line-height: var(--common-line-height)
+	--input-vertical-spacing: var(--spacing)
+	--input-horizontal-spacing: var(--spacing)
+	--input-hint-vertical-spacing: calc(var(--input-vertical-spacing) / 4)
+	--input-hint-horizontal-spacing: var(--input-horizontal-spacing)
+
+	// checkbox
+	--checkbox-background-color: rgba(255,255,255,0.20)
+	--checkbox-checked-background-color: var(--checkbox-background-color)
+	--checkbox-border-radius: calc(var(--border-radius) /2)
+	--checkbox-box-size: var(--common-line-height)
+	--checkbox-border-radius: calc(var(--border-radius) / 2)
+	--checkbox-box-shadow: none
+	--checkbox-border: none
+	--checkbox-checkmark-color: var(--text-color)
+	--checkbox-label-padding-left: var(--spacing)
+
+	// toggle
+	--toggle-size: 20px
+	--toggle-background-color: rgba(255,255,255,0.30)
+	--toggle-knob-color: var(--text-color)
+	--toggle-checked-background-color: rgba(255,255,255,1)
+	--toggle-checked-knob-color: rgba(0,0,0,0.80)
+	--toggle-border-radius: var(--toggle-size)
+
+	// select
+	--select-label-font-weight: bold
+	--select-item-icon-size: var(--common-line-height)
+
+	// expanding container
+	--expanding-container-collapsed-height: 0
+	--expanding-container-expanded-height: auto
+	--expanding-container-collapsed-width: 0
+	--expanding-container-expanded-width: auto
+	--expanding-container-transition-duration: .2s
+	--expanding-container-padding: 0
+
+	// progress bar
+	--progress-bar-icon-size: 2rem
+	--progress-bar-progress-color: var(--text-color)
+	--progress-bar-background-color: #222
+	--progress-bar-hint-font-size: calc(var(--font-size) * .8)
+	--progress-bar-line-height: 3px
+
+	// data-table
+	--data-table-even-row-background-color: transparent
+	--data-table-odd-row-background-color: transparent
+	--data-table-column-highlight-color: rgba(255,255,255,0.1)
+	--data-table-row-highlight-color: rgba(255,255,255,0.1)
+	--data-table-cell-highlight-color: rgba(255,255,255,0.1)
+	--data-table-checkbox-background-color: rgba(0,0,0,0.10)
+
+	--island-collapsed-height: var(--nav-menu-item-height)
+	--island-collapsed-width: var(--nav-menu-item-height)
+	--island-icon-height: var(--menu-item-icon-size)
+	--island-icon-width: var(--menu-item-icon-size)
+
+	// expander
+	--expander-header-hover-background: var(--button-hover-background-color)
+
+
+#sl-menu-layer
+	position: absolute
+	display: block
+	left: 0
+	top: 0
+	width: 100vw
+	z-index: 1000
+	overflow: visible
+	height: 0
+// .dark
+// 	--button-hover-background-color: rgba(255, 255, 255, 0.1)
+
+// if screen bellow 400px halve spacing
+@media screen and (max-width: 400px)
+	:root
+		--spacing: 7px
+
+$directions: top right bottom left
+$spacing-types: padding margin
+
+@each $spacing-type in $spacing-types
+	.#{$spacing-type}
+		#{$spacing-type}: var(--spacing)
+
+	.#{$spacing-type}-half
+		#{$spacing-type}: var(--spacing-f2)
+
+	@each $direction in $directions
+		.#{$spacing-type}-#{$direction}
+			#{$spacing-type}-#{$direction}: var(--spacing)
+
+		.#{$spacing-type}-#{$direction}-half
+			#{$spacing-type}-#{$direction}: var(--spacing-f2)
+
+@for $i from 1 through 5
+	@each $spacing-type in $spacing-types
+		.#{$spacing-type}-#{$i}
+			#{$spacing-type}: calc(var(--spacing) * #{$i})
+
+		.#{$spacing-type}-half-#{$i}
+			#{$spacing-type}: calc(var(--spacing-f2) * #{$i})
+
+		@each $direction in $directions
+			.#{$spacing-type}-#{$direction}-#{$i}
+				#{$spacing-type}-#{$direction}: calc(var(--spacing) * #{$i})
+
+			.#{$spacing-type}-#{$direction}-half-#{$i}
+				#{$spacing-type}-#{$direction}: calc(var(--spacing-f2) * #{$i})
+
+.opacity-0
+	opacity: 0
+
+svg.svg-icon, .svg-icon svg
+	fill: var(--svg-icon-fill, var(--text-color))
+	stroke: var(--svg-icon-stroke, none)
+	width: var(--svg-icon-width, none)
+	height: var(--svg-icon-height, none)
+	stroke: none
+
+.unstyle-button
+	background: none
+	border: none
+	padding: 0
+	font: inherit
+	cursor: pointer
+	outline: inherit
+	-webkit-appearance: none
+	-moz-appearance: none
+	text-align: inherit
+	line-height: inherit
+	color: var(--button-text-color)
+
+.unstyle-link
+	text-decoration: none
+	color: inherit
+
+@for $i from 0 through 5
+	.pt-#{$i}
+		padding-top: calc(var(--spacing) * #{$i})
+	.pb-#{$i}
+		padding-bottom: calc(var(--spacing) * #{$i})
+	.pl-#{$i}
+		padding-left: calc(var(--spacing) * #{$i})
+	.pr-#{$i}
+		padding-right: calc(var(--spacing) * #{$i})
+	.ph-#{$i}
+		padding-left: calc(var(--spacing) * #{$i})
+		padding-right: calc(var(--spacing) * #{$i})
+	.pv-#{$i}
+		padding-top: calc(var(--spacing) * #{$i})
+		padding-bottom: calc(var(--spacing) * #{$i})
+	.pa-#{$i}
+		padding: calc(var(--spacing) * #{$i})
+
+	.mt-#{$i}
+		margin-top: calc(var(--spacing) * #{$i})
+	.mb-#{$i}
+		margin-bottom: calc(var(--spacing) * #{$i})
+	.ml-#{$i}
+		margin-left: calc(var(--spacing) * #{$i})
+	.mr-#{$i}
+		margin-right: calc(var(--spacing) * #{$i})
+	.mh-#{$i}
+		margin-left: calc(var(--spacing) * #{$i})
+		margin-right: calc(var(--spacing) * #{$i})
+	.mv-#{$i}
+		margin-top: calc(var(--spacing) * #{$i})
+		margin-bottom: calc(var(--spacing) * #{$i})
+	.ma-#{$i}
+		margin: calc(var(--spacing) * #{$i})
