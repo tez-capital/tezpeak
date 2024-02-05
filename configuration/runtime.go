@@ -165,7 +165,12 @@ func (r *Runtime) Validate() (*Runtime, error) {
 
 func Load() (*Runtime, error) {
 	var err error
-	configBytes, err := os.ReadFile("config.hjson")
+	configFilePath := os.Getenv(constants.ENV_TEZPEAK_CONFIG_FILE)
+	if configFilePath == "" {
+		configFilePath = "config.hjson"
+	}
+
+	configBytes, err := os.ReadFile(configFilePath)
 	if err != nil {
 		slog.Debug("failed to read config file", "error", err.Error())
 
