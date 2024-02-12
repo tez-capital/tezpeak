@@ -34,7 +34,7 @@ jobs:
         run: npm run build
 
       - name: Clone web to dist
-        run: cp -r web/build web/dist
+        run: cp -r web/build/* web/dist
 
       # - name: Test
       #   run: go test -v ./...
