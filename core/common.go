@@ -6,9 +6,13 @@ import (
 )
 
 type PeakStatus struct {
-	Nodes    map[string]providers.NodeStatus `json:"nodes,omitempty"`
-	Rights   providers.RightsStatus          `json:"rights,omitempty"`
-	Services providers.ServicesStatus        `json:"services,omitempty"`
+	Id        string                          `json:"id,omitempty"` // peak instance id
+	BakerNode providers.NodeStatus            `json:"baker_node,omitempty"`
+	Nodes     map[string]providers.NodeStatus `json:"nodes,omitempty"`
+	Rights    providers.RightsStatus          `json:"rights,omitempty"`
+	Services  providers.ServicesStatus        `json:"services,omitempty"`
+	Bakers    providers.BakersStatus          `json:"bakers,omitempty"`
+	Ledgers   providers.LedgerStatus          `json:"ledgers,omitempty"`
 }
 
 type PeakStatusUpdateReportKind string

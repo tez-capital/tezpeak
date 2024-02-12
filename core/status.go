@@ -5,21 +5,36 @@ import (
 	"log/slog"
 
 	"blockwatch.cc/tzgo/rpc"
+	"github.com/tez-capital/tezbake/apps/base"
 	"github.com/tez-capital/tezpeak/configuration"
-	"github.com/tez-capital/tezpeak/constants"
 	"github.com/tez-capital/tezpeak/core/common"
 	"github.com/tez-capital/tezpeak/core/providers"
 )
 
 func Run(ctx context.Context, config *configuration.Runtime) (<-chan PeakStatus, error) {
 	status := PeakStatus{
-		Nodes:  map[string]providers.NodeStatus{},
-		Rights: providers.RightsStatus{},
+		Id:    config.Id,
+		Nodes: map[string]providers.NodeStatus{},
+		Rights: providers.RightsStatus{
+			Level:  0,
+			Rights: []*providers.BlockRights{},
+		},
+		Services: providers.ServicesStatus{
+			NodeServices:   map[string]base.AmiServiceInfo{},
+			SignerServices: map[string]base.AmiServiceInfo{},
+		},
+		Bakers: providers.BakersStatus{
+			Level:  0,
+			Bakers: map[string]*rpc.Delegate{},
+		},
+		Ledgers: providers.LedgerStatus{
+			Level: 0,
+		},
 	}
 	statusChannel := make(chan common.ProviderStatusUpdatedReport, 100)
 
 	bakerNodeClient, err := rpc.NewClient(config.Node, nil)
-	providers.StartNodeStatusProvider(ctx, constants.BAKER_NODE_ID, bakerNodeClient, statusChannel)
+	providers.StartBakerNodeStatusProvider(ctx, bakerNodeClient, statusChannel)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +65,8 @@ func Run(ctx context.Context, config *configuration.Runtime) (<-chan PeakStatus,
 	}
 
 	providers.StartRightsStatusProvider(ctx, rightProviderRpcs, config.Bakers, config.BlockWindow, statusChannel)
-	// providers.StartServiceStatusProvider(ctx, config.WorkingDirectory, statusChannel)
+	providers.StartBakersStatusProvider(ctx, rightProviderRpcs, config.Bakers, statusChannel)
+	providers.StartServiceStatusProvider(ctx, config.TezbakeHome, statusChannel)
 
 	resultChannel := make(chan PeakStatus, 100)
 
@@ -66,6 +82,14 @@ func Run(ctx context.Context, config *configuration.Runtime) (<-chan PeakStatus,
 			case common.ServicesStatusUpdateKind:
 				servicesStatus := statusUpdate.GetData().(providers.ServicesStatus)
 				status.Services = servicesStatus
+			case common.BakerStatusUpdateKind:
+				bakersStatus := statusUpdate.GetData().(providers.BakersStatus)
+				status.Bakers = bakersStatus
+			case common.LedgerStatusUpdateKind:
+
+			case common.BakerNodeStatusUpdateKind:
+				nodeStatus := statusUpdate.GetData().(providers.NodeStatus)
+				status.BakerNode = nodeStatus
 			}
 			resultChannel <- status
 		}

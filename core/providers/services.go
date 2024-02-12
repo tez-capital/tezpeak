@@ -34,9 +34,13 @@ func (s *ServicesStatusUpdate) GetKind() common.StatusUpdateKind {
 	return common.ServicesStatusUpdateKind
 }
 
-func StartServiceStatusProvider(ctx context.Context, workingDirectory string, statusChannel chan<- common.ProviderStatusUpdatedReport) {
-	node := apps.NodeFromPath(path.Join(workingDirectory, "node"))
-	signer := apps.SignerFromPath(path.Join(workingDirectory, "signer"))
+func StartServiceStatusProvider(ctx context.Context, tezbakeHome string, statusChannel chan<- common.ProviderStatusUpdatedReport) {
+	if tezbakeHome == "" {
+		slog.Warn("tezbake home not set, not starting service status provider")
+		return
+	}
+	node := apps.NodeFromPath(path.Join(tezbakeHome, "node"))
+	signer := apps.SignerFromPath(path.Join(tezbakeHome, "signer"))
 
 	go func() {
 
@@ -47,17 +51,47 @@ func StartServiceStatusProvider(ctx context.Context, workingDirectory string, st
 		}
 
 		for {
-			nodeServiceInfo, err := node.GetServiceInfo()
-			if err != nil {
-				slog.Warn("failed to get node service info", err)
-			}
-			status.NodeServices = nodeServiceInfo
+			nodeServiceInfoChannel := make(chan map[string]base.AmiServiceInfo)
+			signerServiceInfoChannel := make(chan map[string]base.AmiServiceInfo)
 
-			signerServiceInfo, err := signer.GetServiceInfo()
-			if err != nil {
-				slog.Warn("failed to get node service info", err)
-			}
-			status.SignerServices = signerServiceInfo
+			go func() {
+				// recover
+				defer func() {
+					if r := recover(); r != nil {
+						slog.Warn("recovered from panic", "error", r)
+						nodeServiceInfoChannel <- map[string]base.AmiServiceInfo{}
+					}
+				}()
+
+				nodeServiceInfo, err := node.GetServiceInfo()
+				if err != nil {
+					slog.Warn("failed to get node service info", err)
+					nodeServiceInfoChannel <- map[string]base.AmiServiceInfo{}
+					return
+				}
+				nodeServiceInfoChannel <- nodeServiceInfo
+			}()
+
+			go func() {
+				defer func() {
+					if r := recover(); r != nil {
+						slog.Warn("recovered from panic", "error", r)
+						nodeServiceInfoChannel <- map[string]base.AmiServiceInfo{}
+					}
+				}()
+
+				signerServiceInfo, err := signer.GetServiceInfo()
+				if err != nil {
+					slog.Warn("failed to get node service info", err)
+					signerServiceInfoChannel <- map[string]base.AmiServiceInfo{}
+					return
+				}
+				signerServiceInfoChannel <- signerServiceInfo
+			}()
+
+			status.SignerServices = <-signerServiceInfoChannel
+			status.NodeServices = <-nodeServiceInfoChannel
+			status.Timestamp = time.Now().Unix()
 
 			statusChannel <- &ServicesStatusUpdate{
 				Status: status,

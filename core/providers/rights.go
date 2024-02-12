@@ -6,11 +6,18 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"sync/atomic"
 
 	"blockwatch.cc/tzgo/rpc"
 	"blockwatch.cc/tzgo/tezos"
+	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"github.com/tez-capital/tezpeak/core/common"
+)
+
+var (
+	rightsProviderCount atomic.Int64
+	rightsChannel       = make(chan *RightsStatus, 100)
 )
 
 type BlockRights struct {
@@ -20,8 +27,8 @@ type BlockRights struct {
 }
 
 type RightsStatus struct {
-	Level  int64         `json:"level"`
-	Rights []BlockRights `json:"rights"`
+	Level  int64          `json:"level"`
+	Rights []*BlockRights `json:"rights"`
 }
 
 type RightsStatusUpdate struct {
@@ -38,28 +45,6 @@ func (s *RightsStatusUpdate) GetData() interface{} {
 
 func (s *RightsStatusUpdate) GetKind() common.StatusUpdateKind {
 	return common.RightsStatusUpdateKind
-}
-
-var (
-	blockSubscribers         = []chan *rpc.BlockHeaderLogEntry{}
-	lastProcessedBlockHeight = int64(0)
-)
-
-func init() {
-	go func() {
-		for b := range blockHeaderLogEntryChannel {
-			if b.Level < lastProcessedBlockHeight {
-				continue
-			}
-			lastProcessedBlockHeight = b.Level
-			for _, subscriber := range blockSubscribers {
-				s := subscriber // remove in 1.22
-				go func() {
-					s <- b
-				}()
-			}
-		}
-	}()
 }
 
 func initRights(bakers []string) (map[string]int, map[string]int) {
@@ -226,18 +211,26 @@ func checkRealized(ctx context.Context, clients []*rpc.Client, rights *BlockRigh
 
 func StartRightsStatusProvider(ctx context.Context, clients []*rpc.Client, bakers []string, window int64, statusChannel chan<- common.ProviderStatusUpdatedReport) {
 	blockChannel := make(chan *rpc.BlockHeaderLogEntry)
-	blockSubscribers = append(blockSubscribers, blockChannel)
+	id, err := uuid.NewRandom()
+	if err != nil {
+		slog.Error("failed to generate block subscriber (rights status provider) uuid", "error", err.Error())
+		return
+	}
+	blockSubscribers[id] = blockChannel
 
 	go func() {
+		defer func() {
+			delete(blockSubscribers, id)
+			close(blockChannel)
+		}()
+
 		if blockProviderCount.Load() == 0 {
 			slog.Warn("no block providers are running, rights provider will not work until at least one block provider is running")
 		}
 
-		lastProcessedBlockHeight = int64(0)
-
 		status := RightsStatus{
 			Level:  0,
-			Rights: []BlockRights{},
+			Rights: []*BlockRights{},
 		}
 
 		for {
@@ -266,7 +259,7 @@ func StartRightsStatusProvider(ctx context.Context, clients []*rpc.Client, baker
 				// get slice of levels to query
 				minLevel := max(0, block.Level-window/2)
 				maxLevel := block.Level + window/2
-				newRights := []BlockRights{}
+				newRights := []*BlockRights{}
 				lastCachedLevel := int64(0)
 				for _, right := range status.Rights {
 					if right.Level < minLevel || right.Level > maxLevel {
@@ -282,19 +275,20 @@ func StartRightsStatusProvider(ctx context.Context, clients []*rpc.Client, baker
 						slog.Error("failed to get block rights", "error", err.Error())
 						continue
 					}
-					newRights = append(newRights, *rights)
+					newRights = append(newRights, rights)
+				}
+
+				for _, right := range newRights {
+					if right.Level > block.Level { // we do not check future rights
+						break
+					}
+					checkRealized(ctx, syncedClients, right)
 				}
 
 				status.Level = block.Level
 				status.Rights = newRights
 
-				for _, right := range status.Rights {
-					if right.Level > block.Level { // we do not check future rights
-						break
-					}
-					checkRealized(ctx, syncedClients, &right)
-				}
-
+				rightsChannel <- &status
 				statusChannel <- &RightsStatusUpdate{
 					Status: status,
 				}

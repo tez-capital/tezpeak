@@ -3,13 +3,16 @@ package main
 import (
 	"bufio"
 	"context"
+	"embed"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"sync"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	"github.com/google/uuid"
 
 	"github.com/tez-capital/tezpeak/configuration"
@@ -22,6 +25,9 @@ import (
 type Message struct {
 	Text string
 }
+
+//go:embed web/dist/*
+var staticFiles embed.FS
 
 func main() {
 
@@ -81,8 +87,10 @@ func main() {
 	app := fiber.New()
 
 	app.Get("/sse", func(c *fiber.Ctx) error {
-		// Set SSE headers
-		// ... (no changes here)
+		c.Set("Content-Type", "text/event-stream")
+		c.Set("Cache-Control", "no-cache")
+		c.Set("Connection", "keep-alive")
+		c.Set("Transfer-Encoding", "chunked")
 
 		c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
 			id, err := uuid.NewRandom()
@@ -120,6 +128,14 @@ func main() {
 
 		return nil
 	})
+
+	app.Use("/", filesystem.New(filesystem.Config{
+		Root:         http.FS(staticFiles),
+		Index:        "index.html",
+		NotFoundFile: "/web/dist/index.html",
+		PathPrefix:   "/web/dist",
+		Browse:       false,
+	}))
 
 	fmt.Println(app.Listen(config.Listen))
 }

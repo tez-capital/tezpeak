@@ -1,0 +1,16 @@
+<svg
+	xmlns="http://www.w3.org/2000/svg"
+	x="0"
+	y="0"
+	version="1.1"
+	viewBox="0 0 20 20"
+	xml:space="preserve"
+>
+	<defs />
+	<path id="Shape" d="M15.1 2.5H8.2v9.2h9.3V4.9c0-1.3-1.1-2.4-2.4-2.4z" class="st0" />
+	<path d="M6.1 2.5H4.9c-1.3 0-2.4 1.1-2.4 2.4v1.2h3.6V2.5z" class="st0" />
+	<path id="Rectangle-path" d="M2.5 8.2h3.6v3.6H2.5z" class="st0" />
+	<path
+		d="M13.9 17.5h1.2c1.3 0 2.4-1.1 2.4-2.4V14h-3.6v3.5zM8.2 13.9h3.6v3.6H8.2zM2.5 13.9v1.2c0 1.3 1.1 2.4 2.4 2.4h1.2v-3.6H2.5z"
+	/>
+</svg>

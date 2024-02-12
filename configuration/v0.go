@@ -13,12 +13,15 @@ type referenceNode struct {
 
 type v0 struct {
 	Version          int                       `json:"version,omitempty"`
+	Id               string                    `json:"id,omitempty"`
 	Listen           string                    `json:"listen,omitempty"`
 	Bakers           []string                  `json:"bakers,omitempty"`
 	WorkingDirectory string                    `json:"working_directory,omitempty"`
+	TezbakeHome      string                    `json:"tezbake_home,omitempty"`
 	Node             string                    `json:"node,omitempty"`
 	ReferenceNodes   *map[string]referenceNode `json:"reference_nodes,omitempty"`
 	BlockWindow      int64                     `json:"block_window,omitempty"`
+	Mode             PeakMode                  `json:"mode,omitempty"`
 }
 
 func getDefault_v0() *v0 {
@@ -46,6 +49,7 @@ func getDefault_v0() *v0 {
 			},
 		},
 		BlockWindow: 50,
+		Mode:        AutoPeakMode,
 	}
 }
 
@@ -70,12 +74,15 @@ func load_v0(configBytes []byte) (*v0, error) {
 
 func (v *v0) ToRuntime() *Runtime {
 	result := &Runtime{
+		Id:               v.Id,
 		Listen:           v.Listen,
 		Bakers:           v.Bakers,
 		WorkingDirectory: v.WorkingDirectory,
+		TezbakeHome:      v.TezbakeHome,
 		Node:             v.Node,
 		ReferenceNodes:   make(map[string]RuntimeReferenceNode),
 		BlockWindow:      v.BlockWindow,
+		Mode:             v.Mode,
 	}
 
 	if v.ReferenceNodes != nil {
@@ -94,5 +101,6 @@ func (v *v0) ToRuntime() *Runtime {
 			result.ReferenceNodes[name] = runtimeReferenceNode
 		}
 	}
+
 	return result
 }
