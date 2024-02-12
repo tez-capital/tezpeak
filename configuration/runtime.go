@@ -3,6 +3,7 @@ package configuration
 import (
 	"errors"
 	"log/slog"
+	"net"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -183,7 +184,7 @@ func (r *Runtime) Hydrate() *Runtime {
 
 func (r *Runtime) Validate() (*Runtime, error) {
 	if r.Listen != "" {
-		_, err := url.Parse(r.Listen)
+		_, _, err := net.SplitHostPort(r.Listen)
 		if err != nil {
 			return nil, constants.ErrInvalidListenAddress
 		}

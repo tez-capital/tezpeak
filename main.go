@@ -30,7 +30,6 @@ type Message struct {
 var staticFiles embed.FS
 
 func main() {
-
 	logLevelFlag := flag.String("log-level", "info", "Log level")
 	versionFlag := flag.Bool("version", false, "Print version and exit")
 	flag.Parse()
