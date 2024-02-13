@@ -25,7 +25,7 @@
 </script>
 
 <button class="unstyle-button governance-wrap" on:click={() => open_governance()}>
-	<Card>
+	<Card class="governance-card">
 		<div class="governance">
 			<div class="title">
 				<h5>Governance</h5>
@@ -54,11 +54,19 @@
 
 <style lang="sass">
 .governance-wrap
+	display: grid
+	grid-template-rows: 1fr
+	width: 100%
+	height: 100%
 	user-select: none
 	&:hover
 		cursor: pointer
 		transition: background-color 0.2s
-		--card-background-color: rgba(255,255,255, 0.10)
+		--card-background-color: #151515
+
+	:global(.governance-card)
+		box-sizing: border-box
+		height: 100%
 
 .governance
 	display: grid
@@ -106,4 +114,12 @@
 			padding-left : var(--spacing-f2)
 			font-size: 1.25rem
 			font-weight: 500
+
+	.no-data
+		display: flex
+		justify-content: center
+		align-items: center
+		font-size: 1.5rem
+		font-weight: 500
+		height: 100%
 </style>

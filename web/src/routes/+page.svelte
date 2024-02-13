@@ -31,6 +31,7 @@
 
 <div class="dashboard-grid-wrap">
 	<div class="dashboard-grid">
+		
 		{#if hasAnyService}
 			<ServicesStatusCard title="Baker's Services" {services} />
 		{/if}
@@ -41,7 +42,7 @@
 		{/each}
 
 		<GovernancePeriodCard {votingPeriodInfo} />
-
+		
 		<div class="baker-rights" class:expanded={expandedBakingRights}>
 			<BakerRightsCard
 				mode="upcoming"
@@ -78,9 +79,12 @@
 		grid-template-columns: minmax(450px, 1fr) minmax(450px, 1fr) minmax(450px, 1fr)
 		gap: var(--spacing)
 
+		.baker-rights
+			display: grid
+			grid-template-rows: 1fr
+
 		.baker-rights.expanded
 			grid-column: 1/-1
-
 
 @media (max-width: 1400px)
 	.dashboard-grid
@@ -91,6 +95,5 @@
 	.dashboard-grid
 		grid-template-columns: minmax(450px, 1fr) !important
 		
-
 
 </style>
