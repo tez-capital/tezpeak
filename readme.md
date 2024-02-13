@@ -23,7 +23,7 @@ TBD
 
 The configuration is stored in `config.hjson` file. The default configuration is:
 
-```yaml
+```hjson
 {
 	# Id to show in the header
   	id: ""
@@ -60,7 +60,7 @@ The configuration is stored in `config.hjson` file. The default configuration is
 ```
 
 Sample minimal configuration:
-```yaml
+```hjson
 {
 	listen: "0.0.0.0:8733"
 	bakers: [
