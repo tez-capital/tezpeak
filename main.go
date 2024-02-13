@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,6 +20,7 @@ import (
 	"github.com/tez-capital/tezpeak/constants"
 	"github.com/tez-capital/tezpeak/core"
 	"github.com/tez-capital/tezpeak/core/common"
+	"github.com/tez-capital/tezpeak/core/providers"
 	"github.com/tez-capital/tezpeak/util"
 )
 
@@ -84,6 +86,99 @@ func main() {
 	}()
 
 	app := fiber.New()
+
+	governanceProvider := providers.InitGovernanceProvider(context.Background(), config)
+	if governanceProvider == nil {
+		slog.Error("failed to get governance provider")
+		os.Exit(1)
+	}
+
+	app.Get("/api/governance/can-vote", func(c *fiber.Ctx) error {
+		return c.JSON(governanceProvider.CanVote())
+	})
+
+	app.Get("/api/governance/period-detail", func(c *fiber.Ctx) error {
+		if !governanceProvider.CanVote() {
+			return c.Status(403).SendString("not allowed")
+		}
+
+		periodInfo, err := governanceProvider.GetGovernancePeriodDetail(c.Context())
+		if err != nil {
+			return c.Status(500).SendString("failed to get governance period detail")
+		}
+
+		return c.JSON(periodInfo)
+	})
+
+	app.Get("/api/governance/available-pkhs", func(c *fiber.Ctx) error {
+		if !governanceProvider.CanVote() {
+			return c.Status(403).SendString("not allowed")
+		}
+
+		pkhs, err := governanceProvider.GetAvailablePkhs(c.Context())
+		if err != nil {
+			return c.Status(500).SendString("failed to get available pkhs")
+		}
+		return c.JSON(pkhs)
+	})
+
+	app.Post("/api/governance/vote", func(c *fiber.Ctx) error {
+		if !governanceProvider.CanVote() {
+			return c.Status(403).SendString("not allowed")
+		}
+
+		var params providers.VoteParams
+		if err := c.BodyParser(&params); err != nil {
+			return c.Status(400).SendString("invalid request")
+		}
+
+		opHash, err := governanceProvider.Vote(c.Context(), &params)
+		if err != nil {
+			return c.Status(500).SendString(err.Error())
+		}
+
+		return c.JSON(opHash)
+	})
+
+	app.Post("/api/governance/upvote", func(c *fiber.Ctx) error {
+		if !governanceProvider.CanVote() {
+			return c.Status(403).SendString("not allowed")
+		}
+
+		var params providers.UpvoteParams
+		if err := c.BodyParser(&params); err != nil {
+			slog.Error("failed to parse upvote params", "error", err.Error())
+			return c.Status(400).SendString("invalid request")
+		}
+
+		opHash, err := governanceProvider.Upvote(c.Context(), &params)
+		if err != nil {
+			slog.Error("failed to upvote", "error", err.Error())
+			return c.Status(500).SendString(err.Error())
+		}
+
+		return c.JSON(opHash)
+	})
+
+	app.Post("/api/governance/wait-for-apply", func(c *fiber.Ctx) error {
+		if !governanceProvider.CanVote() {
+			return c.Status(403).SendString("not allowed")
+		}
+
+		var params string
+		if err := c.BodyParser(&params); err != nil {
+			slog.Error("failed to parse upvote params", "error", err.Error())
+			return c.Status(400).SendString("invalid request")
+		}
+
+		applied, err := governanceProvider.WaitConfirmation(c.Context(), params)
+		if err != nil {
+			slog.Error("failed to upvote", "error", err.Error())
+			return c.Status(500).SendString("failed to vote")
+		}
+
+		return c.JSON(applied)
+	})
 
 	app.Get("/sse", func(c *fiber.Ctx) error {
 		c.Set("Content-Type", "text/event-stream")

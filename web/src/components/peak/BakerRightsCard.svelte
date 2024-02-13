@@ -2,6 +2,7 @@
 	import { flip } from 'svelte/animate';
 	import type { BlockRights } from '@src/common/types';
 	import Card from '../starlight/components/Card.svelte';
+	import Separator from '@components/peak/Separator.svelte';
 	import { getBakerColor, normalizeBlockRights } from '@src/util/baker';
 
 	import BlockIcon from '@components/la/icons/cube-solid.svelte';
@@ -18,13 +19,14 @@
 		<div class="title">
 			<h5>{title}</h5>
 		</div>
+		<Separator />
 		<div class="block-rights-wrap">
 			{#each rights as blockRights (blockRights.level)}
 				<div class="block-rights" animate:flip>
 					<div class="level">
 						{blockRights.level}
 					</div>
-
+			
 					<div class="block-rights-inner">
 						{#each normalizeBlockRights(blockRights) as right}
 							{#if showBakerColors}
@@ -86,7 +88,6 @@
 			font-weight: 500
 			margin: 0
 	.block-rights-wrap
-	
 		display: grid
 
 		max-height: 400px

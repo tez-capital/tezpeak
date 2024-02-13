@@ -12,6 +12,7 @@ const (
 	MAX_SERVICES_REFRESH_INTERVAL = 300 // 5 minutes
 	MIN_SERVICES_REFRESH_INTERVAL = 5   // 5 seconds
 	DEFAULT_BAKER_NODE_URL        = "http://localhost:8732"
+	DEFAULT_BAKER_SIGNER_URL      = "http://localhost:20090"
 
 	DEFAULT_REFERENCE_NODE_URL                = "https://rpc.tzbeta.net/"
 	DEFAULT_REFERENCE_NODE_IS_RIGHTS_PROVIDER = true
@@ -20,6 +21,10 @@ const (
 	DEFAULT_REFERENCE_NODE_2_URL                = "https://rpc.tzkt.io/mainnet/"
 	DEFAULT_REFERENCE_NODE_2_IS_RIGHTS_PROVIDER = false
 	DEFAULT_REFERENCE_NODE_2_IS_BLOCK_PROVIDER  = true
+
+	// tx constants
+	MAX_OPERATION_TTL         = 12
+	MAX_WAIT_FOR_CONFIRMATION = 120
 )
 
 var (

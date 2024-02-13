@@ -33,7 +33,7 @@
 			: rules.reduce((acc, rule) => {
 					const result = rule(value);
 					return result === true ? acc : result;
-			  }, '');
+				}, '');
 
 	let inputElement: HTMLInputElement;
 	function focusInput() {
@@ -60,79 +60,77 @@
 	}
 </script>
 
-<template>
-	<button
-		class="unstyle-button input-wrap"
-		class:input-wrap-hint-margin={hint !== undefined}
-		class:focused={isFocused}
-		class:disabled
-		on:click={focusInput}
-		on:keydown={(e) => ['Enter', ' '].includes(e.key) && focusInput()}
-	>
-		<div class="input-wrap-internal" class:invalid={isInvalid}>
-			<input
-				bind:this={inputElement}
-				{id}
-				bind:value
-				{...$$restProps}
-				use:typeSetter
-				on:focus={() => focus(true)}
-				on:blur={() => focus(false)}
-				class:shift={!noLabel}
-			/>
-			{#if !noLabel}
-				<div class="label-wrap">
-					<label
-						for={id}
-						class="label"
-						class:label-shifted={isFocused || value.toString()}
-						class:invalid-text={isInvalid}>{label}</label
-					>
-				</div>
-			{/if}
-			{#if type === 'number'}
-				<div class="arrows">
-					<button
-						class="unstyle-button arrow"
-						on:mousedown={() => startRepeatingAction(() => (value = Number(value) + 1))}
-						on:mouseup={stopRepeatingAction}
-						on:mouseleave={stopRepeatingAction}
-						on:keydown={createKeyPressHandler(['Enter', ' '], () =>
-							startRepeatingAction(() => (value = Number(value) + 1))
-						)}
-						on:keyup={createKeyPressHandler(['Enter', ' '], stopRepeatingAction)}
-						on:focus={focusInput}
-						aria-label="Decrease value"
-					>
-						<AngleUpIcon />
-					</button>
-					<button
-						class="unstyle-button arrow"
-						on:mousedown={() => startRepeatingAction(() => (value = Number(value) - 1))}
-						on:mouseup={stopRepeatingAction}
-						on:mouseleave={stopRepeatingAction}
-						on:keydown={createKeyPressHandler(['Enter', ' '], () =>
-							startRepeatingAction(() => (value = Number(value) - 1))
-						)}
-						on:keyup={createKeyPressHandler(['Enter', ' '], stopRepeatingAction)}
-						on:focus={focusInput}
-						aria-label="Decrease value"
-					>
-						<AngleDownIcon />
-					</button>
-				</div>
-			{/if}
-			{#if hint || invalidHint}
-				<span
-					class="hint"
-					class:hidden={disabled || (!invalidHint && !hint)}
-					class:invalid-text={isInvalid}
-					class:hint-visible={isFocused || isInvalid}>{invalidHint || hint}</span
+<button
+	class="unstyle-button input-wrap"
+	class:input-wrap-hint-margin={hint !== undefined}
+	class:focused={isFocused}
+	class:disabled
+	on:click={focusInput}
+	on:keydown={(e) => ['Enter', ' '].includes(e.key) && focusInput()}
+>
+	<div class="input-wrap-internal" class:invalid={isInvalid}>
+		<input
+			bind:this={inputElement}
+			{id}
+			bind:value
+			{...$$restProps}
+			use:typeSetter
+			on:focus={() => focus(true)}
+			on:blur={() => focus(false)}
+			class:shift={!noLabel}
+		/>
+		{#if !noLabel}
+			<div class="label-wrap">
+				<label
+					for={id}
+					class="label"
+					class:label-shifted={isFocused || value.toString()}
+					class:invalid-text={isInvalid}>{label}</label
 				>
-			{/if}
-		</div>
-	</button>
-</template>
+			</div>
+		{/if}
+		{#if type === 'number'}
+			<div class="arrows">
+				<button
+					class="unstyle-button arrow"
+					on:mousedown={() => startRepeatingAction(() => (value = Number(value) + 1))}
+					on:mouseup={stopRepeatingAction}
+					on:mouseleave={stopRepeatingAction}
+					on:keydown={createKeyPressHandler(['Enter', ' '], () =>
+						startRepeatingAction(() => (value = Number(value) + 1))
+					)}
+					on:keyup={createKeyPressHandler(['Enter', ' '], stopRepeatingAction)}
+					on:focus={focusInput}
+					aria-label="Decrease value"
+				>
+					<AngleUpIcon />
+				</button>
+				<button
+					class="unstyle-button arrow"
+					on:mousedown={() => startRepeatingAction(() => (value = Number(value) - 1))}
+					on:mouseup={stopRepeatingAction}
+					on:mouseleave={stopRepeatingAction}
+					on:keydown={createKeyPressHandler(['Enter', ' '], () =>
+						startRepeatingAction(() => (value = Number(value) - 1))
+					)}
+					on:keyup={createKeyPressHandler(['Enter', ' '], stopRepeatingAction)}
+					on:focus={focusInput}
+					aria-label="Decrease value"
+				>
+					<AngleDownIcon />
+				</button>
+			</div>
+		{/if}
+		{#if hint || invalidHint}
+			<span
+				class="hint"
+				class:hidden={disabled || (!invalidHint && !hint)}
+				class:invalid-text={isInvalid}
+				class:hint-visible={isFocused || isInvalid}>{invalidHint || hint}</span
+			>
+		{/if}
+	</div>
+</button>
 
 <style lang="sass">
 .input-wrap-hint-margin

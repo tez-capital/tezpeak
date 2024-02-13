@@ -22,9 +22,10 @@ type deserializedConfigVersion struct {
 }
 
 type RuntimeReferenceNode struct {
-	Address          string
-	IsRightsProvider bool
-	IsBlockProvider  bool
+	Address              string
+	IsRightsProvider     bool
+	IsBlockProvider      bool
+	IsGovernanceProvider bool
 }
 
 type PeakMode string
@@ -42,6 +43,7 @@ type Runtime struct {
 	WorkingDirectory string
 	TezbakeHome      string
 	Node             string
+	Signer           string
 	ReferenceNodes   map[string]RuntimeReferenceNode
 	BlockWindow      int64
 	Mode             PeakMode
@@ -128,8 +130,8 @@ func (r *Runtime) Hydrate() *Runtime {
 	}
 
 	if r.Mode == AutoPeakMode {
-		if u, err := url.Parse(r.Listen); err == nil {
-			switch lo.Contains(constants.PRIVATE_NETWORK_HOSTS, u.Hostname()) {
+		if host, _, err := net.SplitHostPort(r.Listen); err == nil {
+			switch lo.Contains(constants.PRIVATE_NETWORK_HOSTS, host) {
 			case true:
 				r.Mode = PrivatePeakMode
 			default:
@@ -155,6 +157,10 @@ func (r *Runtime) Hydrate() *Runtime {
 
 	if r.Node == "" {
 		r.Node = constants.DEFAULT_BAKER_NODE_URL
+	}
+
+	if r.Signer == "" {
+		r.Signer = constants.DEFAULT_BAKER_SIGNER_URL
 	}
 
 	if r.BlockWindow == 0 {
@@ -196,6 +202,10 @@ func (r *Runtime) Validate() (*Runtime, error) {
 
 	if len(r.ReferenceNodes) == 0 {
 		return nil, constants.ErrInvalidBlockWindow
+	}
+
+	if _, err := url.Parse(r.Signer); err != nil {
+		return nil, constants.ErrInvalidSignerUrl
 	}
 
 	return r, nil
