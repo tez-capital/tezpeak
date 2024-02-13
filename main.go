@@ -35,7 +35,7 @@ func main() {
 	flag.Parse()
 
 	if *versionFlag {
-		fmt.Println(constants.TEZPEAK_VERSION)
+		fmt.Printf("tezpeak %s - %s \n", constants.TEZPEAK_VERSION, constants.TEZPEAK_CODENAME)
 		return
 	}
 

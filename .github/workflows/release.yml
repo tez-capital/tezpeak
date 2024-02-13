@@ -25,6 +25,20 @@ jobs:
         with:
           node-version: '20.x'
 
+      - name: inject version and codename
+        # PEAK_VERSION = "<VERSION>"
+        # PEAK_CODENAME = "<CODENAME>"
+        env: 
+          TEZPEAK_VERSION: ${{ github.ref_name }}
+          TEZPEAK_CODENAME: Vinson
+        run: |
+          # patch constants/common.go
+          sed -i "s/TEZPEAK_VERSION[[:space:]]*= \".*\"/TEZPEAK_VERSION = \"$TEZPEAK_VERSION\"/g" constants/common.go
+          sed -i "s/TEZPEAK_CODENAME[[:space:]]*= \".*\"/TEZPEAK_CODENAME = \"$TEZPEAK_CODENAME\"/g" constants/common.go
+          # patch web/src/common/constants.ts
+          sed -i "s/TEZPEAK_VERSION[[:space:]]*= \".*\"/TEZPEAK_VERSION = \"$TEZPEAK_VERSION\"/g" web/src/common/constants.ts
+          sed -i "s/TEZPEAK_CODENAME[[:space:]]*= \".*\"/TEZPEAK_CODENAME = \"$TEZPEAK_CODENAME\"/g" web/src/common/constants.ts
+
       - name: Install web dependencies
         working-directory: web
         run: npm install

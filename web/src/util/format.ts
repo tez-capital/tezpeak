@@ -14,10 +14,20 @@ export function formatAddress(address: string) {
   return `${address.slice(0, 10)}...${address.slice(-10)}`
 }
 
+function timestampToJSTimestamp(timestamp: number) {
+  if (timestamp < 10000000000) {
+    return timestamp * 1000
+  }
+  return timestamp
+}
+
 export function formatTimestamp(timestamp: string | number) {
   if (!timestamp) {
     return "N/A"
   }
+
+  if (typeof timestamp === "number") timestamp = timestampToJSTimestamp(timestamp)
+
   return new Date(timestamp).toLocaleString()
 }
 
@@ -25,6 +35,9 @@ export function formatTimestampAgo(timestamp: string | number) {
   if (!timestamp) {
     return "N/A"
   }
+
+  if (typeof timestamp === "number") timestamp = timestampToJSTimestamp(timestamp)
+
   return formatDistance(new Date(timestamp), new Date())
 }
 
@@ -32,6 +45,9 @@ export function formatTimestampAgoStrict(timestamp: string | number) {
   if (!timestamp) {
     return "N/A"
   }
+
+  if (typeof timestamp === "number") timestamp = timestampToJSTimestamp(timestamp)
+
   return formatDistanceStrict(new Date(timestamp), new Date(), { addSuffix: true })
 }
 

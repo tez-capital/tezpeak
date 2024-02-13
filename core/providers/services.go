@@ -2,6 +2,7 @@ package providers
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"path"
 	"time"
@@ -43,7 +44,6 @@ func StartServiceStatusProvider(ctx context.Context, tezbakeHome string, statusC
 	signer := apps.SignerFromPath(path.Join(tezbakeHome, "signer"))
 
 	go func() {
-
 		status := ServicesStatus{
 			Timestamp:      time.Now().Unix(),
 			NodeServices:   map[string]base.AmiServiceInfo{},
@@ -91,6 +91,7 @@ func StartServiceStatusProvider(ctx context.Context, tezbakeHome string, statusC
 
 			status.SignerServices = <-signerServiceInfoChannel
 			status.NodeServices = <-nodeServiceInfoChannel
+			fmt.Println("status", time.Now().Unix())
 			status.Timestamp = time.Now().Unix()
 
 			statusChannel <- &ServicesStatusUpdate{

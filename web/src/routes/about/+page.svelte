@@ -1,7 +1,7 @@
 <svelte:options immutable />
 
 <script lang="ts">
-	import { PEAK_VERSION, PEAK_CODENAME } from '@src/common/constants';
+	import { TEZPEAK_VERSION, TEZPEAK_CODENAME } from '@src/common/constants';
 	import { DiscordIcon, TwitterIcon, TelegramIcon } from '@src/components/peak/icons';
 
 </script>
@@ -69,8 +69,8 @@
 			TEZPEAK
 		</h2>
 		<h5 class="version not-selectable">
-			{PEAK_VERSION}
-			{PEAK_CODENAME}
+			{TEZPEAK_VERSION}
+			{TEZPEAK_CODENAME}
 		</h5>
 		<div class="social">
 			<a class="svg-icon" href="https://discord.gg/2PnCr62YgF" target="_blank" rel="noreferrer">

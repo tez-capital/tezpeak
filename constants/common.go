@@ -1,7 +1,8 @@
 package constants
 
 const (
-	TEZPEAK_VERSION = "0.0.6"
+	TEZPEAK_VERSION  = "<VERSION>"
+	TEZPEAK_CODENAME = "<CODENAME>"
 
 	DEFAULT_LISTEN_ADDRESS = "localhost:8733"
 

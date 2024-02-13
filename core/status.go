@@ -2,7 +2,9 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"time"
 
 	"blockwatch.cc/tzgo/rpc"
 	"github.com/tez-capital/tezbake/apps/base"
@@ -47,6 +49,7 @@ func Run(ctx context.Context, config *configuration.Runtime) (<-chan PeakStatus,
 			slog.Warn("no address for node", "id", id)
 			continue
 		}
+
 		if node.IsRightsProvider {
 			if client, err := rpc.NewClient(node.Address, nil); err == nil {
 				rightProviderRpcs = append(rightProviderRpcs, client)
@@ -82,6 +85,7 @@ func Run(ctx context.Context, config *configuration.Runtime) (<-chan PeakStatus,
 			case common.ServicesStatusUpdateKind:
 				servicesStatus := statusUpdate.GetData().(providers.ServicesStatus)
 				status.Services = servicesStatus
+				fmt.Println("servicesStatus", time.Now().Unix())
 			case common.BakerStatusUpdateKind:
 				bakersStatus := statusUpdate.GetData().(providers.BakersStatus)
 				status.Bakers = bakersStatus
