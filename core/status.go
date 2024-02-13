@@ -2,9 +2,7 @@ package core
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
-	"time"
 
 	"blockwatch.cc/tzgo/rpc"
 	"github.com/tez-capital/tezbake/apps/base"
@@ -85,7 +83,6 @@ func Run(ctx context.Context, config *configuration.Runtime) (<-chan PeakStatus,
 			case common.ServicesStatusUpdateKind:
 				servicesStatus := statusUpdate.GetData().(providers.ServicesStatus)
 				status.Services = servicesStatus
-				fmt.Println("servicesStatus", time.Now().Unix())
 			case common.BakerStatusUpdateKind:
 				bakersStatus := statusUpdate.GetData().(providers.BakersStatus)
 				status.Bakers = bakersStatus
