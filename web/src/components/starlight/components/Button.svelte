@@ -56,4 +56,8 @@
 	&:active
 		box-shadow: var(--button-active-box-shadow) !important
 
+	svg
+		fill: var(--button-text-color)
+		stroke: var(--button-text-color)
+
 </style>

@@ -4,9 +4,8 @@
 	import BakerStatusCard from '@components/peak/BakerStatusCard.svelte';
 	import BakerRightsCard from '@components/peak/BakerRightsCard.svelte';
 	import ServicesStatusCard from '@components/peak/ServicesStatusCard.svelte';
-	import Separator from '@components/peak/Separator.svelte';
-	import Card from '@components/starlight/components/Card.svelte';
-	import { pickVotingPeriodInfo } from '@src/util/gov';
+	
+	import { getCurrentBlock, pickVotingPeriodInfo } from '@src/util/gov';
 	import GovernancePeriodCard from '@src/components/peak/GovernancePeriodCard.svelte';
 
 	$: bakerNode = $state.baker_node;
@@ -27,6 +26,7 @@
 		Object.keys(services.signer_services).length > 0;
 
 	$: votingPeriodInfo = pickVotingPeriodInfo([bakerNode, ...nodes.map((n) => n[1])]);
+	$: votingPeriodBlock = getCurrentBlock([bakerNode, ...nodes.map((n) => n[1])])
 </script>
 
 <div class="dashboard-grid-wrap">
@@ -41,7 +41,7 @@
 			<BakerStatusCard {baker} status={info} showColor={showBakerColors} />
 		{/each}
 
-		<GovernancePeriodCard {votingPeriodInfo} />
+		<GovernancePeriodCard {votingPeriodInfo} block={votingPeriodBlock} />
 		
 		<div class="baker-rights" class:expanded={expandedBakingRights}>
 			<BakerRightsCard

@@ -3,7 +3,7 @@ module github.com/tez-capital/tezpeak
 go 1.22
 
 require (
-	blockwatch.cc/tzgo v1.18.2
+	blockwatch.cc/tzgo v1.18.3-0.20240214211523-586f1bc06d8b
 	github.com/gofiber/fiber/v2 v2.52.0
 	github.com/google/uuid v1.6.0
 	github.com/hjson/hjson-go/v4 v4.4.0
@@ -35,7 +35,7 @@ require (
 	github.com/spf13/cobra v1.8.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasthttp v1.51.0 // indirect
+	github.com/valyala/fasthttp v1.52.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3 // indirect

@@ -1,5 +1,5 @@
 import { DEPOSIT_LIMIT_STAKING_CAPACITY_MULTIPLIER } from "@src/common/constants";
-import type { BakerStatus, BlockRights, NormalizedBlockRights } from "@src/common/types";
+import type { BakerStatus, BlockRights, NormalizedBlockRights } from "@src/common/types/status";
 
 export function calculateFreeSpace(baker: BakerStatus) {
 	let limit = BigInt(baker.frozen_deposits_limit)

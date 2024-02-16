@@ -17,6 +17,7 @@
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"@types/eslint": "8.56.0",
+		"@types/uuid": "^9.0.8",
 		"@typescript-eslint/eslint-plugin": "^6.0.0",
 		"@typescript-eslint/parser": "^6.0.0",
 		"eslint": "^8.56.0",
@@ -34,7 +35,10 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"axios": "^1.6.7",
+		"bs58check": "^3.0.1",
 		"date-fns": "^3.3.1",
-		"lodash-es": "^4.17.21"
+		"lodash-es": "^4.17.21",
+		"uuid": "^9.0.1"
 	}
 }

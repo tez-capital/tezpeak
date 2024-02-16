@@ -2,25 +2,23 @@
 	import { goto } from '$app/navigation';
 	import Separator from './Separator.svelte';
 	import Card from '@components/starlight/components/Card.svelte';
-	import { BLOCK_TIME } from '@src/common/constants';
-	import type { NormalizedVotingPeriodInfo } from '@src/common/types';
-	import { formatDistance } from 'date-fns';
+	import type { VotingPeriodInfo } from '@src/common/types/status';
+	import { getVotingPeriodTimeLeft } from '@src/util/gov';
 	import { onDestroy } from 'svelte';
 
-	export let votingPeriodInfo: NormalizedVotingPeriodInfo | undefined;
+	export let votingPeriodInfo: VotingPeriodInfo | undefined;
+	export let block: number | undefined;
 
-	$: remainingMs = (votingPeriodInfo?.remaining ?? -1) * BLOCK_TIME;
-	$: endDate = new Date(Date.now() + remainingMs);
-	$: timeLeft = formatDistance(endDate, new Date(), { includeSeconds: true });
+	$: timeLeft = getVotingPeriodTimeLeft(votingPeriodInfo, block);
 
 	const interval = setInterval(() => {
-		timeLeft = formatDistance(endDate, new Date(), { includeSeconds: true });
+		timeLeft = getVotingPeriodTimeLeft(votingPeriodInfo, block);
 	}, 500);
 
 	onDestroy(() => clearInterval(interval));
 
 	function open_governance() {
-		goto('/governance')
+		goto('/governance');
 	}
 </script>
 
@@ -33,10 +31,10 @@
 			<Separator />
 			{#if votingPeriodInfo}
 				<div class="period-info">
-					<div class="kind">{votingPeriodInfo.kind}</div>
+					<div class="kind">{votingPeriodInfo?.voting_period.kind}</div>
 					<div class="period">period</div>
 					<div class="index">
-						#{votingPeriodInfo.index}
+						#{votingPeriodInfo.voting_period.index}
 					</div>
 				</div>
 				<Separator />

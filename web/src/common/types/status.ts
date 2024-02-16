@@ -1,3 +1,13 @@
+export type VotingPeriodInfo = {
+	position: number
+	remaining: number
+	voting_period: {
+		index: number
+		kind: string
+		start_position: number
+	}
+}
+
 export type NodeStatus = {
 	address?: string
 	connection_status: "connected" | "disconnected" | "connecting"
@@ -12,15 +22,7 @@ export type NodeStatus = {
 			cycle_position: number
 		}
 		protocol: string
-		voting_period_info: {
-			position: number
-			remaining: number
-			voting_period: {
-				index: number
-				kind: string
-				start_position: number
-			}
-		}
+		voting_period_info: VotingPeriodInfo
 	}
 	network_info?: {
 		connection_count: number
@@ -100,10 +102,4 @@ export type NormalizedBlockRights = {
 	attestations: number,
 	realizedBlocks: number,
 	realizedAttestations: number,
-}
-
-export type NormalizedVotingPeriodInfo = {
-	kind: string,
-	index: number,
-	remaining: number,
 }

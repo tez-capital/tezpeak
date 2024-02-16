@@ -1,6 +1,6 @@
 import { derived, writable, type Writable, type Readable } from "svelte/store"
 
-import type { PeakStatus, StatusUpdate } from "@src/common/types"
+import type { PeakStatus, StatusUpdate } from "@src/common/types/status"
 import { StatusProvider, type StatusProviderStatus } from "./StatusProvider"
 import { EMPTY_PEAK_STATUS } from "@src/common/constants"
 

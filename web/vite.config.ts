@@ -17,6 +17,9 @@ export default defineConfig({
 		proxy: {
 			"/sse": {
 				target: "http://127.0.0.1:8733",
+			},
+			"/api": {
+				target: "http://127.0.0.1:8733",
 			}
 		}
 	},
