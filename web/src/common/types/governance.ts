@@ -24,6 +24,7 @@ export type GovernanceProposalPeriodDetail = {
 	}
 	voters: Array<Voter>
 	proposals: Array<GovernanceProposalPeriodDetailProposal>
+	votes: { [key: string]: string[] }
 }
 
 export type ExtendedGovernanceProposalPeriodDetail = GovernanceProposalPeriodDetail & {

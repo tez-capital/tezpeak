@@ -11,6 +11,7 @@ import (
 	"blockwatch.cc/tzgo/rpc"
 	"blockwatch.cc/tzgo/signer/remote"
 	"blockwatch.cc/tzgo/tezos"
+	"github.com/samber/lo"
 	"github.com/tez-capital/tezpeak/configuration"
 	"github.com/tez-capital/tezpeak/constants"
 	"github.com/tez-capital/tezpeak/util"
@@ -22,6 +23,8 @@ type GovernanceProvider struct {
 	signer        string
 }
 
+type VoteList map[string][]string
+
 type GovernancePeriodDetail struct {
 	Info      *rpc.VotingPeriodInfo `json:"info"`
 	Voters    rpc.VoterList         `json:"voters"`
@@ -30,6 +33,7 @@ type GovernancePeriodDetail struct {
 	Proposals rpc.ProposalList      `json:"proposals"`
 	Quorum    int                   `json:"quorum"`
 	Ballots   rpc.BallotList        `json:"ballots"`
+	Votes     VoteList              `json:"votes"`
 }
 
 type UpvoteParams struct {
@@ -130,6 +134,45 @@ func (governanceProvider *GovernanceProvider) startProposalsCollector(ctx contex
 	})
 }
 
+// curl 127.0.0.1:8732/chains/main/blocks/head/context/raw/json/votes/proposals?depth=1
+// [["Pt1JoinAscentToMountVinsonAGNqxgMLDAB8TqZpDwMTU5eCx",["tz1P6WKJu2rcbxKiKRZHKQKmKrpC9TfW1AwM","tz1LjZjdF1wFgUtVyNsrr8P1uYaoBJGTTPyr"]]]
+
+func (governanceProvider *GovernanceProvider) startVotesCollector(ctx context.Context, detail *GovernancePeriodDetail, wg *sync.WaitGroup) {
+	wrapInWaithGroup(wg, func() {
+		votes, _ := attemptWithClients(governanceProvider.nodes, func(client *rpc.Client) (VoteList, error) {
+			var rawVotes [][]interface{}
+
+			err := client.Get(ctx, "chains/main/blocks/head/context/raw/json/votes/proposals?depth=1", &rawVotes)
+			if err != nil {
+				return nil, err
+			}
+
+			result := make(VoteList)
+			for _, rawVote := range rawVotes {
+				if len(rawVote) != 2 {
+					continue
+				}
+				if proposal, ok := rawVote[0].(string); ok {
+					voters := rawVote[1].([]interface{})
+					var votersList []string
+					if len(voters) > 0 {
+						votersList = lo.Map(voters, func(voter interface{}, _ int) string {
+							if v, ok := voter.(string); ok {
+								return v
+							}
+							return ""
+						})
+					}
+					result[proposal] = votersList
+				}
+			}
+
+			return result, err
+		})
+		detail.Votes = votes
+	})
+}
+
 func (governanceProvider *GovernanceProvider) startQuorumCollector(ctx context.Context, detail *GovernancePeriodDetail, wg *sync.WaitGroup) {
 	wrapInWaithGroup(wg, func() {
 		quorum, _ := attemptWithClients(governanceProvider.nodes, func(client *rpc.Client) (int, error) {
@@ -213,6 +256,7 @@ func (governanceProvider *GovernanceProvider) GetGovernancePeriodDetail(ctx cont
 
 	if periodInfo.VotingPeriod.Kind == tezos.VotingPeriodProposal {
 		governanceProvider.startProposalsCollector(ctx, detail, &wg)
+		governanceProvider.startVotesCollector(ctx, detail, &wg)
 	}
 
 	if periodInfo.VotingPeriod.Kind == tezos.VotingPeriodExploration || periodInfo.VotingPeriod.Kind == tezos.VotingPeriodPromotion {

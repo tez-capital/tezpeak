@@ -36,15 +36,27 @@
 
 	async function upvote(proposal: string) {
 		if (!pkh) return;
-		dispatch('tx_building', { message: `building proposal upvote - ${proposal}`, stage: "building" });
+		dispatch('tx_building', {
+			message: `building proposal upvote - ${proposal}`,
+			stage: 'building'
+		});
 		const result = await upvote_proposal(pkh, periodIndex, [proposal]);
 		if (typeof result === 'string') {
-			dispatch('tx_broadcasted', { message: `proposal upvote - ${proposal}`, opHash: result, stage: "confirming" });
+			dispatch('tx_broadcasted', {
+				message: `proposal upvote - ${proposal}`,
+				opHash: result,
+				stage: 'confirming'
+			});
 			return;
 		}
-		dispatch('error', { message: `Failed to upvote. Reason: ${result}`, error: result, stage: "failed" });
+		dispatch('error', {
+			message: `Failed to upvote. Reason: ${result}`,
+			error: result,
+			stage: 'failed'
+		});
 	}
 
+	$: console.log(period.votes)
 	// not available in proposal period :(
 	// $: upvotedAlready = period.voters
 </script>
@@ -106,12 +118,19 @@
 						</div>
 					</Button>
 					<div class="upvote-btn" class:disabled={!pkh}>
-						<Button on:click={() => upvote(proposal.proposal)}>
-							<div class="button-content">
-								<div class="label">UPVOTE</div>
+						{#if pkh && period.votes && period.votes[proposal.proposal].includes(pkh)}
+							<div class="button-content upvoted">
+								<div class="label">UPVOTED</div>
 								<div class="icon"><ThumbsUpIcon /></div>
 							</div>
-						</Button>
+						{:else}
+							<Button on:click={() => upvote(proposal.proposal)}>
+								<div class="button-content">
+									<div class="label">UPVOTE</div>
+									<div class="icon"><ThumbsUpIcon /></div>
+								</div>
+							</Button>
+						{/if}
 					</div>
 				</div>
 			{/each}
@@ -179,6 +198,14 @@
 				.upvote-btn
 					--button-background-color: rgb(0, 96, 0)
 					--button-hover-background-color: rgb(0, 128, 0)
+				
+				.upvoted
+					display: flex
+					justify-content: center
+					align-items: center
+					windth: 100%
+					height: 100%
+					color: var(--success-color)
 
 			.separator
 				padding-top: var(--spacing)
