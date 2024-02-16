@@ -55,10 +55,6 @@
 			stage: 'failed'
 		});
 	}
-
-	$: console.log(period.votes)
-	// not available in proposal period :(
-	// $: upvotedAlready = period.voters
 </script>
 
 <div class="proposal-period-wrap">
