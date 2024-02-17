@@ -4,7 +4,7 @@
 	import { writeToClipboard } from '@src/util/clipboard';
 	import { formatBalance } from '@src/util/format';
 	import { calculateFreeSpace, calculateStakingCapacity, getBakerColor } from '@src/util/baker';
-	import type { BakerStatus } from '@src/common/types';
+	import type { BakerStatus } from '@src/common/types/status';
 
 	export let baker: string;
 	export let status: BakerStatus;

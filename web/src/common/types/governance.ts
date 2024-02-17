@@ -60,6 +60,7 @@ export type CommonPeriodDetail = {
 			kind: "testing" | "adoption"
 		}
 	},
+	voters: Array<Voter>
 	proposal: string
 }
 

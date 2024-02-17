@@ -4,7 +4,7 @@
 	import BakerStatusCard from '@components/peak/BakerStatusCard.svelte';
 	import BakerRightsCard from '@components/peak/BakerRightsCard.svelte';
 	import ServicesStatusCard from '@components/peak/ServicesStatusCard.svelte';
-	
+
 	import { getCurrentBlock, pickVotingPeriodInfo } from '@src/util/gov';
 	import GovernancePeriodCard from '@src/components/peak/GovernancePeriodCard.svelte';
 
@@ -26,23 +26,22 @@
 		Object.keys(services.signer_services).length > 0;
 
 	$: votingPeriodInfo = pickVotingPeriodInfo([bakerNode, ...nodes.map((n) => n[1])]);
-	$: votingPeriodBlock = getCurrentBlock([bakerNode, ...nodes.map((n) => n[1])])
+	$: votingPeriodBlock = getCurrentBlock([bakerNode, ...nodes.map((n) => n[1])]);
 </script>
 
 <div class="dashboard-grid-wrap">
 	<div class="dashboard-grid">
-		
 		{#if hasAnyService}
 			<ServicesStatusCard title="Baker's Services" {services} />
 		{/if}
 		<NodeStatusCard node={bakerNode} title="Baker's Node" />
 
 		{#each bakers as [baker, info]}
-			<BakerStatusCard {baker} status={info} showColor={showBakerColors} />
+			<BakerStatusCard baker={baker ?? {}} status={info} showColor={showBakerColors} />
 		{/each}
 
 		<GovernancePeriodCard {votingPeriodInfo} block={votingPeriodBlock} />
-		
+
 		<div class="baker-rights" class:expanded={expandedBakingRights}>
 			<BakerRightsCard
 				mode="upcoming"

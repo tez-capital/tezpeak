@@ -5,6 +5,7 @@
 	import type { VotingPeriodInfo } from '@src/common/types/status';
 	import { getVotingPeriodTimeLeft } from '@src/util/gov';
 	import { onDestroy } from 'svelte';
+	import Button from '../starlight/components/Button.svelte';
 
 	export let votingPeriodInfo: VotingPeriodInfo | undefined;
 	export let block: number | undefined;
@@ -22,7 +23,7 @@
 	}
 </script>
 
-<button class="unstyle-button governance-wrap" on:click={() => open_governance()}>
+<div class="governance-wrap">
 	<Card class="governance-card">
 		<div class="governance">
 			<div class="title">
@@ -36,19 +37,22 @@
 					<div class="index">
 						#{votingPeriodInfo.voting_period.index}
 					</div>
+					<div class="remaining">
+						ends in
+						<div class="value">{timeLeft}</div>
+					</div>
 				</div>
+		
 				<Separator />
 
-				<div class="remaining">
-					ends in
-					<div class="value">{timeLeft}</div>
-				</div>
+			
 			{:else}
 				<div class="no-data">NO DATA</div>
 			{/if}
+			<Button on:click={open_governance}>OPEN</Button>
 		</div>
 	</Card>
-</button>
+</div>
 
 <style lang="sass">
 .governance-wrap
@@ -57,10 +61,10 @@
 	width: 100%
 	height: 100%
 	user-select: none
-	&:hover
-		cursor: pointer
-		transition: background-color 0.2s
-		--card-background-color: #151515
+	// &:hover
+	// 	cursor: pointer
+	// 	transition: background-color 0.2s
+	// 	--card-background-color: #151515
 
 	:global(.governance-card)
 		box-sizing: border-box
@@ -81,9 +85,11 @@
 
 	.period-info
 		display: grid
+		grid-template-columns:  1fr
 		grid-template-rows: 1fr auto auto auto 1fr
 		justify-content: center
 		gap: var(--spacing-f2)
+		width: 100%
 		
 		.index, .kind
 			display: flex
@@ -106,6 +112,7 @@
 		display: flex
 		justify-content: right
 		align-items: flex-end
+		grid-row: 5
 
 		.value
 			display: inline-block

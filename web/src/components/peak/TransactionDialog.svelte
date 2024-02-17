@@ -15,9 +15,9 @@
 	function getProgressMessage() {
 		switch (stage) {
 			case 'building':
-				return 'building transaction';
+				return 'Building transaction...';
 			case 'confirming':
-				return 'waiting for confirmation';
+				return 'Waiting for confirmation...';
 			case 'applied':
 				return 'CONFIRMED';
 			case 'failed':
@@ -47,10 +47,17 @@
 						<div class="progress">
 							<ProgressBar message={progressMessage} progress="indeterminate" />
 						</div>
+						{#if stage === 'building'}
+							<div class="note">
+								NOTE: You may need to confirm the transaction with your signer.
+							</div>
+						{/if}
 					{/if}
-					<Button on:click={() => window.open(`https://better-call.dev/${opHash}`, '_blank')}>
-						Open Explorer
-					</Button>
+					<div class="explore" class:disabled={stage === 'building'}>
+						<Button on:click={() => window.open(`https://better-call.dev/${opHash}`, '_blank')}>
+							Open Explorer
+						</Button>
+					</div>
 				{/if}
 				{#if allowClose || stage === 'applied' || error}
 					<Button label="close" on:click={() => (open = false)} />
@@ -100,6 +107,11 @@
 
 	.progress 
 		padding-top: var(--spacing-x2)
+
+	.note
+		color: var(--text-color-faded)
+		text-align: center
+		padding-bottom: var(--spacing-x2)
 
 .error-message
 	display: flex

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { state } from '@app/state';
+	import { goto } from '$app/navigation';
 	import Card from '@components/starlight/components/Card.svelte';
 	import Button from '@components/starlight/components/Button.svelte';
 	import Select from '@components/starlight/components/Select.svelte';
@@ -7,6 +8,7 @@
 	import ProposalPeriodSection from '@components/peak/governance/ProposalPeriodSection.svelte';
 	import ExpPromPeriodSection from '@components/peak/governance/ExpPromPeriodSection.svelte';
 	import TransactionDialog from '@components/peak/TransactionDialog.svelte';
+	import HomeIcon from '@components/la/icons/home-solid.svelte';
 
 	import {
 		getCurrentBlock,
@@ -18,12 +20,11 @@
 	import { formatDistanceToNow } from 'date-fns';
 	import { onDestroy, onMount } from 'svelte';
 	import axios from 'axios';
-	import {
-		type GovernancePeriodDetail,
-		type GovernanceProposalPeriodDetail,
-		type GovernanceExplorationOrPromotionPeriodDetail,
-		type CommonPeriodDetail,
-		testExpDetail
+	import type {
+		GovernancePeriodDetail,
+		GovernanceProposalPeriodDetail,
+		GovernanceExplorationOrPromotionPeriodDetail,
+		CommonPeriodDetail
 	} from '@src/common/types/governance';
 	import type { SelectItem } from '@src/components/starlight/types';
 	import ProgressBar from '@src/components/starlight/components/ProgressBar.svelte';
@@ -41,7 +42,10 @@
 	let availablePkhs: Array<string> = [];
 	let selectedPkh: SelectItem | undefined;
 
-	$: availablePkhsOptions = (availablePkhs ?? []).map((pkh) => ({ value: pkh, label: pkh }));
+	$: voters = periodDetail?.voters ?? [];
+	$: availablePkhsOptions = (availablePkhs ?? [])
+		.filter((pkh) => voters.find((voter) => voter.pkh === pkh))
+		.map((pkh) => ({ value: pkh, label: pkh }));
 
 	$: proposalPeriod =
 		periodDetail?.info.voting_period.kind === 'proposal'
@@ -166,6 +170,11 @@
 </script>
 
 <div class="governance-wrap">
+	<div class="navigation-wrap">
+		<Button on:click={() => goto('/')}>
+			<div class="navigation-btn-content"><HomeIcon /> HOME</div>
+		</Button>
+	</div>
 	<div class="vote-as">
 		<Card>
 			<div class="vote-as-content">
@@ -329,6 +338,21 @@
 
 				.governance-period-number
 					grid-column: 1
+
+.navigation-wrap 
+	display: grid
+	grid-template-columns: auto 1fr
+	grid-column: 2
+
+	.navigation-btn-content
+		display: grid
+		grid-template-columns: auto auto
+		align-items: center
+		gap: var(--spacing)
+		:global(svg)
+			fill: var(--text-color)
+			wdith: 30px
+			height: 30px
 
 .error-message
 	display: flex

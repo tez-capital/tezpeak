@@ -248,11 +248,7 @@ func (governanceProvider *GovernanceProvider) GetGovernancePeriodDetail(ctx cont
 
 	var wg sync.WaitGroup
 
-	if periodInfo.VotingPeriod.Kind == tezos.VotingPeriodProposal ||
-		periodInfo.VotingPeriod.Kind == tezos.VotingPeriodExploration ||
-		periodInfo.VotingPeriod.Kind == tezos.VotingPeriodPromotion {
-		governanceProvider.startVotersCollector(ctx, detail, &wg)
-	}
+	governanceProvider.startVotersCollector(ctx, detail, &wg)
 
 	if periodInfo.VotingPeriod.Kind == tezos.VotingPeriodProposal {
 		governanceProvider.startProposalsCollector(ctx, detail, &wg)
