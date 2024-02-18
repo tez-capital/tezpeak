@@ -3,7 +3,7 @@ import type { PeakStatus } from "./types/status"
 export const TEZPEAK_VERSION = "<VERSION>"
 export const TEZPEAK_CODENAME = "<CODENAME>"
 
-export const DEPOSIT_LIMIT_STAKING_CAPACITY_MULTIPLIER = 9n
+export const DEPOSIT_LIMIT_DELEGATION_CAPACITY_MULTIPLIER = 9n
 export const BLOCK_TIME = 15 * 1000 // 15 seconds in milliseconds
 
 export const EXPLORER_URL = "https://tzkt.io"

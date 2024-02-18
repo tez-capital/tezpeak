@@ -1,4 +1,4 @@
-import { DEPOSIT_LIMIT_STAKING_CAPACITY_MULTIPLIER } from "@src/common/constants";
+import { DEPOSIT_LIMIT_DELEGATION_CAPACITY_MULTIPLIER } from "@src/common/constants";
 import type { BakerStatus, BlockRights, NormalizedBlockRights } from "@src/common/types/status";
 
 export function calculateFreeSpace(baker: BakerStatus) {
@@ -8,8 +8,9 @@ export function calculateFreeSpace(baker: BakerStatus) {
 	}
 
 	const delegated = BigInt(baker.delegated_balance)
+	const full_balance = BigInt(baker.full_balance)
 
-	return (limit * DEPOSIT_LIMIT_STAKING_CAPACITY_MULTIPLIER) - delegated
+	return calculateStakingCapacity(baker) - delegated - full_balance
 }
 
 export function calculateStakingCapacity(baker: BakerStatus) {
@@ -18,7 +19,7 @@ export function calculateStakingCapacity(baker: BakerStatus) {
 		limit = BigInt(baker.full_balance)
 	}
 
-	return limit * DEPOSIT_LIMIT_STAKING_CAPACITY_MULTIPLIER
+	return (limit * (DEPOSIT_LIMIT_DELEGATION_CAPACITY_MULTIPLIER + 1n /* + 1 for baker own balance*/))
 }
 
 export function getBakerColor(str: string) {
