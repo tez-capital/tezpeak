@@ -3,20 +3,21 @@ import type { BakerStatus, BlockRights, NormalizedBlockRights } from "@src/commo
 
 export function calculateFreeSpace(baker: BakerStatus) {
 	let limit = BigInt(baker.frozen_deposits_limit)
-	if (limit === 0n) {
-		limit = BigInt(baker.full_balance)
+	const full_balance = BigInt(baker.full_balance)
+	if (limit === 0n || limit > full_balance) {
+		limit = full_balance
 	}
 
 	const delegated = BigInt(baker.delegated_balance)
-	const full_balance = BigInt(baker.full_balance)
 
 	return calculateStakingCapacity(baker) - delegated - full_balance
 }
 
 export function calculateStakingCapacity(baker: BakerStatus) {
 	let limit = BigInt(baker.frozen_deposits_limit)
-	if (limit === 0n) {
-		limit = BigInt(baker.full_balance)
+	const full_balance = BigInt(baker.full_balance)
+	if (limit === 0n || limit > full_balance) {
+		limit = full_balance
 	}
 
 	return (limit * (DEPOSIT_LIMIT_DELEGATION_CAPACITY_MULTIPLIER + 1n /* + 1 for baker own balance*/))
