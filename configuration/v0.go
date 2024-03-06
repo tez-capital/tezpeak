@@ -3,6 +3,7 @@ package configuration
 import (
 	"github.com/hjson/hjson-go/v4"
 	"github.com/tez-capital/tezpeak/constants"
+	"github.com/tez-capital/tezpeak/constants/enums"
 )
 
 type referenceNode struct {
@@ -10,6 +11,10 @@ type referenceNode struct {
 	IsRightsProvider     *bool  `json:"is_rights_provider,omitempty"`
 	IsBlockProvider      *bool  `json:"is_block_provider,omitempty"`
 	IsGovernanceProvider *bool  `json:"is_governance_provider,omitempty"`
+}
+
+type providers struct {
+	Services *enums.ServiceStatusProviderKind `json:"services,omitempty"`
 }
 
 type v0 struct {
@@ -24,6 +29,7 @@ type v0 struct {
 	ReferenceNodes   *map[string]referenceNode `json:"reference_nodes,omitempty"`
 	BlockWindow      int64                     `json:"block_window,omitempty"`
 	Mode             PeakMode                  `json:"mode,omitempty"`
+	Providers        *providers                `json:"providers,omitempty"`
 }
 
 func getDefault_v0() *v0 {
@@ -34,6 +40,8 @@ func getDefault_v0() *v0 {
 	isBlockProvider2 := constants.DEFAULT_REFERENCE_NODE_2_IS_BLOCK_PROVIDER
 
 	isGovernanceProvider := true
+
+	servicesProvider := enums.TezbakeServiceStatusProvider
 
 	return &v0{
 		Version:          0,
@@ -56,6 +64,9 @@ func getDefault_v0() *v0 {
 		},
 		BlockWindow: 50,
 		Mode:        AutoPeakMode,
+		Providers: &providers{
+			Services: &servicesProvider,
+		},
 	}
 }
 
@@ -112,6 +123,16 @@ func (v *v0) ToRuntime() *Runtime {
 				runtimeReferenceNode.IsGovernanceProvider = *node.IsGovernanceProvider
 			}
 			result.ReferenceNodes[name] = runtimeReferenceNode
+		}
+	}
+
+	if v.Providers != nil {
+		serviceStatusProvider := enums.TezbakeServiceStatusProvider
+		if v.Providers.Services != nil {
+			serviceStatusProvider = *v.Providers.Services
+		}
+		result.Providers = Providers{
+			Services: serviceStatusProvider,
 		}
 	}
 

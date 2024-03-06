@@ -17,7 +17,33 @@ Since tezbake 0.13.0-alpha the tezpeak is natively supported module. You can set
 
 #### standalone
 
-TBD
+You can run tezpeak as a standalone server as a binary or on linux as a service with [ami-tezpeak](https://github.com/tez-capital/ami-tezpeak).
+
+#### As binary
+
+1. Download the latest release from the [releases page](https://github.com/tez-capital/tezpeak)
+2. Add configuration file `config.hjson` to the same directory as the binary
+- Sample standalone minimal configuration:
+```hjson
+{
+	listen: "0.0.0.0:8733"
+	bakers: [
+		tz1P6WKJu2rcbxKiKRZHKQKmKrpC9TfW1AwM
+		tz1hZvgjekGo7DmQjWh7XnY5eLQD8wNYPczE
+	]
+	providers: {
+		// right now only tezbake is supported, so disable it altogether with 'none' to suppress the warnings
+		services: none 
+	}
+}
+```
+3. Run the binary
+4. Open the browser and navigate to `http://localhost:8733`
+5. Enjoy
+
+#### As an ami based service
+
+Refer to the [ami-tezpeak readme](https://github.com/tez-capital/ami-tezpeak) for the installation and usage instructions.
 
 ### Configuration
 

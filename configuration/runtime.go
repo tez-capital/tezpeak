@@ -11,6 +11,7 @@ import (
 	"github.com/hjson/hjson-go/v4"
 	"github.com/samber/lo"
 	"github.com/tez-capital/tezpeak/constants"
+	"github.com/tez-capital/tezpeak/constants/enums"
 )
 
 type versionedConfig interface {
@@ -36,6 +37,10 @@ const (
 	AutoPeakMode    PeakMode = "auto"
 )
 
+type Providers struct {
+	Services enums.ServiceStatusProviderKind
+}
+
 type Runtime struct {
 	Id               string
 	Listen           string
@@ -46,6 +51,7 @@ type Runtime struct {
 	Signer           string
 	ReferenceNodes   map[string]RuntimeReferenceNode
 	BlockWindow      int64
+	Providers        Providers
 	Mode             PeakMode
 }
 
@@ -180,6 +186,10 @@ func (r *Runtime) Hydrate() *Runtime {
 				IsBlockProvider:  constants.DEFAULT_REFERENCE_NODE_2_IS_BLOCK_PROVIDER,
 			},
 		}
+	}
+
+	if r.Providers.Services == "" {
+		r.Providers.Services = enums.TezbakeServiceStatusProvider
 	}
 
 	if len(r.Bakers) == 0 {

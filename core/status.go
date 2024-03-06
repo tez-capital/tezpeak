@@ -7,6 +7,7 @@ import (
 	"blockwatch.cc/tzgo/rpc"
 	"github.com/tez-capital/tezbake/apps/base"
 	"github.com/tez-capital/tezpeak/configuration"
+	"github.com/tez-capital/tezpeak/constants/enums"
 	"github.com/tez-capital/tezpeak/core/common"
 	"github.com/tez-capital/tezpeak/core/providers"
 )
@@ -67,7 +68,13 @@ func Run(ctx context.Context, config *configuration.Runtime) (<-chan PeakStatus,
 
 	providers.StartRightsStatusProvider(ctx, rightProviderRpcs, config.Bakers, config.BlockWindow, statusChannel)
 	providers.StartBakersStatusProvider(ctx, rightProviderRpcs, config.Bakers, statusChannel)
-	providers.StartServiceStatusProvider(ctx, config.TezbakeHome, statusChannel)
+	switch config.Providers.Services {
+	case enums.TezbakeServiceStatusProvider:
+		providers.StartServiceStatusProvider(ctx, config.TezbakeHome, statusChannel)
+	case enums.NoneServiceStatusProvider:
+	default:
+		slog.Warn("unknown service status provider", "provider", config.Providers.Services)
+	}
 
 	resultChannel := make(chan PeakStatus, 100)
 
