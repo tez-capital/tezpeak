@@ -2,7 +2,7 @@
 
 <script lang="ts">
 	let open: boolean = false;
-	let persistant: boolean = false;
+	let persistent: boolean = false;
 	let _class: string = '';
 	let dialog: HTMLDialogElement;
 	
@@ -15,9 +15,9 @@
 		}
 		dialog.addEventListener('animationend', cleanup);
 	};
-	$: background_click = persistant ? () => {} : close;
+	$: background_click = persistent ? () => {} : close;
 
-	export { _class as class, open, persistant };
+	export { _class as class, open, persistent };
 </script>
 
 <dialog class={_class} bind:this={dialog} {open}>

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"blockwatch.cc/tzgo/rpc"
 	"github.com/hjson/hjson-go/v4"
+	"github.com/trilitech/tzgo/rpc"
 )
 
 func TryUnwrapRPCError(err error) error {

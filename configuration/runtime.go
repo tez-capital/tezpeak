@@ -47,6 +47,7 @@ type Runtime struct {
 	Bakers           []string
 	WorkingDirectory string
 	TezbakeHome      string
+	TezpayHome       string
 	Node             string
 	Signer           string
 	ReferenceNodes   map[string]RuntimeReferenceNode

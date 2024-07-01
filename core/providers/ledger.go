@@ -4,9 +4,9 @@ import (
 	"context"
 	"log/slog"
 
-	"blockwatch.cc/tzgo/rpc"
 	"github.com/google/uuid"
 	"github.com/tez-capital/tezpeak/core/common"
+	"github.com/trilitech/tzgo/rpc"
 )
 
 type LedgerStatus struct {

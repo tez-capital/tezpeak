@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { flip } from 'svelte/animate';
-	import type { BlockRights } from '@src/common/types';
+	import type { BlockRights } from '@src/common/types/status';
 	import Card from '../starlight/components/Card.svelte';
 	import Separator from '@components/peak/Separator.svelte';
 	import { getBakerColor, normalizeBlockRights } from '@src/util/baker';

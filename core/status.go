@@ -4,12 +4,12 @@ import (
 	"context"
 	"log/slog"
 
-	"blockwatch.cc/tzgo/rpc"
 	"github.com/tez-capital/tezbake/apps/base"
 	"github.com/tez-capital/tezpeak/configuration"
 	"github.com/tez-capital/tezpeak/constants/enums"
 	"github.com/tez-capital/tezpeak/core/common"
 	"github.com/tez-capital/tezpeak/core/providers"
+	"github.com/trilitech/tzgo/rpc"
 )
 
 func Run(ctx context.Context, config *configuration.Runtime) (<-chan PeakStatus, error) {
@@ -26,7 +26,7 @@ func Run(ctx context.Context, config *configuration.Runtime) (<-chan PeakStatus,
 		},
 		Bakers: providers.BakersStatus{
 			Level:  0,
-			Bakers: map[string]*rpc.Delegate{},
+			Bakers: map[string]*providers.BakerStakingStatus{},
 		},
 		Ledgers: providers.LedgerStatus{
 			Level: 0,

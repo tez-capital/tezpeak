@@ -2,19 +2,21 @@ package providers
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"strings"
 
-	"blockwatch.cc/tzgo/rpc"
-	"blockwatch.cc/tzgo/tezos"
 	"github.com/google/uuid"
 	"github.com/samber/lo"
+	"github.com/tez-capital/tezpeak/constants"
 	"github.com/tez-capital/tezpeak/core/common"
+	"github.com/trilitech/tzgo/rpc"
+	"github.com/trilitech/tzgo/tezos"
 )
 
 type BakersStatus struct {
-	Level  int64                    `json:"level"`
-	Bakers map[string]*rpc.Delegate `json:"bakers"`
+	Level  int64                          `json:"level"`
+	Bakers map[string]*BakerStakingStatus `json:"bakers"`
 }
 
 type BakersStatusUpdate struct {
@@ -33,16 +35,73 @@ func (s *BakersStatusUpdate) GetKind() common.StatusUpdateKind {
 	return common.BakerStatusUpdateKind
 }
 
-func getBakerStatusFor(ctx context.Context, clients []*rpc.Client, baker string) (*rpc.Delegate, error) {
+type BakerStakingStatus struct {
+	Balance                  string  `json:"balance"`
+	OwnFrozen                tezos.Z `json:"own_frozen"`
+	StakedBalance            string  `json:"staked_balance"`
+	StakedFrozen             tezos.Z `json:"staked_frozen"`
+	ExternalStakedBalance    string  `json:"external_staked_balance"`
+	Delegated                tezos.Z `json:"delegated"`
+	ExternalDelegatedBalance string  `json:"external_delegated_balance"`
+	DelegatorsCount          int     `json:"delegators_count"`
+}
+
+func getDelegateDelegatedContracts(ctx context.Context, client *rpc.Client, addr tezos.Address, id rpc.BlockID) ([]tezos.Address, error) {
+	u := fmt.Sprintf("chains/main/blocks/%s/context/delegates/%s/delegated_contracts", id, addr)
+
+	var delegatedContracts []tezos.Address
+	err := client.Get(ctx, u, &delegatedContracts)
+	if err != nil {
+		if strings.Contains(err.Error(), "delegate.not_registered") {
+			return []tezos.Address{}, constants.ErrDelegateNotRegistered
+		}
+		var rpcErrors []rpc.GenericError
+		err2 := client.Get(ctx, u, &rpcErrors)
+		if err2 != nil {
+			return nil, err
+		}
+		for _, rpcError := range rpcErrors {
+			if strings.Contains(rpcError.ID, "delegate.not_registered") {
+				return []tezos.Address{}, constants.ErrDelegateNotRegistered
+			}
+		}
+	}
+
+	return delegatedContracts, err
+}
+
+func getDelegateStakingStatusFromRawContext(ctx context.Context, client *rpc.Client, delegate tezos.Address, id rpc.BlockID) (*BakerStakingStatus, error) {
+	u := fmt.Sprintf("chains/main/blocks/%s/context/raw/json/staking_balance/%s", id, delegate)
+
+	var status BakerStakingStatus
+	err := client.Get(ctx, u, &status)
+	return &status, err
+}
+
+func getBakerStatusFor(ctx context.Context, clients []*rpc.Client, baker string) (*BakerStakingStatus, error) {
 	addr, err := tezos.ParseAddress(baker)
 	if err != nil {
 		return nil, err
 	}
-	status, err := attemptWithClients(clients, func(client *rpc.Client) (*rpc.Delegate, error) {
-		acc, err := client.GetDelegate(ctx, addr, rpc.Head)
+	status, err := attemptWithClients(clients, func(client *rpc.Client) (*BakerStakingStatus, error) {
+		acc, err := getDelegateStakingStatusFromRawContext(ctx, client, addr, rpc.Head)
 		if err != nil {
 			return nil, err
 		}
+		balance, err := client.GetContractBalance(ctx, addr, rpc.Head)
+		if err != nil {
+			return nil, err
+		}
+		acc.Balance = balance.String()
+		delegators, err := getDelegateDelegatedContracts(ctx, client, addr, rpc.Head)
+		if err != nil {
+			return nil, err
+		}
+		acc.DelegatorsCount = len(delegators)
+		acc.StakedBalance = acc.OwnFrozen.String()
+		acc.ExternalStakedBalance = acc.StakedFrozen.String()
+		acc.ExternalDelegatedBalance = acc.Delegated.Sub(balance).String()
+
 		return acc, nil
 	})
 	return status, err
@@ -71,7 +130,7 @@ func StartBakersStatusProvider(ctx context.Context, clients []*rpc.Client, baker
 
 		status := BakersStatus{
 			Level:  0,
-			Bakers: map[string]*rpc.Delegate{},
+			Bakers: map[string]*BakerStakingStatus{},
 		}
 
 		for {

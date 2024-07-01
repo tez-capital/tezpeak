@@ -32,24 +32,26 @@
 		<Separator />
 		<div class="balances">
 			<div class="title">Balance</div>
-			<div class="value">{formatBalance(status.full_balance)}</div>
-			<div class="title">Frozen deposit limit</div>
-			<div class="value">{formatBalance(status.frozen_deposits_limit)}</div>
-			<div class="title">Staking</div>
-			<div class="value">{formatBalance(status.staking_balance)}</div>
+			<div class="value">{formatBalance(status.balance)}</div>
+			<div class="title">Staked Balance</div>
+			<div class="value">{formatBalance(status.staked_balance)}</div>
+			<div class="title">External Staked Balance</div>
+			<div class="value">{formatBalance(status.external_staked_balance)}</div>
+			<div class="title">External Delegated Balance</div>
+			<div class="value">{formatBalance(status.external_delegated_balance)}</div>
 		</div>
-		<Separator />
-		<div class="balances">
+		<!-- <Separator /> -->
+		<!-- <div class="balances">
 			<div class="title">Staking Capacity</div>
 			<div class="value">{formatBalance(calculateStakingCapacity(status))}</div>
 			<div class="title">Free Space</div>
 			<div class="value">{formatBalance(calculateFreeSpace(status))}</div>
-		</div>
+		</div> -->
 		<div class="bottom-separator">
 			<Separator />
 		</div>
 		<div class="delegators">
-			<div class="value">{status.delegated_contracts.length - 1}</div>
+			<div class="value">{status.delegators_count}</div>
 			delegators
 		</div>
 	</div>

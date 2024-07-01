@@ -26,8 +26,8 @@
 		confirmText: 'Confirm',
 		cancelText: 'Cancel'
 	};
-	let state = defaultState;
-	let isOpen = false;
+	export let state = defaultState;
+	export let isOpen = false;
 
 	let promptFinalizers: PromiseFinalizers = {
 		resolve: () => close(),
@@ -58,7 +58,7 @@
 	$: isValid = validate(state.value, state.rules) !== true;
 </script>
 
-<OverlayDialog bind:open={isOpen} persistant>
+<OverlayDialog bind:open={isOpen} persistent>
 	<Card>
 		<div class="prompt-wrap">
 			<slot name="title" {...state}>

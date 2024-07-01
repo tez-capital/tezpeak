@@ -6,8 +6,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"blockwatch.cc/tzgo/rpc"
 	"github.com/tez-capital/tezpeak/core/common"
+	"github.com/trilitech/tzgo/rpc"
 )
 
 type NodeConnectionStatus string

@@ -15,4 +15,5 @@ var (
 	ErrFailedToGetPublicKey       = errors.New("failed to get public key")
 	ErrFailedToCreateRemoteSigner = errors.New("failed to create remote signer")
 	ErrFailedToBroadcastOperation = errors.New("failed to broadcast operation")
+	ErrDelegateNotRegistered      = errors.New("delegate not registered")
 )

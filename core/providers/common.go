@@ -3,8 +3,8 @@ package providers
 import (
 	"log/slog"
 
-	"blockwatch.cc/tzgo/rpc"
 	"github.com/google/uuid"
+	"github.com/trilitech/tzgo/rpc"
 )
 
 func attemptWithClients[T interface{}](clients []*rpc.Client, f func(client *rpc.Client) (T, error)) (T, error) {

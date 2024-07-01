@@ -8,11 +8,11 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"blockwatch.cc/tzgo/rpc"
-	"blockwatch.cc/tzgo/tezos"
 	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"github.com/tez-capital/tezpeak/core/common"
+	"github.com/trilitech/tzgo/rpc"
+	"github.com/trilitech/tzgo/tezos"
 )
 
 var (
@@ -48,32 +48,32 @@ func (s *RightsStatusUpdate) GetKind() common.StatusUpdateKind {
 }
 
 func initRights(bakers []string) (map[string]int, map[string]int) {
-	endorsing := map[string]int{}
+	attestations := map[string]int{}
 	baking := map[string]int{}
 	for _, baker := range bakers {
-		endorsing[baker] = 0
+		attestations[baker] = 0
 		baking[baker] = 0
 	}
-	return baking, endorsing
+	return baking, attestations
 }
 
-// [{"level":5026842,"delegates":[{"delegate":"tz1P6WKJu2rcbxKiKRZHKQKmKrpC9TfW1AwM","first_slot":2608,"endorsing_power":1,"consensus_key":"tz1P6WKJu2rcbxKiKRZHKQKmKrpC9TfW1AwM"}]}]
+// [{"level":5026842,"delegates":[{"delegate":"tz1P6WKJu2rcbxKiKRZHKQKmKrpC9TfW1AwM","first_slot":2608,"attestation_power":1,"consensus_key":"tz1P6WKJu2rcbxKiKRZHKQKmKrpC9TfW1AwM"}]}]
 type rights struct {
 	Level     int64 `json:"level"`
 	Delegates []struct {
-		Delegate       string `json:"delegate"`
-		FirstSlot      int64  `json:"first_slot"`
-		EndorsingPower int    `json:"endorsing_power"`
-		ConsensusKey   string `json:"consensus_key"`
+		Delegate         string `json:"delegate"`
+		FirstSlot        int64  `json:"first_slot"`
+		AttestationPower int    `json:"attestation_power"`
+		ConsensusKey     string `json:"consensus_key"`
 	} `json:"delegates"`
 }
 
 func getBlockRights(ctx context.Context, clients []*rpc.Client, block int64) (rights, rights, error) {
 	bakingRights := rights{}
-	endorsingRights := rights{}
-	var bakingRightsErr, endorsingRightsErr error
+	attestationRights := rights{}
+	var bakingRightsErr, attestationRightsErr error
 	bakingRightsChan := make(chan struct{})
-	endorsingRightsChan := make(chan struct{})
+	attestationRightsChan := make(chan struct{})
 
 	go func() {
 		url := fmt.Sprintf("chains/main/blocks/head/helpers/baking_rights?all=true&max_priority=1&level=%d", block)
@@ -90,27 +90,27 @@ func getBlockRights(ctx context.Context, clients []*rpc.Client, block int64) (ri
 	}()
 
 	go func() {
-		url := fmt.Sprintf("chains/main/blocks/head/helpers/endorsing_rights?all=true&max_priority=1&level=%d", block)
-		endorsingRights, endorsingRightsErr = attemptWithClients(clients, func(client *rpc.Client) (rights, error) {
-			endorsingRights := make([]rights, 0)
-			err := client.Get(ctx, url, &endorsingRights)
+		url := fmt.Sprintf("chains/main/blocks/head/helpers/attestation_rights?all=true&max_priority=1&level=%d", block)
+		attestationRights, attestationRightsErr = attemptWithClients(clients, func(client *rpc.Client) (rights, error) {
+			attestationRights := make([]rights, 0)
+			err := client.Get(ctx, url, &attestationRights)
 			result := rights{Level: block}
-			if len(endorsingRights) > 0 {
-				result = endorsingRights[0]
+			if len(attestationRights) > 0 {
+				result = attestationRights[0]
 			}
 			return result, err
 		})
-		endorsingRightsChan <- struct{}{}
+		attestationRightsChan <- struct{}{}
 	}()
 	<-bakingRightsChan
-	<-endorsingRightsChan
-	return bakingRights, endorsingRights, errors.Join(endorsingRightsErr, bakingRightsErr)
+	<-attestationRightsChan
+	return bakingRights, attestationRights, errors.Join(attestationRightsErr, bakingRightsErr)
 }
 
 func getBlockRightsFor(ctx context.Context, clients []*rpc.Client, block int64, bakers []string) (*BlockRights, error) {
-	relevantBakingRights, relevantEndorsingRights := initRights(bakers)
+	relevantBakingRights, relevantAttestationRights := initRights(bakers)
 
-	bakingRights, endorsingRights, err := getBlockRights(ctx, clients, block-1)
+	bakingRights, attestationRights, err := getBlockRights(ctx, clients, block-1)
 
 	for _, right := range bakingRights.Delegates {
 		if _, ok := relevantBakingRights[right.Delegate]; !ok {
@@ -119,11 +119,11 @@ func getBlockRightsFor(ctx context.Context, clients []*rpc.Client, block int64, 
 		relevantBakingRights[right.Delegate]++
 	}
 
-	for _, right := range endorsingRights.Delegates {
-		if _, ok := relevantEndorsingRights[right.Delegate]; !ok {
+	for _, right := range attestationRights.Delegates {
+		if _, ok := relevantAttestationRights[right.Delegate]; !ok {
 			continue
 		}
-		relevantEndorsingRights[right.Delegate] += right.EndorsingPower
+		relevantAttestationRights[right.Delegate] += right.AttestationPower
 	}
 
 	if err != nil {
@@ -132,7 +132,7 @@ func getBlockRightsFor(ctx context.Context, clients []*rpc.Client, block int64, 
 
 	rights := map[string][]int{}
 	for _, baker := range bakers {
-		rights[baker] = []int{relevantBakingRights[baker], relevantEndorsingRights[baker]}
+		rights[baker] = []int{relevantBakingRights[baker], relevantAttestationRights[baker]}
 	}
 
 	return &BlockRights{
@@ -177,7 +177,7 @@ func checkRealized(ctx context.Context, clients []*rpc.Client, rights *BlockRigh
 	validAttestations := lo.Reduce(ops, func(acc []string, g []rpc.Operation, _ int) []string {
 		for _, tx := range g {
 			for _, c := range tx.Contents {
-				if c.Kind() == tezos.OpTypeEndorsement {
+				if c.Kind() == tezos.OpTypeAttestation {
 					acc = append(acc, c.Meta().Delegate.String())
 				}
 			}

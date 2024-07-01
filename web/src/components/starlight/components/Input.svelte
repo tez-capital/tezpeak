@@ -1,7 +1,7 @@
 <script lang="ts">
 	import AngleDownIcon from '../icons/angle-down.svelte';
 	import AngleUpIcon from '../icons/angle-up.svelte';
-	import { createKeyPressHandler } from '../src/util';
+	import { createKeyPressHandler, validate } from '../src/util';
 	import type { ValidationRules } from '../types';
 	import { v4 as uuidv4 } from 'uuid';
 
@@ -23,17 +23,11 @@
 		isFocused = focused;
 	}
 
-	$: value = type === 'number' ? Number(value) : value;
-
-	$: isInvalid =
-		invalid === true ? true : rules.reduce((acc, rule) => acc || rule(value) !== true, false);
+	$: isInvalid = validate(value, rules) !== true;
 	$: invalidHint =
 		invalid === true
 			? hint
-			: rules.reduce((acc, rule) => {
-					const result = rule(value);
-					return result === true ? acc : result;
-				}, '');
+			: (isInvalid ? validate(value, rules) as string : "");
 
 	let inputElement: HTMLInputElement;
 	function focusInput() {

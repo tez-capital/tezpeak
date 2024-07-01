@@ -39,7 +39,7 @@
 	}
 </script>
 
-<OverlayDialog bind:open={isOpen} persistant>
+<OverlayDialog bind:open={isOpen} persistent>
 	<Card>
 		<div class="progress-wrap">
 			<div class="title">

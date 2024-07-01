@@ -7,14 +7,14 @@ import (
 	"sync"
 	"time"
 
-	"blockwatch.cc/tzgo/codec"
-	"blockwatch.cc/tzgo/rpc"
-	"blockwatch.cc/tzgo/signer/remote"
-	"blockwatch.cc/tzgo/tezos"
 	"github.com/samber/lo"
 	"github.com/tez-capital/tezpeak/configuration"
 	"github.com/tez-capital/tezpeak/constants"
 	"github.com/tez-capital/tezpeak/util"
+	"github.com/trilitech/tzgo/codec"
+	"github.com/trilitech/tzgo/rpc"
+	"github.com/trilitech/tzgo/signer/remote"
+	"github.com/trilitech/tzgo/tezos"
 )
 
 type GovernanceProvider struct {
