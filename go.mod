@@ -8,6 +8,7 @@ require (
 	github.com/hjson/hjson-go/v4 v4.4.0
 	github.com/samber/lo v1.39.0
 	github.com/tez-capital/tezbake v0.0.0-20240612212514-049360e9bcfa
+	github.com/trilitech/tzgo v1.19.8
 )
 
 require (
@@ -33,7 +34,6 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/cobra v1.8.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/trilitech/tzgo v1.19.8 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.52.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
