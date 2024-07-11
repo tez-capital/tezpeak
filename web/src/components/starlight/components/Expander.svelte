@@ -47,7 +47,7 @@
 .expander-grid
 	display: grid
 	grid-template-columns: 1fr
-	grid-template-rows: auto auto
+	grid-template-rows: auto 1fr
 	grid-template-areas: "header" "content"
 
 	.expander-header

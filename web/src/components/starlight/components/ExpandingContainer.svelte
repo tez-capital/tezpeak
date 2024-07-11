@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ExpandingContainerDirection } from "../types";
+	import { ExpandingContainerDirection } from '../types';
 
 	export let isOpen = false;
 	export let direction: ExpandingContainerDirection = ExpandingContainerDirection.vertical;
@@ -20,7 +20,6 @@
 	}
 
 	function computeWidth(element: HTMLDivElement) {
-		console.log(element)
 		if (!element) {
 			return ``;
 		}
@@ -34,7 +33,6 @@
 
 	$: contentHeight = isOpen ? computeHeight(containerElement) : `0px`;
 	$: contentWidth = isOpen ? computeWidth(containerElement) : `0px`;
-
 </script>
 
 <div
@@ -54,38 +52,32 @@
 <style lang="sass">
 	.container-vertical 
 		height: var(--expanding-container-collapsed-height, 0)
-		overflow: hidden
+		max-height: var(--expanding-container-max-height)
+		overflow: var(--expanding-container-overflow, hidden)
 		transition: height var(--expanding-container-transition-duration) ease-in-out
 		position: relative
 
 		&.open 
 			height: var(--expanding-container-expanded-height, auto)
+
 		
 		.content 
 			height: auto
 			padding: var(--expanding-container-padding, 0)
-		
-		.overflow-auto 
-			overflow: auto
 
 	.container-horizontal 
 		width: var(--expanding-container-collapsed-width, 0)
-		overflow: hidden
+		max-width: var(--expanding-container-max-width)
+		overflow: var(--expanding-container-overflow, hidden)
 		transition: width var(--expanding-container-transition-duration) ease-in-out
 		position: relative
 		height: 100%
 
 		&.open 
 			width: var(--expanding-container-expanded-width, auto)
-		
 	
 		.content 
 			height: 100%
 			width: max-content
 			padding: var(--expanding-container-padding, 0)
-		
-		.overflow-auto 
-			overflow: auto
-
-
 </style>

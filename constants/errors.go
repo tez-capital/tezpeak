@@ -9,6 +9,11 @@ var (
 	ErrInvalidConfigVersion    = errors.New("invalid configuration version")
 	ErrInvalidConfig           = errors.New("invalid configuration")
 	ErrInvalidSignerUrl        = errors.New("invalid signer url")
+	ErrInvalidNodeUrl          = errors.New("invalid node url")
+	ErrInvalidNodes            = errors.New("invalid nodes")
+	ErrNoValidBakers           = errors.New("no valid bakers")
+	ErrInvalidPayoutWallet     = errors.New("invalid payout wallet")
+	ErrNoTezpayAppPath         = errors.New("no tezpay app path")
 
 	ErrFailedToSignOperation      = errors.New("failed to sign operation")
 	ErrFailedToCompleteOperation  = errors.New("failed to complete operation")

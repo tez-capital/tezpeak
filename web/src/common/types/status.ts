@@ -33,6 +33,7 @@ export type NodeStatus = {
 			current_outflow: number
 		} | null
 	} | null
+	is_essential: boolean
 }
 
 export type NodesStatus = { [key: string]: NodeStatus }
@@ -52,12 +53,14 @@ export type RightsStatus = {
 export type AmiServiceInfo = {
 	status: string | "running",
 	started: string,
+	formattedTimestamp?: string,
 }
+
+export type ApplicationServices = { [key: string]: AmiServiceInfo }
 
 export type ServicesStatus = {
 	timestamp: number
-	node_services: { [key: string]: AmiServiceInfo }
-	signer_services: { [key: string]: AmiServiceInfo }
+	applications?: { [key: string]: ApplicationServices }
 }
 
 export type BakerStatus = {
@@ -79,23 +82,40 @@ export type BakersStatus = {
 
 export type LedgerStatus = unknown
 
-export type PeakStatus = {
-	id?: string
-	baker_node: NodeStatus,
-	nodes: NodesStatus
+export type TezbakeStatus = {
 	rights: RightsStatus,
 	services: ServicesStatus,
 	bakers: BakersStatus,
 	ledgers: LedgerStatus,
 }
 
+export type WalletStatus = {
+	address: string
+	balance: number
+	level: string
+}
+
+export type TezpayStatus = {
+	services: ServicesStatus
+	wallet: WalletStatus
+}
+
+export type PeakStatus = {
+	id?: string
+	modules: {
+		"tezbake": TezbakeStatus | undefined
+		"tezpay": TezpayStatus | undefined
+	}
+	nodes: NodesStatus
+}
+
 export type StatusUpdate = {
-	kind: "full" | "node" | "rights" | "services" | "baker" | "baker-node"
+	kind: "full" | "diff"
 	data: PeakStatus
 }
 
 export type NormalizedBlockRights = {
-	baker : string,
+	baker: string,
 	blocks: number,
 	attestations: number,
 	realizedBlocks: number,

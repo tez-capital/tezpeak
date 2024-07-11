@@ -76,7 +76,7 @@ The configuration is stored in `config.hjson` file. The default configuration is
 	node: http://localhost:8732
 	# List of reference nodes to connect to
 	# The reference nodes are used to get the rights and blocks if the baker's node is not available
-	reference_nodes: {
+	nodes: {
 		"Tezos Foundation": {
 			address: https://rpc.tzbeta.net/
 			is_rights_provider: true

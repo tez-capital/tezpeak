@@ -1,17 +1,15 @@
 <script lang="ts">
-	import { state } from '@app/state';
 	import { goto } from '$app/navigation';
 	import Card from '@components/starlight/components/Card.svelte';
 	import Button from '@components/starlight/components/Button.svelte';
 	import Select from '@components/starlight/components/Select.svelte';
-	import Separator from '@components/peak/Separator.svelte';
-	import ProposalPeriodSection from '@components/peak/governance/ProposalPeriodSection.svelte';
-	import ExpPromPeriodSection from '@components/peak/governance/ExpPromPeriodSection.svelte';
-	import TransactionDialog from '@components/peak/TransactionDialog.svelte';
+	import Separator from '@components/app/Separator.svelte';
+	import ProposalPeriodSection from '@components/app/governance/ProposalPeriodSection.svelte';
+	import ExpPromPeriodSection from '@components/app/governance/ExpPromPeriodSection.svelte';
+	import TransactionDialog from '@components/app/TransactionDialog.svelte';
 	import HomeIcon from '@components/la/icons/home-solid.svelte';
 
 	import {
-		getCurrentBlock,
 		getGovernancePeriodBlocksLeft,
 		getVotingPeriodEndDate,
 		preprocessExpPromPeriodDetail,
@@ -28,7 +26,7 @@
 	} from '@src/common/types/governance';
 	import type { SelectItem } from '@src/components/starlight/types';
 	import ProgressBar from '@src/components/starlight/components/ProgressBar.svelte';
-	import CommonPeriodSection from '@src/components/peak/governance/CommonPeriodSection.svelte';
+	import CommonPeriodSection from '@src/components/app/governance/CommonPeriodSection.svelte';
 	import type {
 		TransactionErrorEvent,
 		TransactionBroadcastedEvent,
@@ -61,18 +59,14 @@
 		? (periodDetail as CommonPeriodDetail)
 		: undefined;
 
-	$: bakerNode = $state.baker_node;
-	$: nodes = Object.entries($state.nodes).sort((a, b) => (a[0] > b[0] ? 1 : -1));
-	$: block = getCurrentBlock([bakerNode, ...nodes.map((n) => n[1])]);
-
-	$: endDate = getVotingPeriodEndDate(periodDetail?.info, block);
+	$: endDate = getVotingPeriodEndDate(periodDetail?.info);
 	$: timeLeft = formatDistanceToNow(endDate, { addSuffix: true });
 
 	$: ended = endDate < new Date();
-	$: remainingBlocks = getGovernancePeriodBlocksLeft(periodDetail?.info, block);
+	$: remainingBlocks = getGovernancePeriodBlocksLeft(periodDetail?.info);
 
 	const interval = setInterval(() => {
-		remainingBlocks = getGovernancePeriodBlocksLeft(periodDetail?.info, block);
+		remainingBlocks = getGovernancePeriodBlocksLeft(periodDetail?.info);
 		timeLeft = formatDistanceToNow(endDate, { addSuffix: true });
 		ended = endDate < new Date();
 	}, 500);
@@ -274,6 +268,7 @@
 	width: calc(100% - var(--spacing) * 2)
 	padding: var(--spacing)
 	--button-vertical-spacing: var(--spacing-f2)
+	gap: var(--spacing)
 
 	.vote-as
 		padding: var(--spacing)

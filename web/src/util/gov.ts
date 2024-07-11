@@ -3,33 +3,29 @@ import type { NodeStatus, VotingPeriodInfo } from "@src/common/types/status";
 import type { ExtendGovernanceExplorationOrPromotionPeriodDetail, ExtendedGovernanceProposalPeriodDetail, GovernanceExplorationOrPromotionPeriodDetail, GovernanceProposalPeriodDetail } from "@src/common/types/governance";
 import { formatDistanceToNow } from "date-fns/formatDistanceToNow";
 
-export function getVotingPeriodEndDate(info?: VotingPeriodInfo, block?: number) {
+export function getVotingPeriodEndDate(info: VotingPeriodInfo) {
 	if (!info) {
 		return new Date(0);
 	}
 
-	const endsAt = info.voting_period.start_position + info.position + info.remaining
-
-	const remainingMs = ((endsAt ?? -1) - (block ?? info?.position ?? 1)) * BLOCK_TIME;
+	const remainingMs = (info?.remaining ?? 1) * BLOCK_TIME;
 	const endDate = new Date(Date.now() + remainingMs);
 	return endDate;
 }
 
-export function getVotingPeriodTimeLeft(info?: VotingPeriodInfo, block?: number) {
+export function getVotingPeriodTimeLeft(info?: VotingPeriodInfo) {
 	if (!info) {
 		return "N/A";
 	}
-	const endDate = getVotingPeriodEndDate(info, block);
+	const endDate = getVotingPeriodEndDate(info);
 	return formatDistanceToNow(endDate);
 }
 
-export function getGovernancePeriodBlocksLeft(info: VotingPeriodInfo, block?: number) {
+export function getGovernancePeriodBlocksLeft(info: VotingPeriodInfo) {
 	if (!info) {
 		return "N/A";
 	}
-	const endsAt = info.voting_period.start_position + info.position + info.remaining
-
-	return (endsAt ?? 0) - (block ?? 0);
+	return info.remaining;
 }
 
 

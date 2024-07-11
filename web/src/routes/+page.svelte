@@ -1,67 +1,66 @@
 <script lang="ts">
-	import { state } from '@app/state';
-	import NodeStatusCard from '@components/peak/NodeStatusCard.svelte';
-	import BakerStatusCard from '@components/peak/BakerStatusCard.svelte';
-	import BakerRightsCard from '@components/peak/BakerRightsCard.svelte';
-	import ServicesStatusCard from '@components/peak/ServicesStatusCard.svelte';
+	import { nodes } from '@app/state/index';
+	import {
+		state as tezbakeStatus,
+		bakers as tezbakeBakers,
+		services as tezbakeServices,
+		bakingRights,
+		votingPeriodInfo
+	} from '@app/state/tezbake';
+	import NodeStatusCard from '@components/app/NodeStatusCard.svelte';
+	import BakerStatusCard from '@components/app/BakerStatusCard.svelte';
+	import BakerRightsCard from '@components/app/BakerRightsCard.svelte';
+	import ServicesStatusCard from '@components/app/ServicesStatusCard.svelte';
 
-	import { getCurrentBlock, pickVotingPeriodInfo } from '@src/util/gov';
-	import GovernancePeriodCard from '@src/components/peak/GovernancePeriodCard.svelte';
+	import GovernancePeriodCard from '@src/components/app/GovernancePeriodCard.svelte';
+	import PayoutsCard from '@src/components/app/PayoutsCard.svelte';
 
-	$: bakerNode = $state.baker_node;
+	$: showBakerColors = $tezbakeBakers.length > 1;
+	$: expandedBakingRights = $tezbakeBakers.length > 1;
 
-	$: nodes = Object.entries($state.nodes).sort((a, b) => (a[0] > b[0] ? 1 : -1));
-	$: bakers = Object.entries($state.bakers.bakers).sort((a, b) => (a[0] > b[0] ? 1 : -1));
-	$: showBakerColors = bakers.length > 1;
-	$: expandedBakingRights = bakers.length > 1;
+	//$: services = $state.tezbake?.services;
+	// $: hasAnyService =
+	// 	Object.keys(services.node_services).length > 0 ||
+	// 	Object.keys(services.signer_services).length > 0;
 
-	$: upcomingRights = $state.rights.rights.filter((r) => r.level > $state.rights.level);
-	$: pastRights = $state.rights.rights
-		.filter((r) => r.level <= $state.rights.level)
-		.sort((a, b) => (a.level < b.level ? 1 : -1));
-
-	$: services = $state.services;
-	$: hasAnyService =
-		Object.keys(services.node_services).length > 0 ||
-		Object.keys(services.signer_services).length > 0;
-
-	$: votingPeriodInfo = pickVotingPeriodInfo([bakerNode, ...nodes.map((n) => n[1])]);
-	$: votingPeriodBlock = getCurrentBlock([bakerNode, ...nodes.map((n) => n[1])]);
+	// $: votingPeriodInfo = pickVotingPeriodInfo([bakerNode, ...nodes.map((n) => n[1])]);
+	// $: votingPeriodBlock = getCurrentBlock([bakerNode, ...nodes.map((n) => n[1])]);
 </script>
 
 <div class="dashboard-grid-wrap">
 	<div class="dashboard-grid">
-		{#if hasAnyService}
-			<ServicesStatusCard title="Baker's Services" {services} />
+		{#if Object.keys($tezbakeServices.applications ?? {}).length > 0}
+			<ServicesStatusCard title="Baker's Services" services={$tezbakeServices} />
 		{/if}
-		<NodeStatusCard node={bakerNode} title="Baker's Node" />
 
-		{#each bakers as [baker, info]}
-			<BakerStatusCard baker={baker ?? {}} status={info} showColor={showBakerColors} />
-		{/each}
-
-		<GovernancePeriodCard {votingPeriodInfo} block={votingPeriodBlock} />
-
-		<div class="baker-rights" class:expanded={expandedBakingRights}>
-			<BakerRightsCard
-				mode="upcoming"
-				rights={upcomingRights}
-				{showBakerColors}
-				title="Upcoming Baking Rights"
-			/>
-		</div>
-		<div class="baker-rights" class:expanded={expandedBakingRights}>
-			<BakerRightsCard
-				mode="past"
-				rights={pastRights}
-				{showBakerColors}
-				title="Past Baking Rights"
-			/>
-		</div>
-
-		{#each nodes as [node, info]}
+		{#if $tezbakeStatus}
+			{#each $tezbakeBakers as [baker, info]}
+				<BakerStatusCard baker={baker ?? {}} status={info} showColor={showBakerColors} />
+			{/each}
+			<GovernancePeriodCard votingPeriodInfo={$votingPeriodInfo} />
+		{/if}
+		<PayoutsCard votingPeriodInfo={$votingPeriodInfo} />
+		{#each $nodes as [node, info]}
 			<NodeStatusCard node={info} title={node} />
 		{/each}
+		{#if $tezbakeStatus}
+			<div class="baker-rights" class:expanded={expandedBakingRights}>
+				<BakerRightsCard
+					mode="upcoming"
+					rights={$bakingRights.future}
+					{showBakerColors}
+					title="Upcoming Baking Rights"
+				/>
+			</div>
+			<div class="baker-rights" class:expanded={expandedBakingRights}>
+				<BakerRightsCard
+					mode="past"
+					rights={$bakingRights.past}
+					{showBakerColors}
+					title="Past Baking Rights"
+				/>
+			</div>
+		{/if}
 	</div>
 </div>
 
@@ -71,6 +70,7 @@
 	grid-template-columns: 1fr minmax(0px, 1400px) 1fr
 	width: calc(100% - var(--spacing) * 2)
 	padding: var(--spacing)
+	gap: var(--spacing)
 
 	.dashboard-grid
 		display: grid

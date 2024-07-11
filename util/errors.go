@@ -15,7 +15,7 @@ func TryUnwrapRPCError(err error) error {
 			return err
 		}
 
-		var message interface{}
+		var message any
 		err := json.Unmarshal(body, &message)
 		if err != nil {
 			return errors.New(string(body))

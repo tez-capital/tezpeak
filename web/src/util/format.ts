@@ -4,14 +4,14 @@ export function formatBlockHash(hash: string) {
   if (!hash) {
     return "N/A"
   }
-  return `${hash.slice(0, 10)}...${hash.slice(-10)}`
+  return `${hash.slice(0, 8)}...${hash.slice(-8)}`
 }
 
 export function formatAddress(address: string) {
   if (!address) {
     return "N/A"
   }
-  return `${address.slice(0, 10)}...${address.slice(-10)}`
+  return `${address.slice(0, 8)}...${address.slice(-8)}`
 }
 
 function timestampToJSTimestamp(timestamp: number) {
@@ -51,15 +51,20 @@ export function formatTimestampAgoStrict(timestamp: string | number) {
   return formatDistanceStrict(new Date(timestamp), new Date(), { addSuffix: true })
 }
 
-export function formatBalance(balance: string | bigint) {
-  if (typeof balance === "bigint") {
-    balance = balance.toString()
+export function formatBalance(mutez: string | bigint | number) {
+  if (typeof mutez === "bigint" || typeof mutez === "number") {
+    mutez = mutez.toString()
   }
-  if (!balance || typeof balance !== "string") {
+  if (!mutez || typeof mutez !== "string") {
     return "N/A"
   }
-  if (balance === "0") {
+  if (mutez === "0") {
     return "0 ꜩ"
   }
-  return `${balance.substring(0, balance.length - 6)}.${balance.substring(balance.length - 6)} ꜩ`
+  mutez = mutez.padStart(7, "0")
+  return `${mutez.substring(0, mutez.length - 6)}.${mutez.substring(mutez.length - 6)} ꜩ`
+}
+
+export function formatPercentage(percentage: number | string) {
+  return `${Number(percentage).toFixed(2)}%`
 }

@@ -1,32 +1,21 @@
 package configuration
 
 import (
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"net"
-	"net/url"
 	"os"
 	"path/filepath"
 
 	"github.com/hjson/hjson-go/v4"
-	"github.com/samber/lo"
 	"github.com/tez-capital/tezpeak/constants"
-	"github.com/tez-capital/tezpeak/constants/enums"
 )
 
-type versionedConfig interface {
-	ToRuntime() *Runtime
-}
+type moduleConfigurationbase struct {
+	Applications map[string]string `json:"applications,omitempty"`
 
-type deserializedConfigVersion struct {
-	Version int `json:"version,omitempty"`
-}
-
-type RuntimeReferenceNode struct {
-	Address              string
-	IsRightsProvider     bool
-	IsBlockProvider      bool
-	IsGovernanceProvider bool
+	Mode PeakMode `json:"mode,omitempty"`
 }
 
 type PeakMode string
@@ -37,166 +26,141 @@ const (
 	AutoPeakMode    PeakMode = "auto"
 )
 
-type Providers struct {
-	Services enums.ServiceStatusProviderKind
+type versionedConfig interface {
+	ToRuntime() *Runtime
 }
 
+type deserializedConfigVersion struct {
+	Version int `json:"version,omitempty"`
+}
+
+type TezosNode struct {
+	Address                string `json:"address"`
+	IsRightsProvider       bool   `json:"is_rights_provider,omitempty"`
+	IsBlockProvider        bool   `json:"is_block_provider,omitempty"`
+	IsGovernanceProvider   bool   `json:"is_governance_provider,omitempty"`
+	IsNetworkSInfoProvider bool   `json:"is_network_info_provider,omitempty"`
+	IsEssential            bool   `json:"is_essential,omitempty"`
+}
+
+var (
+	TF_RPC = TezosNode{
+		Address:              "https://rpc.tzbeta.net/",
+		IsGovernanceProvider: true,
+	}
+	TZKT_RPC = TezosNode{
+		Address:              "https://rpc.tzkt.io/mainnet/",
+		IsBlockProvider:      true,
+		IsRightsProvider:     true,
+		IsGovernanceProvider: true,
+	}
+	TZC_EU_RPC = TezosNode{
+		Address:              "https://eu.rpc.tez.capital/",
+		IsBlockProvider:      true,
+		IsRightsProvider:     true,
+		IsGovernanceProvider: true,
+	}
+	TZC_US_RPC = TezosNode{
+		Address:              "https://us.rpc.tez.capital/",
+		IsBlockProvider:      true,
+		IsRightsProvider:     true,
+		IsGovernanceProvider: true,
+	}
+	BAKER_NODE = TezosNode{
+		Address:                "http://127.0.0.1:8732/",
+		IsRightsProvider:       true,
+		IsBlockProvider:        true,
+		IsGovernanceProvider:   true,
+		IsNetworkSInfoProvider: true,
+		IsEssential:            true,
+	}
+)
+
 type Runtime struct {
-	Id               string
-	Listen           string
-	Bakers           []string
-	WorkingDirectory string
-	TezbakeHome      string
-	TezpayHome       string
-	Node             string
-	Signer           string
-	ReferenceNodes   map[string]RuntimeReferenceNode
-	BlockWindow      int64
-	Providers        Providers
-	Mode             PeakMode
+	Id     string
+	Listen string
+	Mode   PeakMode
+	// path to the root where are the apps located e.g. /bake-buddy
+	AppRoot string
+
+	Modules map[string]json.RawMessage `json:"modules,omitempty"`
+
+	Nodes map[string]TezosNode
 }
 
 func gerDefaultRuntime() *Runtime {
 	return &Runtime{
-		Id:               "",
-		Listen:           constants.DEFAULT_LISTEN_ADDRESS,
-		WorkingDirectory: "",
-		TezbakeHome:      "",
-		ReferenceNodes:   make(map[string]RuntimeReferenceNode),
-		BlockWindow:      50,
-		Mode:             AutoPeakMode,
+		Id:      "",
+		Listen:  constants.DEFAULT_LISTEN_ADDRESS,
+		Mode:    AutoPeakMode,
+		Modules: map[string]json.RawMessage{},
 	}
 }
 
-type nodeAppJsonConfiguration struct {
-	AdditionalKeysAliases []string `json:"additional_keys_aliases,omitempty"`
-}
-
-type nodeAppJson struct {
-	Configuration nodeAppJsonConfiguration `json:"configuration,omitempty"`
-}
-
-type nodePublicKeyHashAlias struct {
-	Name string `json:"name,omitempty"`
-	Hash string `json:"value,omitempty"`
-}
-
-type nodePublicKeys []nodePublicKeyHashAlias
-
-func (r *Runtime) loadBakersFromNodeConfiguration() {
-	aliases := []string{"baker"} // baker is used by default
-
-	nodeDirectory := filepath.Join(r.WorkingDirectory, "node")
-	nodeAppJsonPath := filepath.Join(nodeDirectory, "app.json")
-	if _, err := os.Stat(nodeAppJsonPath); os.IsNotExist(err) {
-		nodeAppJsonPath = filepath.Join(nodeDirectory, "app.hjson")
+func (v *Runtime) GetTezbakeModuleConfiguration() (bool, *TezbakeModuleConfiguration) {
+	rawConfiguration, ok := v.Modules[constants.TEZBAKE_MODULE_ID]
+	if !ok {
+		return false, nil
 	}
 
-	nodeAppJsonBytes, err := os.ReadFile(nodeAppJsonPath)
+	configuration := getDefaultTezbakeModuleConfiguration()
+	err := hjson.Unmarshal(rawConfiguration, configuration)
 	if err != nil {
-		slog.Error("failed to read node app.json file", "error", err.Error())
-		return
+		slog.Error("failed to parse tezbake module configuration", "error", err.Error())
+		return false, nil
 	}
 
-	var nodeApp nodeAppJson
-	err = hjson.Unmarshal(nodeAppJsonBytes, &nodeApp)
-	if err != nil {
-		slog.Error("failed to parse node app.json file", "error", err.Error())
-		return
-	}
-
-	aliases = append(aliases, nodeApp.Configuration.AdditionalKeysAliases...)
-
-	// r.Bakers
-	publicKeyHashesPath := filepath.Join(nodeDirectory, "data", ".tezos-client", "public_key_hashs")
-	publicKeyHashesBytes, err := os.ReadFile(publicKeyHashesPath)
-	if err != nil {
-		slog.Error("failed to read node public_key_hashs file", "error", err.Error())
-		return
-	}
-
-	var publicKeys nodePublicKeys
-	err = hjson.Unmarshal(publicKeyHashesBytes, &publicKeys)
-	if err != nil {
-		slog.Error("failed to parse node public_key_hashs file", "error", err.Error())
-		return
-	}
-
-	for _, publicKey := range publicKeys {
-		for _, alias := range aliases {
-			if publicKey.Name == alias {
-				r.Bakers = append(r.Bakers, publicKey.Hash)
-			}
+	for key, value := range configuration.Applications {
+		if filepath.IsAbs(value) {
+			continue // skip absolute paths
 		}
+		configuration.Applications[key] = filepath.Join(v.AppRoot, value)
 	}
+
+	if configuration.Mode == "" {
+		configuration.Mode = v.Mode
+	}
+	configuration.Hydrate()
+
+	if err := configuration.Validate(); err != nil {
+		slog.Error("failed to validate tezbake module configuration", "error", err.Error())
+		return false, nil
+	}
+
+	return true, configuration
 }
 
-func (r *Runtime) Hydrate() *Runtime {
-	if r.Listen == "" {
-		r.Listen = constants.DEFAULT_LISTEN_ADDRESS
+func (v *Runtime) GetTezpayModuleConfiguration() (bool, *TezpayModuleConfiguration) {
+	rawConfiguration, ok := v.Modules[constants.TEZPAY_MODULE_ID]
+	if !ok {
+		return false, nil
 	}
 
-	if r.Mode == AutoPeakMode {
-		if host, _, err := net.SplitHostPort(r.Listen); err == nil {
-			switch lo.Contains(constants.PRIVATE_NETWORK_HOSTS, host) {
-			case true:
-				r.Mode = PrivatePeakMode
-			default:
-				r.Mode = PublicPeakMode
-			}
-		} else {
-			r.Mode = PublicPeakMode
+	configuration := getDefaultTezpayModuleConfiguration()
+	err := hjson.Unmarshal(rawConfiguration, configuration)
+	if err != nil {
+		slog.Error("failed to parse tezpay module configuration", "error", err.Error())
+		return false, nil
+	}
+
+	for key, value := range configuration.Applications {
+		if filepath.IsAbs(value) {
+			continue // skip absolute paths
 		}
+		configuration.Applications[key] = filepath.Join(v.AppRoot, value)
 	}
 
-	if r.WorkingDirectory == "" {
-		r.WorkingDirectory, _ = os.Getwd()
+	if configuration.Mode == "" {
+		configuration.Mode = v.Mode
+	}
+	configuration.Hydrate()
+
+	if err := configuration.Validate(); err != nil {
+		slog.Error("failed to validate tezpay module configuration", "error", err.Error())
+		return false, nil
 	}
 
-	if r.TezbakeHome == "" {
-		envTezbakeHome := os.Getenv(constants.ENV_TEZBAKE_HOME)
-		if envTezbakeHome != "" {
-			r.TezbakeHome = envTezbakeHome
-		} else {
-			r.TezbakeHome, _ = os.Getwd()
-		}
-	}
-
-	if r.Node == "" {
-		r.Node = constants.DEFAULT_BAKER_NODE_URL
-	}
-
-	if r.Signer == "" {
-		r.Signer = constants.DEFAULT_BAKER_SIGNER_URL
-	}
-
-	if r.BlockWindow == 0 {
-		r.BlockWindow = 50
-	}
-
-	if len(r.ReferenceNodes) == 0 {
-		r.ReferenceNodes = map[string]RuntimeReferenceNode{
-			"Tezos Foundation": {
-				Address:          constants.DEFAULT_REFERENCE_NODE_URL,
-				IsRightsProvider: constants.DEFAULT_REFERENCE_NODE_IS_RIGHTS_PROVIDER,
-				IsBlockProvider:  constants.DEFAULT_REFERENCE_NODE_IS_BLOCK_PROVIDER,
-			},
-			"tzkt": {
-				Address:          constants.DEFAULT_REFERENCE_NODE_2_URL,
-				IsRightsProvider: constants.DEFAULT_REFERENCE_NODE_2_IS_RIGHTS_PROVIDER,
-				IsBlockProvider:  constants.DEFAULT_REFERENCE_NODE_2_IS_BLOCK_PROVIDER,
-			},
-		}
-	}
-
-	if r.Providers.Services == "" {
-		r.Providers.Services = enums.TezbakeServiceStatusProvider
-	}
-
-	if len(r.Bakers) == 0 {
-		r.loadBakersFromNodeConfiguration()
-	}
-	return r
+	return true, configuration
 }
 
 func (r *Runtime) Validate() (*Runtime, error) {
@@ -207,19 +171,42 @@ func (r *Runtime) Validate() (*Runtime, error) {
 		}
 	}
 
-	if r.WorkingDirectory == "" {
+	if r.AppRoot == "" {
 		return nil, constants.ErrInvalidWorkingDirectory
 	}
 
-	if len(r.ReferenceNodes) == 0 {
-		return nil, constants.ErrInvalidBlockWindow
+	// TODO: optimize?
+	if ok, module := r.GetTezbakeModuleConfiguration(); ok {
+		if err := module.Validate(); err != nil {
+			return nil, err
+		}
 	}
 
-	if _, err := url.Parse(r.Signer); err != nil {
-		return nil, constants.ErrInvalidSignerUrl
+	if ok, module := r.GetTezpayModuleConfiguration(); ok {
+		if err := module.Validate(); err != nil {
+			return nil, err
+		}
 	}
 
 	return r, nil
+}
+
+func (r *Runtime) Hydrate() *Runtime {
+	if r.AppRoot == "" {
+		r.AppRoot, _ = os.Getwd()
+	}
+
+	if len(r.Nodes) == 0 {
+		r.Nodes = map[string]TezosNode{
+			"baker":  BAKER_NODE,
+			"TzC-EU": TZC_EU_RPC,
+			"TzC-US": TZC_US_RPC,
+			"TF":     TF_RPC,
+			"TZKT":   TZKT_RPC,
+		}
+	}
+
+	return r
 }
 
 func Load() (*Runtime, error) {

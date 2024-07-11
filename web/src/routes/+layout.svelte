@@ -2,11 +2,8 @@
 	import '@src/nodespecific.ts';
 	import '@src/styles/default.sass';
 
-	import {
-		APP_ID,
-		APP_STATUS_LEVEL,
-		APP_CONNECTION_STATUS,
-	} from '@app/state';
+	import { APP_STATUS_LEVEL } from '@app/state/status';
+	import { APP_ID, APP_CONNECTION_STATUS } from '@app/state/index';
 
 	$: animateStatusBar = $APP_STATUS_LEVEL === 'warning' || $APP_STATUS_LEVEL === 'error';
 	$: centerStatusBar = $APP_STATUS_LEVEL === 'ok';
@@ -21,14 +18,18 @@
 				<h4>{$APP_ID}</h4>
 			</a>
 			<div class="connection-status">
-				<div class="connection-status-sign" class:connected={$APP_CONNECTION_STATUS === "connected"} class:reconnecting={$APP_CONNECTION_STATUS === "reconnecting"}></div>
+				<div
+					class="connection-status-sign"
+					class:connected={$APP_CONNECTION_STATUS === 'connected'}
+					class:reconnecting={$APP_CONNECTION_STATUS === 'reconnecting'}
+				></div>
 				{$APP_CONNECTION_STATUS}
 			</div>
 		</div>
 		<div
 			class="status-bar"
-			class:ok={$APP_STATUS_LEVEL === "ok"}
-			class:warning={$APP_STATUS_LEVEL === "warning"}
+			class:ok={$APP_STATUS_LEVEL === 'ok'}
+			class:warning={$APP_STATUS_LEVEL === 'warning'}
 			class:animate={animateStatusBar}
 			class:center={centerStatusBar}
 		></div>

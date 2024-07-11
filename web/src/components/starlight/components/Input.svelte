@@ -12,7 +12,7 @@
 	export let disabled: boolean = false;
 	export let hint: string = '';
 	export let type: 'text' | 'number' = 'text';
-	export let rules: ValidationRules = [];
+	export let rules: ValidationRules<any> = [];
 	export let noLabel: boolean = false;
 
 	let isInvalid = false;

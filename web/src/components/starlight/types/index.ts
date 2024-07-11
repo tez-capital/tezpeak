@@ -22,7 +22,7 @@ export type NavMenuItemType = {
 	isActive?: (path: string) => boolean | boolean
 }
 
-export interface MenuItem<T extends any = any> {
+export interface MenuItem<T = any> {
 	icon?: IIcon
 	label: string
 	value: T
@@ -41,8 +41,8 @@ export const ComponentIcon = (component: typeof SvelteComponent): ComponentIcon 
 	}
 }
 
-export type ValidationRule = (value: any) => true | string
-export type ValidationRules = Array<ValidationRule>
+export type ValidationRule<T = any> = (value: T) => true | string
+export type ValidationRules<T = any> = Array<ValidationRule<T>>
 
 export type ProgressValue = number | "indeterminate"
 
@@ -51,21 +51,20 @@ export type PromiseFinalizers = {
 	reject: (reason?: any) => void
 }
 
-export interface DataTableItem {
-	[key: string]: any,
+export type DataTableItem<T = any> = T & {
 	selected?: boolean
 }
 
-export type DataTableColumn = {
+export type DataTableColumn<T = any> = {
 	hidden?: boolean
 	name: string
 	label?: string
 	sortable?: boolean
 	filterable?: boolean
-	sortFn?: (a: DataTableItem, b: DataTableItem) => number
-	getValue?: (item: DataTableItem) => any
-	component?: typeof SvelteComponent<{ item: DataTableItem, compactModeEnabled: boolean }>
-	click?: (item: DataTableItem) => any
+	sortFn?: (a: DataTableItem<T>, b: DataTableItem<T>) => number
+	getValue?: (item: DataTableItem<T>) => any
+	component?: typeof SvelteComponent<{ item: DataTableItem<T>, compactModeEnabled: boolean }>
+	click?: (item: DataTableItem<T>) => any
 	disableSelect?: boolean
 }
 

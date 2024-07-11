@@ -30,7 +30,7 @@ jobs:
         # PEAK_CODENAME = "<CODENAME>"
         env: 
           TEZPEAK_VERSION: ${{ github.ref_name }}
-          TEZPEAK_CODENAME: Vinson
+          TEZPEAK_CODENAME: Mont D'Iberville
         run: |
           # patch constants/common.go
           sed -i "s/TEZPEAK_VERSION[[:space:]]*= \".*\"/TEZPEAK_VERSION = \"$TEZPEAK_VERSION\"/g" constants/common.go
