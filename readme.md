@@ -114,4 +114,4 @@ The configuration is stored in `config.hjson` file. The default configuration is
 	# private - assumes private environment, all operations are allowed
 	mode: auto
 }
-```
+``` 
