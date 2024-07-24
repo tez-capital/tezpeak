@@ -23,7 +23,7 @@
 
 	onMount(async () => {
 		info = await getTezpayInfo();
-		payoutDialog.generate('latest');
+		//payoutDialog.generate('latest');
 	});
 
 	async function start() {
