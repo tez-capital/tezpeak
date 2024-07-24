@@ -67,34 +67,51 @@ The configuration is stored in `config.hjson` file. The default configuration is
   	id: ""
 	# Address to listen on
   	listen: 127.0.0.1:8733
-	# baker's rpc node to connect to
-	node: http://localhost:8732
-	# List of bakers to monitor
-	bakers: [
-	]
-	# Baker's node to connect to
-	node: http://localhost:8732
+    modules: {
+        tezbake: {
+			# uncomment bellow to disable tezbake package monitoring
+            # applications: null
+            bakers: [
+				# list of bakers to monitor for balances and rights
+                tz1P6WKJu2rcbxKiKRZHKQKmKrpC9TfW1AwM
+            ]
+        }
+        tezpay: {
+			# can be null to disable tezpay package monitoring
+			applications: {
+				# path to tezpay ami package, either absolute or relative to parent directory peak
+				tezpay: tezpay
+			}
+			payout_wallet: tz1X7U9XxVz6NDxL4DSZhijME61PW45bYUJE
+            payout_wallet_preferences: {
+                balance_warning_threshold: 100
+                balance_error_threshold: 50
+            }
+			# forces all operations to be dry run
+			force_dry_run: true
+		}
+    }
+	
 	# List of reference nodes to connect to
 	# The reference nodes are used to get the rights and blocks if the baker's node is not available
-	nodes: {
-		"Tezos Foundation": {
-			address: https://rpc.tzbeta.net/
-			is_rights_provider: true
-			is_block_provider: false
-		},
-		"tzkt": {
-			address: https://rpc.tzkt.io/mainnet/
-			is_rights_provider: false
-			is_block_provider: true
-		}
-	}
+	#nodes: {
+	#	"Tezos Foundation": {
+	#		address: https://rpc.tzbeta.net/
+	#		is_rights_provider: true
+	#		is_block_provider: false
+	#	},
+	#	"tzkt": {
+	#		address: https://rpc.tzkt.io/mainnet/
+	#		is_rights_provider: false
+	#		is_block_provider: true
+	#       # reports error if node not available
+	#       is_essential: false
+	#	}
+	#}
 	# The mode tezpeak should operate in
 	# auto - if bound to localhost, it will operate in private mode if not, it will operate in public mode
 	# public - assumes public environment, only readonly operations are allowed
 	# private - assumes private environment, all operations are allowed
 	mode: auto
-	# The number of blocks to look for the rights
-	# 50 means 25 blocks in the past and 25 blocks in the future
-	block_window: 50
 }
 ```
