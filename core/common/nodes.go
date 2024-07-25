@@ -52,19 +52,18 @@ var (
 
 func updateNetworkInfo(ctx context.Context, client *rpc.Client, nodeStatus *NodeStatus) {
 	connections, err := client.GetNetworkConnections(ctx)
-	if err == nil {
+	if err != nil {
 		nodeStatus.NetworkInfo.ConnectionCount = len(connections)
 	} else {
 		slog.Debug("failed to get network connections", "source", client.BaseURL.String(), "error", err.Error())
 	}
 
 	stats, err := client.GetNetworkStats(ctx)
-	if err == nil {
+	if err != nil {
 		nodeStatus.NetworkInfo.Stats = stats
 	} else {
 		slog.Debug("failed to get network stats", "source", client.BaseURL.String(), "error", err.Error())
 	}
-
 }
 
 func StartNodeStatusProviders(ctx context.Context, nodes map[string]configuration.TezosNode, statusChannel chan<- StatusUpdatedReport) {
