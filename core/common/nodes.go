@@ -99,14 +99,18 @@ func StartNodeStatusProviders(ctx context.Context, nodes map[string]configuratio
 			Url:              node.Address,
 			ConnectionStatus: Disconnected,
 			Block:            nil,
-			NetworkInfo:      &NodeNetworkInfo{},
+			NetworkInfo:      nil,
 			IsEssential:      node.IsEssential,
+		}
+
+		if node.IsNetworkInfoProvider {
+			nodeStatus.NetworkInfo = &NodeNetworkInfo{}
 		}
 
 		monitorId, err := AddBlockMonitor(ctx, blockMonitorClient, func(status ConnectionStatus) {
 			nodeStatus.ConnectionStatus = status
 
-			if node.IsNetworkSInfoProvider {
+			if node.IsNetworkInfoProvider {
 				updateNetworkInfo(ctx, blockMonitorClient, &nodeStatus)
 			}
 
@@ -117,7 +121,7 @@ func StartNodeStatusProviders(ctx context.Context, nodes map[string]configuratio
 		}, func(h *Block) {
 			nodeStatus.Block = h
 
-			if node.IsNetworkSInfoProvider {
+			if node.IsNetworkInfoProvider {
 				updateNetworkInfo(ctx, blockMonitorClient, &nodeStatus)
 			}
 

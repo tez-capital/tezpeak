@@ -193,6 +193,7 @@ func runStatusUpdatesProcessing(moduleStatusChannel <-chan common.ModuleStatusUp
 		case <-pendingUpdatesChannel:
 			if pendingUpdatesCounter > 0 {
 				notifyClients()
+				pendingUpdatesCounter = 0
 			}
 		}
 	}

@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/tez-capital/tezbake/ami"
 	"github.com/tez-capital/tezbake/apps/base"
 	"github.com/tez-capital/tezpeak/constants"
@@ -57,7 +59,7 @@ func getApplicationServiceStatus(_ context.Context, application string) (result 
 
 	result, err := GetServiceInfo(application)
 	if err != nil {
-		slog.Warn("failed to get node service info", "error", err.Error())
+		slog.Warn("failed to get service info", "error", err.Error(), "application", application)
 		return map[string]base.AmiServiceInfo{}
 	}
 
@@ -78,7 +80,7 @@ func startApplicationServiceStatusProvider(ctx context.Context, application stri
 					toSleep = time.Second * constants.MIN_SERVICES_REFRESH_INTERVAL
 				} else if started, err := time.Parse("Mon 2006-01-02 15:04:05 UTC", serviceStatus.Started); err == nil {
 					diff := time.Since(started)
-					toSleep = max(time.Second*constants.MIN_SERVICES_REFRESH_INTERVAL, min(diff, constants.MAX_SERVICES_REFRESH_INTERVAL))
+					toSleep = max(time.Second*constants.MIN_SERVICES_REFRESH_INTERVAL, min(time.Second*diff, constants.MAX_SERVICES_REFRESH_INTERVAL))
 				} else {
 					toSleep = time.Second * constants.MIN_SERVICES_REFRESH_INTERVAL
 				}
@@ -91,33 +93,32 @@ func startApplicationServiceStatusProvider(ctx context.Context, application stri
 }
 
 func StartServiceStatusProviders(ctx context.Context, applications map[string]string, statusChannel chan<- StatusUpdatedReport) {
-	go func() {
-		status := ServicesStatus{
-			Timestamp:    time.Now().Unix(),
-			Applications: map[string]ApplicationServices{},
-		}
+	applicationsServices := lo.MapEntries(applications, func(k string, _ string) (string, ApplicationServices) {
+		return k, ApplicationServices{}
+	})
+	applicationsMtx := sync.RWMutex{}
 
-		for name, path := range applications {
-			status.Applications[name] = ApplicationServices{}
+	for name, path := range applications {
+		serviceStatusChannel := make(chan map[string]base.AmiServiceInfo)
+		startApplicationServiceStatusProvider(ctx, path, serviceStatusChannel)
 
-			serviceStatusChannel := make(chan map[string]base.AmiServiceInfo)
-			startApplicationServiceStatusProvider(ctx, path, serviceStatusChannel)
-
-			go func() {
-				for {
-					select {
-					case <-ctx.Done():
-						return
-					case serviceStatus := <-serviceStatusChannel:
-						status.Applications[name] = serviceStatus
-						statusChannel <- &ServicesStatusUpdate{
-							Status: status,
-						}
+		go func() {
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case serviceStatus := <-serviceStatusChannel:
+					applicationsMtx.Lock()
+					applicationsServices[name] = serviceStatus
+					applicationsMtx.Unlock()
+					statusChannel <- &ServicesStatusUpdate{
+						Status: ServicesStatus{
+							Timestamp:    time.Now().Unix(),
+							Applications: applicationsServices,
+						},
 					}
 				}
-			}()
-
-		}
-	}()
-
+			}
+		}()
+	}
 }

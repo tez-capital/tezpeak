@@ -19,14 +19,6 @@
 
 	$: showBakerColors = $tezbakeBakers.length > 1;
 	$: expandedBakingRights = $tezbakeBakers.length > 1;
-
-	//$: services = $state.tezbake?.services;
-	// $: hasAnyService =
-	// 	Object.keys(services.node_services).length > 0 ||
-	// 	Object.keys(services.signer_services).length > 0;
-
-	// $: votingPeriodInfo = pickVotingPeriodInfo([bakerNode, ...nodes.map((n) => n[1])]);
-	// $: votingPeriodBlock = getCurrentBlock([bakerNode, ...nodes.map((n) => n[1])]);
 </script>
 
 <div class="dashboard-grid-wrap">
@@ -51,18 +43,18 @@
 		{#if $tezbakeStatus}
 			<div class="baker-rights" class:expanded={expandedBakingRights}>
 				<BakerRightsCard
-					mode="past"
-					rights={$pastBakingRights}
-					{showBakerColors}
-					title="Past Baking Rights"
-				/>
-			</div>
-			<div class="baker-rights" class:expanded={expandedBakingRights}>
-				<BakerRightsCard
 					mode="upcoming"
 					rights={$futureBakingRights}
 					{showBakerColors}
 					title="Upcoming Baking Rights"
+				/>
+			</div>
+			<div class="baker-rights" class:expanded={expandedBakingRights}>
+				<BakerRightsCard
+					mode="past"
+					rights={$pastBakingRights}
+					{showBakerColors}
+					title="Past Baking Rights"
 				/>
 			</div>
 		{/if}
@@ -86,4 +78,7 @@
 		.baker-rights
 			display: grid
 			grid-template-rows: 1fr
+
+			&.expanded
+				grid-column: 1 / -1
 </style>

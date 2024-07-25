@@ -35,12 +35,12 @@ type deserializedConfigVersion struct {
 }
 
 type TezosNode struct {
-	Address                string `json:"address"`
-	IsRightsProvider       bool   `json:"is_rights_provider,omitempty"`
-	IsBlockProvider        bool   `json:"is_block_provider,omitempty"`
-	IsGovernanceProvider   bool   `json:"is_governance_provider,omitempty"`
-	IsNetworkSInfoProvider bool   `json:"is_network_info_provider,omitempty"`
-	IsEssential            bool   `json:"is_essential,omitempty"`
+	Address               string `json:"address"`
+	IsRightsProvider      bool   `json:"is_rights_provider,omitempty"`
+	IsBlockProvider       bool   `json:"is_block_provider,omitempty"`
+	IsGovernanceProvider  bool   `json:"is_governance_provider,omitempty"`
+	IsNetworkInfoProvider bool   `json:"is_network_info_provider,omitempty"`
+	IsEssential           bool   `json:"is_essential,omitempty"`
 }
 
 var (
@@ -67,12 +67,12 @@ var (
 		IsGovernanceProvider: true,
 	}
 	BAKER_NODE = TezosNode{
-		Address:                "http://127.0.0.1:8732/",
-		IsRightsProvider:       true,
-		IsBlockProvider:        true,
-		IsGovernanceProvider:   true,
-		IsNetworkSInfoProvider: true,
-		IsEssential:            true,
+		Address:               "http://127.0.0.1:8732/",
+		IsRightsProvider:      true,
+		IsBlockProvider:       true,
+		IsGovernanceProvider:  true,
+		IsNetworkInfoProvider: true,
+		IsEssential:           true,
 	}
 )
 
