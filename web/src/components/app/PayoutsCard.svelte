@@ -2,25 +2,50 @@
 	import { goto } from '$app/navigation';
 	import Card from '@components/starlight/components/Card.svelte';
 	import Button from '../starlight/components/Button.svelte';
+	import Separator from './Separator.svelte';
+	import { services, wallet } from '@app/state/tezpay';
+	import { formatBalance } from '@src/util/format';
 
 	function open_governance() {
 		goto('/tezpay');
 	}
+
+	$: isTezpayRunning = $services.applications?.tezpay?.['tezpay']?.status === 'running';
 </script>
 
 <div class="governance-wrap">
 	<Card class="governance-card">
 		<div class="governance">
 			<div class="title">
-				
+				<h5>PAYOUTS</h5>
 			</div>
-			<div/>
-				<div class="payouts-info">
-					<div class="kind">PAYOUTS</div>
-					<div class="enter">
-						<Button on:click={open_governance}>OPEN</Button>
+			<Separator />
+
+			<div class="payouts-info">
+				<div class="row" />
+				<div class="property">Automatic Payouts:</div>
+				{#if isTezpayRunning}
+					<div class="value automatic-payouts-status ok">ACTIVE</div>
+				{:else}
+					<div class="value automatic-payouts-status warn">INACTIVE</div>
+				{/if}
+
+				{#if $wallet !== undefined}
+					<div class="property">Wallet Balance:</div>
+					<div
+						class="value balance"
+						class:error={$wallet.level === 'error'}
+						class:warn={$wallet.level === 'warning'}
+					>
+						{formatBalance($wallet.balance)}
 					</div>
-				</div>
+				{/if}
+				<div class="row" />
+			</div>
+			<Separator />
+			<div class="enter">
+				<Button on:click={open_governance}>OPEN</Button>
+			</div>
 		</div>
 	</Card>
 </div>
@@ -56,31 +81,27 @@
 
 	.payouts-info
 		display: grid
-		grid-template-columns:  1fr
-		grid-template-rows: 1fr auto auto auto 1fr
+		grid-template-columns:  1fr auto auto 1fr
+		grid-template-rows: 1fr auto auto 1fr
 		justify-content: center
-		gap: var(--spacing-f2)
+		gap: var(--spacing)
 		width: 100%
 		
-		.index, .kind
+		.row
+			grid-column: 1 / -1
+
+		.property
+			grid-column: 2
 			display: flex
-			justify-content: center
-			font-size: 1.5rem
-			font-weight: 500
-
-		.index
-			grid-row: 4
-
-		.enter 
+			align-items: end
+		
+		.value
+			grid-column: 3
+			font-size: 1.25rem
 			display: flex
-			justify-content: center
-			grid-row: 3
-			margin-top: var(--spacing-x2)
-			margin-botton: var(--spacing-x2)
+			align-items: end
+		
 
-		.kind
-			text-transform: uppercase
-			grid-row: 2
 	.remaining
 		display: flex
 		justify-content: right
@@ -100,4 +121,14 @@
 		font-size: 1.5rem
 		font-weight: 500
 		height: 100%
+
+.error 
+	color: var(--error-color)
+
+.warn
+	color: var(--warning-color)
+
+.ok
+	color: var(--success-color)
+
 </style>

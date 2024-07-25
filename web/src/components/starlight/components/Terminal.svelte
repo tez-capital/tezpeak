@@ -1,5 +1,4 @@
 <script lang="ts">
-	import '@xterm/xterm/css/xterm.css';
 	import { Terminal, type ITerminalInitOnlyOptions, type ITerminalOptions } from '@xterm/xterm';
 	import { FitAddon } from '@xterm/addon-fit';
 
@@ -8,13 +7,15 @@
 	let terminalContainer: HTMLDivElement;
 	let term: Terminal;
 	let resizeObserver: ResizeObserver | undefined = undefined;
-	export let options: ITerminalOptions | ITerminalInitOnlyOptions | undefined = undefined
+	export let options: ITerminalOptions | ITerminalInitOnlyOptions | undefined = {
+		convertEol: true
+	};
 
 	onMount(() => {
 		term = new Terminal(options);
-		term.open(terminalContainer);
 		const fitAddon = new FitAddon();
 		term.loadAddon(fitAddon);
+		term.open(terminalContainer);
 		fitAddon.fit();
 
 		resizeObserver = new ResizeObserver(() => {
@@ -37,10 +38,12 @@
 	}
 </script>
 
-<div class="terminal" bind:this={terminalContainer}></div>
+<div class="terminal-warp">
+	<div class="terminal" bind:this={terminalContainer}></div>
+</div>
 
 <style lang="sass">
-.terminal
-	width: inherit
-	height: inherit
+.terminal-wrap
+	width: 50vw
+	height: 50vh
 </style>

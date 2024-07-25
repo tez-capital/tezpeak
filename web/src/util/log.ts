@@ -8,6 +8,10 @@ export function formatLogMessageForTerminal(message: string | LogMessage): strin
 		message = JSON.parse(message) as LogMessage
 	}
 
+	if (message.phase === "execution_finished") {
+		return "==== execution finished ====\n"
+	}
+
 	let levelString = `[${message.level}]`
 	switch (message.level?.toLowerCase()) {
 		case "error":

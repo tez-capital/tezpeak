@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '@src/nodespecific.ts';
 	import '@src/styles/default.sass';
+	import '@xterm/xterm/css/xterm.css';
 
 	import { APP_STATUS_LEVEL } from '@app/state/status';
 	import { APP_ID, APP_CONNECTION_STATUS } from '@app/state/index';

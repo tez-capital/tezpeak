@@ -2,7 +2,7 @@
 	import Card from '@src/components/starlight/components/Card.svelte';
 	import Input from '@src/components/starlight/components/Input.svelte';
 	import Button from '@src/components/starlight/components/Button.svelte';
-	import OverlayDialog from '@src/components/starlight/components/OverlayDialog.svelte';
+	import OverlayDialog from '@src/components/starlight/dialogs/Overlay.svelte';
 	import { upvote_proposal } from '@src/app/governance';
 	import { createEventDispatcher } from 'svelte';
 	import type { TransactionEventDispatcher } from '@src/common/types/events';
@@ -49,7 +49,7 @@
 	];
 </script>
 
-<OverlayDialog {open} persistant={true}>
+<OverlayDialog {open} persistent={true}>
 	<div class="center">
 		<Card>
 			<div class="content">

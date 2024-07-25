@@ -32,7 +32,7 @@ export interface MenuItem<T = any> {
 	click?: () => void
 }
 
-export type SelectItem = MenuItem
+export type SelectItem<T = any> = MenuItem<T>
 
 export const ComponentIcon = (component: typeof SvelteComponent): ComponentIcon => {
 	return {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import OverlayDialog from '../components/OverlayDialog.svelte';
+	import OverlayDialog from './Overlay.svelte';
 	import Card from '@components/starlight/components/Card.svelte';
 	import type { PromiseFinalizers, ValidationRules } from '../types';
 	import Input from '../components/Input.svelte';

@@ -1,23 +1,19 @@
 import { derived, type Readable } from "svelte/store"
 import { state as globalState, nodes } from "."
-import type { BlockRights, PeakStatus } from "@src/common/types/status"
+import type { PeakStatus } from "@src/common/types/status"
 import { pickVotingPeriodInfo } from "@src/util/gov"
 
 export const state = derived(globalState, $state => {
 	return $state?.modules.tezbake
 }) as Readable<PeakStatus["modules"]["tezbake"]>
 
-export const bakingRights = derived(state, $tezbakeState => {
-	if ($tezbakeState === undefined) {
-		return {
-			past: [] as Array<BlockRights>,
-			future: [] as Array<BlockRights>,
-		}
-	}
-	return {
-		past: $tezbakeState?.rights.rights.filter(right => right.level <= $tezbakeState.rights.level).sort((a, b) => b.level - a.level),
-		future: $tezbakeState?.rights.rights.filter(right => right.level > $tezbakeState.rights.level).sort((a, b) => a.level - b.level),
-	}
+
+export const futureBakingRights = derived(state, $tezbakeState => {
+	return $tezbakeState?.rights.rights.filter(right => right.level > $tezbakeState.rights.level).sort((a, b) => a.level - b.level) ?? []
+})
+
+export const pastBakingRights = derived(state, $tezbakeState => {
+	return $tezbakeState?.rights.rights.filter(right => right.level <= $tezbakeState.rights.level).sort((a, b) => b.level - a.level) ?? []
 })
 
 export const bakers = derived(state, $tezbakeStatus => {

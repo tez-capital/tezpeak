@@ -26,7 +26,7 @@
 					<div class="level">
 						{blockRights.level}
 					</div>
-			
+
 					<div class="block-rights-inner">
 						{#each normalizeBlockRights(blockRights) as right}
 							{#if showBakerColors}
@@ -38,34 +38,36 @@
 								</div>
 							{/if}
 							<div class="baker-block-rights">
-								<div class="icon" class:no-rights={right.blocks === 0}>
-									<BlockIcon />
-								</div>
 								<div
 									class="value"
 									class:no-rights={right.blocks === 0}
 									class:warning={mode === 'past' && right.realizedBlocks === 0}
 									class:success={mode === 'past' && right.realizedBlocks === 1}
 								>
-									{right.blocks}
 									{#if mode === 'past'}
-										/{right.realizedBlocks * right.blocks}
+										{right.blocks}/{right.realizedBlocks * right.blocks}
+									{:else}
+										{right.blocks}
 									{/if}
 								</div>
-
-								<div class="icon" class:no-rights={right.attestations === 0}>
-									<AttestationIcon />
+								<div class="icon" class:no-rights={right.blocks === 0}>
+									<BlockIcon />
 								</div>
+
 								<div
 									class="value"
 									class:no-rights={right.attestations === 0}
 									class:warning={mode === 'past' && right.realizedAttestations === 0}
 									class:success={mode === 'past' && right.realizedAttestations === 1}
 								>
-									{right.attestations}
 									{#if mode === 'past'}
-										/{right.realizedAttestations * right.attestations}
+										{right.attestations}/{right.realizedAttestations * right.attestations}
+									{:else}
+										{right.attestations}
 									{/if}
+								</div>
+								<div class="icon" class:no-rights={right.attestations === 0}>
+									<AttestationIcon />
 								</div>
 							</div>
 						{/each}
@@ -114,21 +116,23 @@
 				grid-column: 2
 				display: flex
 				align-items: center
-				* 
-					margin-left: var(--spacing-f2)
-					margin-right: var(--spacing-f2)
+				min-width: 150px
+			
 				
 				.no-rights
 					filter: grayscale(0.75) opacity(0.44)
 				.baker-block-rights
-					display: inline-flex
-					align-items: center
-
+					// display: inline-flex
+					// align-items: center
+					display: grid
+					grid-template-columns: 120px 30px 120px 30px 
 
 					.value
 						display: inline-flex
-						justify-content: left
-						//min-width: 120px
+						justify-content: right
+						align-items: center
+						white-space: nowrap
+						margin-right: var(--spacing-f2)
 						&.warning
 							color: var(--warning-color)
 						

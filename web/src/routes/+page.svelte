@@ -4,9 +4,11 @@
 		state as tezbakeStatus,
 		bakers as tezbakeBakers,
 		services as tezbakeServices,
-		bakingRights,
+		futureBakingRights,
+		pastBakingRights,
 		votingPeriodInfo
 	} from '@app/state/tezbake';
+	import { state as tezpayStatus } from '@app/state/tezpay';
 	import NodeStatusCard from '@components/app/NodeStatusCard.svelte';
 	import BakerStatusCard from '@components/app/BakerStatusCard.svelte';
 	import BakerRightsCard from '@components/app/BakerRightsCard.svelte';
@@ -29,35 +31,38 @@
 
 <div class="dashboard-grid-wrap">
 	<div class="dashboard-grid">
-		{#if Object.keys($tezbakeServices.applications ?? {}).length > 0}
-			<ServicesStatusCard title="Baker's Services" services={$tezbakeServices} />
-		{/if}
-
 		{#if $tezbakeStatus}
 			{#each $tezbakeBakers as [baker, info]}
 				<BakerStatusCard baker={baker ?? {}} status={info} showColor={showBakerColors} />
 			{/each}
+		{/if}
+		{#if $tezpayStatus}
+			<PayoutsCard />
+		{/if}
+		{#if $tezbakeStatus}
 			<GovernancePeriodCard votingPeriodInfo={$votingPeriodInfo} />
 		{/if}
-		<PayoutsCard votingPeriodInfo={$votingPeriodInfo} />
+		{#if Object.keys($tezbakeServices.applications ?? {}).length > 0}
+			<ServicesStatusCard title="Baker's Services" services={$tezbakeServices} />
+		{/if}
 		{#each $nodes as [node, info]}
 			<NodeStatusCard node={info} title={node} />
 		{/each}
 		{#if $tezbakeStatus}
 			<div class="baker-rights" class:expanded={expandedBakingRights}>
 				<BakerRightsCard
-					mode="upcoming"
-					rights={$bakingRights.future}
+					mode="past"
+					rights={$pastBakingRights}
 					{showBakerColors}
-					title="Upcoming Baking Rights"
+					title="Past Baking Rights"
 				/>
 			</div>
 			<div class="baker-rights" class:expanded={expandedBakingRights}>
 				<BakerRightsCard
-					mode="past"
-					rights={$bakingRights.past}
+					mode="upcoming"
+					rights={$futureBakingRights}
 					{showBakerColors}
-					title="Past Baking Rights"
+					title="Upcoming Baking Rights"
 				/>
 			</div>
 		{/if}
@@ -75,24 +80,10 @@
 	.dashboard-grid
 		display: grid
 		grid-column: 2
-		grid-template-columns: minmax(450px, 1fr) minmax(450px, 1fr) minmax(450px, 1fr)
+		grid-template-columns: repeat(auto-fill, minmax(450px, 1fr))
 		gap: var(--spacing)
 
 		.baker-rights
 			display: grid
 			grid-template-rows: 1fr
-
-		.baker-rights.expanded
-			grid-column: 1/-1
-
-@media (max-width: 1400px)
-	.dashboard-grid
-		grid-template-columns: minmax(450px, 1fr) minmax(450px, 1fr) !important
-
-
-@media (max-width: 900px) 
-	.dashboard-grid
-		grid-template-columns: minmax(450px, 1fr) !important
-		
-
 </style>

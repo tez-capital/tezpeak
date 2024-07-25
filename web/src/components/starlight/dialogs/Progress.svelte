@@ -1,5 +1,5 @@
 <script lang="ts">
-	import OverlayDialog from '../components/OverlayDialog.svelte';
+	import OverlayDialog from './Overlay.svelte';
 	import Card from '@components/starlight/components/Card.svelte';
 	import ProgressBar from '../components/ProgressBar.svelte';
 	import type { ProgressValue } from '../types';

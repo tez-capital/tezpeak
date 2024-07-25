@@ -1,4 +1,5 @@
 import { EmptyTezpayInfo, type PayoutBlueprint, type TezpayInfo } from "@src/common/types/tezpay"
+import { readBody } from "@src/util/fetch"
 
 export async function getTezpayInfo() {
 	try {
@@ -35,32 +36,7 @@ export async function generatePayuts(cycle: number | undefined, cb: (message: st
 		throw new Error(response.statusText)
 	}
 
-	const reader = response.body?.getReader();
-	if (!reader) {
-		throw new Error('No reader')
-	}
-	const decoder = new TextDecoder('utf-8');
-	let buffer = '';
-
-
-	for (;;) {
-		const { done, value } = await reader.read();
-		if (done) {
-			if (buffer.length > 0) {
-				console.log(`Received chunk: ${buffer}`);
-			}
-			break;
-		}
-
-		buffer += decoder.decode(value, { stream: true });
-
-		let newlineIndex;
-		while ((newlineIndex = buffer.indexOf('\n')) > -1) {
-			const line = buffer.slice(0, newlineIndex + 1).trim();
-			buffer = buffer.slice(newlineIndex + 1);
-			cb(line);
-		}
-	}
+	return await readBody(response, cb)
 }
 
 export async function executePayuts(blueprint: PayoutBlueprint, cb: (message: string) => void, dry?: boolean) {
@@ -85,7 +61,7 @@ export async function executePayuts(blueprint: PayoutBlueprint, cb: (message: st
 	let buffer = '';
 
 
-	for (;;) {
+	for (; ;) {
 		const { done, value } = await reader.read();
 		if (done) {
 			if (buffer.length > 0) {
@@ -121,7 +97,7 @@ export async function startContinual() {
 		method: 'GET',
 	})
 
-	
+
 	if (response.status !== 200) {
 		const body = await response.text()
 		console.log(body)
@@ -130,25 +106,50 @@ export async function startContinual() {
 }
 
 export async function listReports(dry?: boolean) {
-	const reponse = await fetch(`/api/tezpay/list-reports?dry=${dry === true}`, {
+	const response = await fetch(`/api/tezpay/list-reports?dry=${dry === true}`, {
 		method: 'GET',
 	})
 
-	if (reponse.status !== 200) {
+	if (response.status !== 200) {
 		throw new Error('Failed to list reports')
 	}
 
-	return await reponse.json() as Array<string>
+	return await response.json() as Array<string>
 }
 
 export async function getReport(report: string, dry?: boolean) {
-	const reponse = await fetch(`/api/tezpay/report?id=${report}&dry=${dry === true}`, {
+	const response = await fetch(`/api/tezpay/report?id=${report}&dry=${dry === true}`, {
 		method: 'GET',
 	})
 
-	if (reponse.status !== 200) {
+	if (response.status !== 200) {
 		throw new Error('Failed to get report')
 	}
 
-	return await reponse.json()
+	return await response.json()
+}
+
+export async function testNotify(notificator = 'all', cb: (message: string) => void) {
+	const query = notificator === "all" ? "" : `notificator=${notificator}`
+	const response = await fetch(`/api/tezpay/test-notify?${query}`, {
+		method: 'POST',
+	})
+
+	if (response.status !== 200) {
+		throw new Error(response.statusText)
+	}
+
+	return await readBody(response, cb)
+}
+
+export async function testExtensions(cb: (message: string) => void) {
+	const response = await fetch(`/api/tezpay/test-extensions`, {
+		method: 'POST',
+	})
+
+	if (response.status !== 200) {
+		throw new Error(response.statusText)
+	}
+
+	return await readBody(response, cb)
 }

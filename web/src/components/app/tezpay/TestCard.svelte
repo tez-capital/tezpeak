@@ -5,8 +5,8 @@
 	import Button from '../../starlight/components/Button.svelte';
 
 	const dispatch = createEventDispatcher<{
-		preview: void;
-		pay: void;
+		test_notifications: void;
+		test_extensions: void;
 	}>();
 </script>
 
@@ -19,8 +19,8 @@
 			<Separator />
 
 			<div class="tools">
-				<Button on:click={() => dispatch('preview')}>Notifications</Button>
-				<Button on:click={() => dispatch('pay')}>Extensions</Button>
+				<Button on:click={() => dispatch('test_notifications')}>Notifications</Button>
+				<Button on:click={() => dispatch('test_extensions')}>Extensions</Button>
 			</div>
 		</div>
 	</Card>
@@ -44,7 +44,7 @@
 
 .test
 	display: grid
-	grid-template-rows: auto auto auto auto 1fr
+	grid-template-rows: auto auto 1fr
 	height: 100%
 	gap: var(--spacing)
 	.title

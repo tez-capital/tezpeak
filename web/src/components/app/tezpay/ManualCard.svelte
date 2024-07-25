@@ -38,12 +38,12 @@
 					bind:value={cycle}
 				/>
 				<!-- <Button on:click={() => dispatch('preview')}>PREVIEW</Button> -->
-				<div class="pay-btn" class:disabled={!isValidCycle}>
-					<Button on:click={() => dispatch('pay', cycle)}>Pay</Button>
-				</div>
 			</div>
-			<Separator />
 			<div class="note">NOTE: You will be prompted for a confirmation 😉</div>
+			<Separator />
+			<div class="pay-btn" class:disabled={!isValidCycle}>
+				<Button on:click={() => dispatch('pay', cycle)}>Pay</Button>
+			</div>
 		</div>
 	</Card>
 </div>
@@ -89,6 +89,7 @@
 		display: flex
 		justify-content: center
 		align-items: center
+		font-size: 0.9rem
 
 	.pay-btn
 		width: 100%

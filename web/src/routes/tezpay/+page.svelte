@@ -3,6 +3,8 @@
 	import Button from '@components/starlight/components/Button.svelte';
 	import AlertDialog from '@components/starlight/dialogs/Alert.svelte';
 	import ProgressDialog from '@components/starlight/dialogs/Progress.svelte';
+	import SelectDialog from '@components/starlight/dialogs/Select.svelte';
+	import TerminalDialog from '@components/starlight/dialogs/Terminal.svelte';
 
 	import ManualCard from '@src/components/app/tezpay/ManualCard.svelte';
 	import TestCard from '@src/components/app/tezpay/TestCard.svelte';
@@ -10,16 +12,24 @@
 	import PayoutDialog from '@components/app/tezpay/PayoutDialog.svelte';
 	import HomeIcon from '@components/la/icons/home-solid.svelte';
 	import ScrollIcon from '@components/la/icons/scroll-solid.svelte';
-	import { getTezpayInfo, startContinual, stopContinual } from '@src/app/tezpay/client';
+	import {
+		getTezpayInfo,
+		startContinual,
+		stopContinual,
+		testExtensions,
+		testNotify
+	} from '@src/app/tezpay/client';
 
-	import { services, wallet } from '@src/app/state/tezpay';
 	import { onMount } from 'svelte';
 	import { EmptyTezpayInfo, type TezpayInfo } from '@src/common/types/tezpay';
+	import { formatLogMessageForTerminal } from '@src/util/log';
 
 	let info: TezpayInfo = EmptyTezpayInfo;
 	let payoutDialog: PayoutDialog;
 	let alertDialog: AlertDialog;
 	let progressDialog: ProgressDialog;
+	let selectDialog: SelectDialog;
+	let terminalDialog: TerminalDialog;
 
 	onMount(async () => {
 		info = await getTezpayInfo();
@@ -58,6 +68,46 @@
 			progressDialog.hide();
 		}
 	}
+
+	async function test_notify() {
+		const { configuration } = await getTezpayInfo();
+		const notificators = new Set((configuration?.notifications ?? []).map((x) => x.type));
+
+		const result = await selectDialog.prompt({
+			title: 'Select Notificator',
+			message: 'Select through which notificator you want to send test notifications',
+			options: [...notificators, 'all'],
+			value: 'all',
+			confirmText: 'Send',
+			cancelText: 'Cancel'
+		});
+
+		terminalDialog.show({
+			title: `Test Notifications - ${result}`,
+			allowClose: false
+		});
+		try {
+			await testNotify(result, (msg) => {
+				terminalDialog.write(formatLogMessageForTerminal(msg));
+			});
+		} finally {
+			terminalDialog.update_state({ allowClose: true });
+		}
+	}
+
+	async function test_extensions() {
+		terminalDialog.show({
+			title: `Test Extensions`,
+			allowClose: false
+		});
+		try {
+			await testExtensions((msg) => {
+				terminalDialog.write(formatLogMessageForTerminal(msg));
+			});
+		} finally {
+			terminalDialog.update_state({ allowClose: true });
+		}
+	}
 </script>
 
 <div class="dashboard-grid-wrap">
@@ -72,20 +122,12 @@
 	</div>
 	<div class="dashboard-grid">
 		<div class="info-card">
-			<InfoCard
-				{info}
-				wallet={$wallet}
-				services={$services}
-				phase="waitinforcycle"
-				on:start={start}
-				on:stop={stop}
-			/>
+			<InfoCard phase="" on:start={start} on:stop={stop} />
 		</div>
 		<!-- <AutomaticCard services={$services}  /> -->
 		<ManualCard on:pay={(e) => payoutDialog.generate(e.detail)} />
-		<div class="disabled">
-			<TestCard />
-		</div>
+		<TestCard on:test_extensions={test_extensions} on:test_notifications={test_notify} />
+
 		<!-- <div class="terminal-card">
 			<Terminal bind:this={terminal} />
 		</div> -->
@@ -93,6 +135,8 @@
 	<PayoutDialog bind:this={payoutDialog} />
 	<ProgressDialog bind:this={progressDialog} />
 	<AlertDialog bind:this={alertDialog} />
+	<SelectDialog bind:this={selectDialog} />
+	<TerminalDialog bind:this={terminalDialog} />
 </div>
 
 <style lang="sass">
@@ -107,7 +151,7 @@
 	.dashboard-grid
 		display: grid
 		grid-column: 2
-		grid-template-columns: minmax(450px, 1fr) minmax(450px, 1fr) minmax(450px, 1fr)
+		grid-template-columns:  repeat(auto-fill, minmax(450px, 1fr))
 		gap: var(--spacing)
 
 
@@ -125,11 +169,4 @@
 			fill: var(--text-color)
 			wdith: 30px
 			height: 30px
-
-.info-card
-	grid-row: 1/3
-
-.terminal-card
-	// width: 200px
-	// height: 200px
 </style>

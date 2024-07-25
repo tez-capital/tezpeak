@@ -12,10 +12,6 @@ import (
 	"github.com/trilitech/tzgo/tezos"
 )
 
-var (
-	rightsChannel = make(chan *RightsStatus, 100)
-)
-
 type BlockRights struct {
 	Level           int64            `json:"level"`
 	Rights          map[string][]int `json:"rights"`
@@ -279,7 +275,6 @@ func startRightsStatusProviders(ctx context.Context, bakers []string, blockWindo
 				status.Level = block.Level
 				status.Rights = newRights
 
-				rightsChannel <- &status
 				statusChannel <- &RightsStatusUpdate{
 					Status: status,
 				}

@@ -87,7 +87,10 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.App) error {
 		}
 
 		var configuration map[string]interface{}
-		hjson.Unmarshal([]byte(configurationString), &configuration)
+		err = hjson.Unmarshal([]byte(configurationString), &configuration)
+		if err != nil {
+			slog.Error("failed to parse configuration", "error", err.Error())
+		}
 
 		return c.JSON(map[string]interface{}{
 			"version":       versions,
@@ -196,10 +199,12 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.App) error {
 		c.Set("Connection", "keep-alive")
 		c.Set("Transfer-Encoding", "chunked")
 
+		notificator := c.Query("notificator")
+
 		c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
 			outputChannel := make(chan string)
 
-			go tezpayProvider.TestNotify(c.Query("notificator"), outputChannel)
+			go tezpayProvider.TestNotify(notificator, outputChannel)
 
 			for output := range outputChannel {
 				fmt.Fprintf(w, "%v\n", output)

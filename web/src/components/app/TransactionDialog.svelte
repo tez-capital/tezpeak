@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Card from '@src/components/starlight/components/Card.svelte';
-	import OverlayDialog from '@components/starlight/components/OverlayDialog.svelte';
+	import OverlayDialog from '@src/components/starlight/dialogs/Overlay.svelte';
 	import Button from '@components/starlight/components/Button.svelte';
 	import ProgressBar from '@src/components/starlight/components/ProgressBar.svelte';
 	import Separator from './Separator.svelte';

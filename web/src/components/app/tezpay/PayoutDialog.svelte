@@ -1,5 +1,5 @@
 <script lang="ts">
-	import OverlayDialog from '@components/starlight/components/OverlayDialog.svelte';
+	import OverlayDialog from '@src/components/starlight/dialogs/Overlay.svelte';
 	import Card from '@components/starlight/components/Card.svelte';
 	import Terminal from '@components/starlight/components/Terminal.svelte';
 	import Button from '@components/starlight/components/Button.svelte';
