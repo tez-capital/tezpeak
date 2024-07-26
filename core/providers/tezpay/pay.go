@@ -19,6 +19,7 @@ import (
 	"github.com/tez-capital/tezbake/apps/pay"
 	"github.com/tez-capital/tezpay/common"
 	"github.com/tez-capital/tezpeak/configuration"
+	peakCommon "github.com/tez-capital/tezpeak/core/common"
 )
 
 /* TODO:
@@ -252,7 +253,7 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.App) error {
 	})
 
 	app.Get("/api/tezpay/stop-continual", func(c *fiber.Ctx) error {
-		err := tezpayProvider.StartContinualPayouts()
+		err := tezpayProvider.StopContinualPayouts()
 		if err != nil {
 			return c.Status(500).SendString("failed to stop service: " + err.Error())
 		}
@@ -497,6 +498,7 @@ func (t *TezpayProvider) GetReport(reportName string, dry bool) (*PayoutReport, 
 }
 
 func (t *TezpayProvider) StopContinualPayouts() error {
+	defer peakCommon.UpdateServiceStatus(t.tezpay.GetPath())
 	exitCode, err := t.tezpay.Stop()
 	if err != nil {
 		return err
@@ -508,6 +510,7 @@ func (t *TezpayProvider) StopContinualPayouts() error {
 }
 
 func (t *TezpayProvider) StartContinualPayouts() error {
+	defer peakCommon.UpdateServiceStatus(t.tezpay.GetPath())
 	exitCode, err := t.tezpay.Start()
 	if err != nil {
 		return err

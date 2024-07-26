@@ -35,7 +35,9 @@
 			<div class="payouts-info">
 				<div class="row" />
 				<div class="property">Automatic Payouts:</div>
-				{#if isTezpayRunning}
+				{#if !hasTezpayStatus}
+					<div class="value automatic-payouts-status warn">UNKNOWN</div>
+				{:else if isTezpayRunning}
 					<div class="value automatic-payouts-status ok">ACTIVE</div>
 				{:else}
 					<div class="value automatic-payouts-status warn">INACTIVE</div>
@@ -54,15 +56,13 @@
 				<div class="row" />
 			</div>
 			<Separator />
-			{#if hasTezpayStatus}
-				<div class="tools">
-					{#if isTezpayRunning}
-						<Button on:click={() => dispatch('stop')}>STOP</Button>
-					{:else}
-						<Button on:click={() => dispatch('start')}>START</Button>
-					{/if}
-				</div>
-			{/if}
+			<div class="tools" class:disabled={!hasTezpayStatus}>
+				{#if isTezpayRunning}
+					<Button on:click={() => dispatch('stop')}>STOP</Button>
+				{:else}
+					<Button on:click={() => dispatch('start')}>START</Button>
+				{/if}
+			</div>
 		</div>
 	</Card>
 </div>
