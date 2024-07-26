@@ -67,8 +67,12 @@ type TezpayVersion struct {
 	Tezpay    string `json:"tezpay"`
 }
 
-func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.App) error {
-	app.Get("/api/tezpay/info", func(c *fiber.Ctx) error {
+func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.Group) error {
+	app.Get("/tezpay/can-pay", func(c *fiber.Ctx) error {
+		return c.JSON(tezpayProvider.CanPay())
+	})
+
+	app.Get("/tezpay/info", func(c *fiber.Ctx) error {
 		version, err := tezpayProvider.Version()
 		if err != nil {
 			slog.Error("failed to get version", "error", err.Error())
@@ -99,7 +103,11 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.App) error {
 		})
 	})
 
-	app.Get("/api/tezpay/generate-payouts", func(c *fiber.Ctx) error {
+	app.Get("/tezpay/generate-payouts", func(c *fiber.Ctx) error {
+		if !tezpayProvider.CanPay() {
+			return c.Status(fiber.StatusForbidden).SendString("not allowed")
+		}
+
 		c.Set("Content-Type", "text/event-stream")
 		c.Set("Cache-Control", "no-cache")
 		c.Set("Connection", "keep-alive")
@@ -127,7 +135,10 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.App) error {
 		return nil
 	})
 
-	app.Post("/api/tezpay/pay", func(c *fiber.Ctx) error {
+	app.Post("/tezpay/pay", func(c *fiber.Ctx) error {
+		if !tezpayProvider.CanPay() {
+			return c.Status(fiber.StatusForbidden).SendString("not allowed")
+		}
 		c.Set("Content-Type", "text/event-stream")
 		c.Set("Cache-Control", "no-cache")
 		c.Set("Connection", "keep-alive")
@@ -154,7 +165,7 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.App) error {
 		return nil
 	})
 
-	app.Get("/api/tezpay/statistics", func(c *fiber.Ctx) error {
+	app.Get("/tezpay/statistics", func(c *fiber.Ctx) error {
 		c.Set("Content-Type", "text/event-stream")
 		c.Set("Cache-Control", "no-cache")
 		c.Set("Connection", "keep-alive")
@@ -194,7 +205,10 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.App) error {
 		return nil
 	})
 
-	app.Post("/api/tezpay/test-notify", func(c *fiber.Ctx) error {
+	app.Post("/tezpay/test-notify", func(c *fiber.Ctx) error {
+		if !tezpayProvider.CanPay() {
+			return c.Status(fiber.StatusForbidden).SendString("not allowed")
+		}
 		c.Set("Content-Type", "text/event-stream")
 		c.Set("Cache-Control", "no-cache")
 		c.Set("Connection", "keep-alive")
@@ -215,7 +229,10 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.App) error {
 		return nil
 	})
 
-	app.Post("/api/tezpay/test-extensions", func(c *fiber.Ctx) error {
+	app.Post("/tezpay/test-extensions", func(c *fiber.Ctx) error {
+		if !tezpayProvider.CanPay() {
+			return c.Status(fiber.StatusForbidden).SendString("not allowed")
+		}
 		c.Set("Content-Type", "text/event-stream")
 		c.Set("Cache-Control", "no-cache")
 		c.Set("Connection", "keep-alive")
@@ -234,7 +251,7 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.App) error {
 		return nil
 	})
 
-	app.Get("/api/tezpay/list-reports", func(c *fiber.Ctx) error {
+	app.Get("/tezpay/list-reports", func(c *fiber.Ctx) error {
 		reports, err := tezpayProvider.ListReports(c.Query("dry") == "true")
 		if err != nil {
 			return c.Status(500).SendString("failed to list reports")
@@ -243,7 +260,7 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.App) error {
 		return c.JSON(reports)
 	})
 
-	app.Get("/api/tezpay/report", func(c *fiber.Ctx) error {
+	app.Get("/tezpay/report", func(c *fiber.Ctx) error {
 		report, err := tezpayProvider.GetReport(c.Query("id"), c.Query("dry") == "true")
 		if err != nil {
 			return c.Status(500).SendString("failed to get report")
@@ -252,7 +269,10 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.App) error {
 		return c.JSON(report)
 	})
 
-	app.Get("/api/tezpay/stop-continual", func(c *fiber.Ctx) error {
+	app.Get("/tezpay/stop-continual", func(c *fiber.Ctx) error {
+		if !tezpayProvider.CanPay() {
+			return c.Status(fiber.StatusForbidden).SendString("not allowed")
+		}
 		err := tezpayProvider.StopContinualPayouts()
 		if err != nil {
 			return c.Status(500).SendString("failed to stop service: " + err.Error())
@@ -260,7 +280,10 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.App) error {
 		return c.Status(200).SendString("service stopped")
 	})
 
-	app.Get("/api/tezpay/start-continual", func(c *fiber.Ctx) error {
+	app.Get("/tezpay/start-continual", func(c *fiber.Ctx) error {
+		if !tezpayProvider.CanPay() {
+			return c.Status(fiber.StatusForbidden).SendString("not allowed")
+		}
 		err := tezpayProvider.StartContinualPayouts()
 		if err != nil {
 			return c.Status(500).SendString("failed to start service: " + err.Error())
@@ -271,7 +294,7 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.App) error {
 	return nil
 }
 
-func setupTezpayProvider(configuration *configuration.TezpayModuleConfiguration, app *fiber.App) error {
+func setupTezpayProvider(configuration *configuration.TezpayModuleConfiguration, app *fiber.Group) error {
 	tezpayPath, ok := configuration.Applications["tezpay"]
 	if !ok {
 		return errors.New("tezpay path not found in configuration")
@@ -528,4 +551,8 @@ func (t *TezpayProvider) GetTezpayConfiguration() (string, error) {
 		return "{}", err
 	}
 	return string(configurationBytes), nil
+}
+
+func (t *TezpayProvider) CanPay() bool {
+	return t.configuration.Mode == configuration.PrivatePeakMode
 }

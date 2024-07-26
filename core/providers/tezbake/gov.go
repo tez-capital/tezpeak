@@ -349,12 +349,12 @@ func (governanceProvider *GovernanceProvider) WaitConfirmation(ctx context.Conte
 	return result, err
 }
 
-func (governanceProvider *GovernanceProvider) RegisterApi(app *fiber.App) error {
-	app.Get("/api/governance/can-vote", func(c *fiber.Ctx) error {
+func (governanceProvider *GovernanceProvider) RegisterApi(app *fiber.Group) error {
+	app.Get("/governance/can-vote", func(c *fiber.Ctx) error {
 		return c.JSON(governanceProvider.CanVote())
 	})
 
-	app.Get("/api/governance/period-detail", func(c *fiber.Ctx) error {
+	app.Get("/governance/period-detail", func(c *fiber.Ctx) error {
 		if !governanceProvider.CanVote() {
 			return c.Status(403).SendString("not allowed")
 		}
@@ -367,7 +367,7 @@ func (governanceProvider *GovernanceProvider) RegisterApi(app *fiber.App) error 
 		return c.JSON(periodInfo)
 	})
 
-	app.Get("/api/governance/available-pkhs", func(c *fiber.Ctx) error {
+	app.Get("/governance/available-pkhs", func(c *fiber.Ctx) error {
 		if !governanceProvider.CanVote() {
 			return c.Status(403).SendString("not allowed")
 		}
@@ -379,7 +379,7 @@ func (governanceProvider *GovernanceProvider) RegisterApi(app *fiber.App) error 
 		return c.JSON(pkhs)
 	})
 
-	app.Post("/api/governance/vote", func(c *fiber.Ctx) error {
+	app.Post("/governance/vote", func(c *fiber.Ctx) error {
 		if !governanceProvider.CanVote() {
 			return c.Status(403).SendString("not allowed")
 		}
@@ -397,7 +397,7 @@ func (governanceProvider *GovernanceProvider) RegisterApi(app *fiber.App) error 
 		return c.JSON(opHash)
 	})
 
-	app.Post("/api/governance/upvote", func(c *fiber.Ctx) error {
+	app.Post("/governance/upvote", func(c *fiber.Ctx) error {
 		if !governanceProvider.CanVote() {
 			return c.Status(403).SendString("not allowed")
 		}
@@ -417,7 +417,7 @@ func (governanceProvider *GovernanceProvider) RegisterApi(app *fiber.App) error 
 		return c.JSON(opHash)
 	})
 
-	app.Post("/api/governance/wait-for-apply", func(c *fiber.Ctx) error {
+	app.Post("/governance/wait-for-apply", func(c *fiber.Ctx) error {
 		if !governanceProvider.CanVote() {
 			return c.Status(403).SendString("not allowed")
 		}
@@ -440,7 +440,7 @@ func (governanceProvider *GovernanceProvider) RegisterApi(app *fiber.App) error 
 	return nil
 }
 
-func setupGovernanceProvider(configuration *configuration.TezbakeModuleConfiguration, app *fiber.App) error {
+func setupGovernanceProvider(configuration *configuration.TezbakeModuleConfiguration, app *fiber.Group) error {
 	provider := &GovernanceProvider{
 		configuration: configuration,
 		signerUrl:     configuration.SignerUrl,

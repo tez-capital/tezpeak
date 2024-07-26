@@ -94,7 +94,7 @@ func createModuleStatusChannel(id string, statusChannel chan<- common.ModuleStat
 	return moduleStatusChannel
 }
 
-func registerStatusEndpoint(app *fiber.App) {
+func registerStatusEndpoint(app *fiber.Group) {
 	app.Get("/sse", func(c *fiber.Ctx) error {
 		c.Set("Content-Type", "text/event-stream")
 		c.Set("Cache-Control", "no-cache")
@@ -199,7 +199,7 @@ func runStatusUpdatesProcessing(moduleStatusChannel <-chan common.ModuleStatusUp
 	}
 }
 
-func Run(ctx context.Context, config *configuration.Runtime, app *fiber.App) error {
+func Run(ctx context.Context, config *configuration.Runtime, app *fiber.Group) error {
 	status.Id = config.Id
 	registerStatusEndpoint(app)
 

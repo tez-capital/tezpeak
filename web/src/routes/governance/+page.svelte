@@ -346,7 +346,7 @@
 		gap: var(--spacing)
 		:global(svg)
 			fill: var(--text-color)
-			wdith: 30px
+			width: 30px
 			height: 30px
 
 .error-message

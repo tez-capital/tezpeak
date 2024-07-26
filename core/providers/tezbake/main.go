@@ -45,7 +45,7 @@ func GetEmptyStatus() *Status {
 	}
 }
 
-func SetupModule(ctx context.Context, configuration *configuration.TezbakeModuleConfiguration, app *fiber.App, statusChannel chan<- common.StatusUpdatedReport) error {
+func SetupModule(ctx context.Context, configuration *configuration.TezbakeModuleConfiguration, app *fiber.Group, statusChannel chan<- common.StatusUpdatedReport) error {
 	err := setupGovernanceProvider(configuration, app)
 	if err != nil {
 		return err

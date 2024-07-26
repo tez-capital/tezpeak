@@ -31,7 +31,7 @@ func GetEmptyStatus() *Status {
 	}
 }
 
-func SetupModule(ctx context.Context, configuration *configuration.TezpayModuleConfiguration, app *fiber.App, statusChannel chan<- common.StatusUpdatedReport) error {
+func SetupModule(ctx context.Context, configuration *configuration.TezpayModuleConfiguration, app *fiber.Group, statusChannel chan<- common.StatusUpdatedReport) error {
 	err := setupTezpayProvider(configuration, app)
 	if err != nil {
 		return err

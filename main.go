@@ -23,6 +23,20 @@ type Message struct {
 //go:embed web/dist/*
 var staticFiles embed.FS
 
+type staticFs struct {
+	http.FileSystem
+}
+
+func (c staticFs) Open(name string) (http.File, error) {
+	// try to open .html file first, because filesystem middleware forbids to open folders
+	// but we want to provide html if it exists when user tries to access path like /tezpay
+	f, err := c.FileSystem.Open(name + ".html")
+	if err != nil {
+		return c.FileSystem.Open(name)
+	}
+	return f, nil
+}
+
 func main() {
 	logLevelFlag := flag.String("log-level", "info", "Log level")
 	versionFlag := flag.Bool("version", false, "Print version and exit")
@@ -40,14 +54,18 @@ func main() {
 	}
 
 	app := fiber.New()
+	group, ok := app.Group("/api").(*fiber.Group)
+	if !ok {
+		panic("failed to create api group")
+	}
 
-	err = core.Run(context.Background(), config, app)
+	err = core.Run(context.Background(), config, group)
 	if err != nil {
 		panic(err)
 	}
 
 	app.Use("/", filesystem.New(filesystem.Config{
-		Root:         http.FS(staticFiles),
+		Root:         staticFs{http.FS(staticFiles)},
 		Index:        "index.html",
 		NotFoundFile: "/web/dist/index.html",
 		PathPrefix:   "/web/dist",
