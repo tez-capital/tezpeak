@@ -5,12 +5,14 @@
 	import Button from '@components/starlight/components/Button.svelte';
 	import Input from '@components/starlight/components/Input.svelte';
 	import type { ValidationRules } from '@src/components/starlight/types';
+	import CheckBox from '@src/components/starlight/components/CheckBox.svelte';
 
 	const dispatch = createEventDispatcher<{
-		pay: number | 'latest';
+		pay: { cycle: number | 'latest'; dry: boolean };
 	}>();
 
 	let cycle: number | 'latest' = 'latest';
+	let dryRun = false;
 
 	const cycleValidationRules: ValidationRules<number | string> = [
 		(v) => !!v || "cycle number has to be a number or 'latest'",
@@ -37,12 +39,17 @@
 					rules={cycleValidationRules}
 					bind:value={cycle}
 				/>
+				<div class="dry-run-wrap">
+					<div class="dry-run">
+						<CheckBox label="Dry Run" bind:checked={dryRun} />
+					</div>
+				</div>
 				<!-- <Button on:click={() => dispatch('preview')}>PREVIEW</Button> -->
 			</div>
 			<div class="note">NOTE: You will be prompted for a confirmation 😉</div>
 			<Separator />
 			<div class="pay-btn" class:disabled={!isValidCycle}>
-				<Button on:click={() => dispatch('pay', cycle)}>Pay</Button>
+				<Button on:click={() => dispatch('pay', { cycle, dry: dryRun })}>Pay</Button>
 			</div>
 		</div>
 	</Card>
@@ -83,7 +90,14 @@
 		justify-content: center
 		align-items: center
 		height: 100%
-		gap: var(--spacing)
+		
+		.dry-run-wrap
+			display: flex
+			align-items: center
+			justify-content: end
+			width: 100%
+			margin-bottom: var(--spacing)
+			margin-right: var(--spacing-x2)
 
 	.note
 		display: flex

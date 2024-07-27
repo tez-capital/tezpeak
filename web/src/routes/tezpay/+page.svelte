@@ -125,7 +125,7 @@
 			<InfoCard phase="" on:start={start} on:stop={stop} />
 		</div>
 		<!-- <AutomaticCard services={$services}  /> -->
-		<ManualCard on:pay={(e) => payoutDialog.generate(e.detail)} />
+		<ManualCard on:pay={({ detail: { cycle, dry } }) => payoutDialog.generate(cycle, dry)} />
 		<TestCard on:test_extensions={test_extensions} on:test_notifications={test_notify} />
 
 		<!-- <div class="terminal-card">

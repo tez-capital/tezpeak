@@ -26,6 +26,7 @@
 	let phase = 'Generating payouts...';
 	let error: string | undefined = undefined;
 	let stage: 'generate' | 'execute' = 'generate';
+	let dry = false;
 
 	let isOpen = false;
 	let generatedPayouts: PayoutBlueprint | undefined = undefined;
@@ -77,30 +78,37 @@
 		{ name: 'fee', getValue: (item) => formatBalance(item.fee) }
 	];
 
-	export async function generate(c: number | 'latest') {
+	export async function generate(c: number | 'latest', dryRun: boolean = false) {
 		isOpen = true;
 		cycle = c;
 		phase = 'Generating payouts...';
 		stage = 'generate';
+		dry = dryRun;
+		terminal.clear();
+
 		let executionResult: ExecutionResult | undefined = undefined;
 		// undefined is latest
 		try {
-			await generatePayuts(cycle === 'latest' ? undefined : cycle, (msg) => {
-				const event = JSON.parse(msg) as LogMessage;
-				if (event.phase) {
-					const k = event.phase as keyof typeof PHASE_MAPPING;
-					phase = PHASE_MAPPING[k] ?? event.phase;
-				}
-				if (event.phase === 'result') {
-					generatedPayouts = (event as { cycle_payout_blueprint?: PayoutBlueprint })
-						.cycle_payout_blueprint;
-				}
-				if (event.phase !== 'execution_finished') {
-					terminal.write(formatLogMessageForTerminal(event));
-				} else {
-					executionResult = event as unknown as ExecutionResult;
-				}
-			});
+			await generatePayuts(
+				cycle === 'latest' ? undefined : cycle,
+				(msg) => {
+					const event = JSON.parse(msg) as LogMessage;
+					if (event.phase) {
+						const k = event.phase as keyof typeof PHASE_MAPPING;
+						phase = PHASE_MAPPING[k] ?? event.phase;
+					}
+					if (event.phase === 'result') {
+						generatedPayouts = (event as { cycle_payout_blueprint?: PayoutBlueprint })
+							.cycle_payout_blueprint;
+					}
+					if (event.phase !== 'execution_finished') {
+						terminal.write(formatLogMessageForTerminal(event));
+					} else {
+						executionResult = event as unknown as ExecutionResult;
+					}
+				},
+				dry
+			);
 			//@ts-ignore
 			const exitCode = executionResult?.exit_code;
 			if (exitCode !== 0) {
@@ -153,63 +161,66 @@
 
 		let executionResult: ExecutionResult | undefined = undefined;
 		try {
-			await executePayuts(blueprint, (msg) => {
-				const event = JSON.parse(msg) as LogMessage;
-				if (event.phase) {
-					const k = event.phase as keyof typeof PHASE_MAPPING;
-					phase = PHASE_MAPPING[k] ?? event.phase;
-					// TODO: improve, do not use any
-					const data = event as any;
-					console.log(event.phase, event);
-					switch (event.phase) {
-						case 'executing_batch':
-							if (batchStore[data.batch_id] === undefined) {
-								batchStore[data.batch_id] = true;
-								batches = [
-									...batches,
-									{
-										id: data.batch_id,
-										recipes: data.recipes,
-										status: 'executing...',
-										hash: ''
-									}
-								];
-								///batches.push(batchStore[data.id]);
-							}
-						case 'batch_waiting_for_confirmation':
-							batches = batches.map((x) => {
-								if (x.id === data.batch_id) {
-									return { ...x, status: 'waiting for confirmation', hash: data.op_hash };
+			await executePayuts(
+				blueprint,
+				(msg) => {
+					const event = JSON.parse(msg) as LogMessage;
+					if (event.phase) {
+						const k = event.phase as keyof typeof PHASE_MAPPING;
+						phase = PHASE_MAPPING[k] ?? event.phase;
+						// TODO: improve, do not use any
+						const data = event as any;
+						switch (event.phase) {
+							case 'executing_batch':
+								if (batchStore[data.batch_id] === undefined) {
+									batchStore[data.batch_id] = true;
+									batches = [
+										...batches,
+										{
+											id: data.batch_id,
+											recipes: data.recipes,
+											status: 'executing...',
+											hash: ''
+										}
+									];
+									///batches.push(batchStore[data.id]);
 								}
-								return x;
-							});
-							break;
-						case 'batch_execution_finished':
-							if (data.error) {
+							case 'batch_waiting_for_confirmation':
 								batches = batches.map((x) => {
 									if (x.id === data.batch_id) {
-										return { ...x, status: 'error' };
+										return { ...x, status: 'waiting for confirmation', hash: data.op_hash };
 									}
 									return x;
 								});
-							} else {
-								batches = batches.map((x) => {
-									if (x.id === data.batch_id) {
-										return { ...x, status: 'success' };
-									}
-									return x;
-								});
-							}
-							break;
+								break;
+							case 'batch_execution_finished':
+								if (data.error) {
+									batches = batches.map((x) => {
+										if (x.id === data.batch_id) {
+											return { ...x, status: 'error' };
+										}
+										return x;
+									});
+								} else {
+									batches = batches.map((x) => {
+										if (x.id === data.batch_id) {
+											return { ...x, status: 'success' };
+										}
+										return x;
+									});
+								}
+								break;
+						}
 					}
-				}
 
-				if (event.phase !== 'execution_finished') {
-					terminal.write(formatLogMessageForTerminal(event));
-				} else {
-					executionResult = event as unknown as ExecutionResult;
-				}
-			});
+					if (event.phase !== 'execution_finished') {
+						terminal.write(formatLogMessageForTerminal(event));
+					} else {
+						executionResult = event as unknown as ExecutionResult;
+					}
+				},
+				dry
+			);
 			//@ts-ignore
 			const exitCode = executionResult?.exit_code;
 			if (exitCode !== 0) {
@@ -264,6 +275,8 @@
 					{/if}
 					{#if batches.length > 0}
 						<DataTable data={batches} columns={batchColumns}></DataTable>
+					{:else if phase === 'execution_finished' && !error}
+						<div class="title">Nothing to pay out.</div>
 					{/if}
 				{:else if stage === 'generate'}
 					{#if phase !== 'execution_finished'}
