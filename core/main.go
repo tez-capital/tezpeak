@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
-	"sync/atomic"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -19,12 +18,30 @@ import (
 
 type client struct {
 	channel chan string
-	closed  atomic.Bool
+	closed  bool
+	mtx     sync.RWMutex
 }
 
 func (c *client) Close() {
-	c.closed.Store(true)
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	c.closed = true
 	close(c.channel)
+}
+
+func (c *client) Send(msg string) {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
+	if c.closed {
+		return
+	}
+	c.channel <- msg
+}
+
+func newClient(statusChannel chan string) *client {
+	return &client{
+		channel: statusChannel,
+	}
 }
 
 type clientStoreBase map[uuid.UUID]*client
@@ -59,9 +76,7 @@ func (c *clientStore) Add(statusChannel chan string) (close func(), err error) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
-	c.clientStoreBase[id] = &client{
-		channel: statusChannel,
-	}
+	c.clientStoreBase[id] = newClient(statusChannel)
 	return func() { c.Remove(id) }, nil
 }
 
@@ -105,9 +120,7 @@ func registerStatusEndpoint(app *fiber.Group) {
 			fmt.Fprintf(w, "data: %v\n\n", status.ToJSONString())
 			w.Flush()
 
-			defer func() {
-				unregisterClient()
-			}()
+			defer unregisterClient()
 
 			for msg := range statusUpdateChannel {
 				if _, err := fmt.Fprintf(w, "data: %v\n\n", msg); err != nil {
@@ -117,24 +130,17 @@ func registerStatusEndpoint(app *fiber.Group) {
 				}
 				w.Flush()
 			}
-
 		})
 
 		return nil
 	})
-
 }
 
 func notifyClients() {
 	serializedStatus := status.ToJSONString()
 
 	clients.Each(func(_ uuid.UUID, c *client) {
-		go func() {
-			if c.closed.Load() {
-				return
-			}
-			c.channel <- serializedStatus
-		}()
+		go c.Send(serializedStatus)
 	})
 }
 
