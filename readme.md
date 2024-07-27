@@ -69,9 +69,7 @@ You can run tezpeak as a standalone server as a binary or on linux as a service 
 
 Refer to the [ami-tezpeak readme](https://github.com/tez-capital/ami-tezpeak) for the installation and usage instructions.
 
-### Configuration
-
-The configuration is stored in `config.hjson` file. The default configuration is:
+### Advanced Configuration
 
 ```hjson
 {
@@ -106,20 +104,20 @@ The configuration is stored in `config.hjson` file. The default configuration is
 	
 	# List of reference nodes to connect to
 	# The reference nodes are used to get the rights and blocks if the baker's node is not available
-	#nodes: {
-	#	"Tezos Foundation": {
-	#		address: https://rpc.tzbeta.net/
-	#		is_rights_provider: true
-	#		is_block_provider: false
-	#	},
-	#	"tzkt": {
-	#		address: https://rpc.tzkt.io/mainnet/
-	#		is_rights_provider: false
-	#		is_block_provider: true
-	#       # reports error if node not available
-	#       is_essential: false
-	#	}
-	#}
+	nodes: {
+		"Tezos Foundation": {
+			address: https://rpc.tzbeta.net/
+			is_rights_provider: true
+			is_block_provider: false
+		},
+		"tzkt": {
+			address: https://rpc.tzkt.io/mainnet/
+			is_rights_provider: false
+			is_block_provider: true
+	       # reports error if node not available, use for baker's node
+	       is_essential: false
+		}
+	}
 	# The mode tezpeak should operate in
 	# auto - if bound to localhost, it will operate in private mode if not, it will operate in public mode
 	# public - assumes public environment, only readonly operations are allowed
