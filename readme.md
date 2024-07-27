@@ -18,7 +18,7 @@ Since tezbake 0.13.0-alpha the tezpeak is natively supported module. You can set
 Sample minimal configuration:
 ```hjson
 {
-	listen: "0.0.0.0:8733"
+    listen: 0.0.0.0:8733
     modules: {
         tezbake: {
             bakers: [
@@ -26,13 +26,14 @@ Sample minimal configuration:
             ]
         }
         tezpay: {
-			payout_wallet: tz1X7U9XxVz6NDxL4DSZhijME61PW45bYUJE
-		}
+            payout_wallet: tz1X7U9XxVz6NDxL4DSZhijME61PW45bYUJE
+        }
     }
 }
 ```
 
 NOTE: you can use only modules you prefer, for example if you don't want to use tezpay, you can remove it from the configuration.
+NOTE 2: tezpay should be 0.17.0 or higher to provide proper experience.
 
 #### Standalone
 
@@ -45,7 +46,7 @@ You can run tezpeak as a standalone server as a binary or on linux as a service 
 - Sample standalone minimal configuration:
 ```hjson
 {
-	listen: "0.0.0.0:8733"
+    listen: 0.0.0.0:8733
     modules: {
         tezbake: {
             applications: null
@@ -55,9 +56,9 @@ You can run tezpeak as a standalone server as a binary or on linux as a service 
         }
 		# tezpay requires ami-tezpay package, it is used to run automatic and manual payouts
         tezpay: {
-			applications: null
-			payout_wallet: tz1X7U9XxVz6NDxL4DSZhijME61PW45bYUJE
-		}
+            applications: null
+            payout_wallet: tz1X7U9XxVz6NDxL4DSZhijME61PW45bYUJE
+        }
     }
 }
 ```
@@ -74,9 +75,9 @@ Refer to the [ami-tezpeak readme](https://github.com/tez-capital/ami-tezpeak) fo
 ```hjson
 {
 	# Id to show in the header
-  	id: ""
+    id: ""
 	# Address to listen on
-  	listen: 127.0.0.1:8733
+    listen: 127.0.0.1:8733
     modules: {
         tezbake: {
 			# uncomment bellow to disable tezbake package monitoring
@@ -88,40 +89,40 @@ Refer to the [ami-tezpeak readme](https://github.com/tez-capital/ami-tezpeak) fo
         }
         tezpay: {
 			# can be null to disable tezpay package monitoring
-			applications: {
+            applications: {
 				# path to tezpay ami package, either absolute or relative to parent directory peak
-				tezpay: tezpay
-			}
-			payout_wallet: tz1X7U9XxVz6NDxL4DSZhijME61PW45bYUJE
+                tezpay: tezpay
+            }
+            payout_wallet: tz1X7U9XxVz6NDxL4DSZhijME61PW45bYUJE
             payout_wallet_preferences: {
                 balance_warning_threshold: 100
                 balance_error_threshold: 50
             }
 			# forces all operations to be dry run
-			force_dry_run: true
-		}
+            force_dry_run: true
+        }
     }
 	
 	# List of reference nodes to connect to
 	# The reference nodes are used to get the rights and blocks if the baker's node is not available
-	nodes: {
-		"Tezos Foundation": {
-			address: https://rpc.tzbeta.net/
-			is_rights_provider: true
-			is_block_provider: false
-		},
-		"tzkt": {
-			address: https://rpc.tzkt.io/mainnet/
-			is_rights_provider: false
-			is_block_provider: true
-	       # reports error if node not available, use for baker's node
-	       is_essential: false
-		}
-	}
+    nodes: {
+        "Tezos Foundation": {
+            address: https://rpc.tzbeta.net/
+            is_rights_provider: true
+            is_block_provider: false
+        }
+        tzkt: {
+            address: https://rpc.tzkt.io/mainnet/
+            is_rights_provider: false
+            is_block_provider: true
+	        # reports error if node not available, use for baker's node
+            is_essential: false
+        }
+    }
 	# The mode tezpeak should operate in
 	# auto - if bound to localhost, it will operate in private mode if not, it will operate in public mode
 	# public - assumes public environment, only readonly operations are allowed
 	# private - assumes private environment, all operations are allowed
-	mode: auto
+    mode: auto
 }
 ``` 
