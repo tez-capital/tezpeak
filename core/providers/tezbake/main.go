@@ -2,6 +2,7 @@ package tezbake
 
 import (
 	"context"
+	"maps"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/tez-capital/tezpeak/configuration"
@@ -9,11 +10,37 @@ import (
 )
 
 type Status struct {
-	Governance GovernanceStatus      `json:"governance,omitempty"`
-	Rights     RightsStatus          `json:"rights,omitempty"`
-	Services   common.ServicesStatus `json:"services,omitempty"`
-	Bakers     BakersStatus          `json:"bakers,omitempty"`
-	Ledgers    LedgerStatus          `json:"ledgers,omitempty"`
+	Rights   RightsStatus                          `json:"rights,omitempty"`
+	Services map[string]common.ApplicationServices `json:"services,omitempty"`
+	Bakers   BakersStatus                          `json:"bakers,omitempty"`
+	Ledgers  LedgerStatus                          `json:"ledgers,omitempty"`
+}
+
+func (status *Status) Clone() *Status {
+	return &Status{
+		// no need to clone RightsStatus
+		status.Rights,
+		maps.Clone(status.Services),
+		status.Bakers,  // no need to clone BakersStatus
+		status.Ledgers, // no need to clone LedgerStatus
+	}
+}
+
+func GetEmptyStatus() *Status {
+	return &Status{
+		Rights: RightsStatus{
+			Level:  0,
+			Rights: []*BlockRights{},
+		},
+		Services: make(map[string]common.ApplicationServices),
+		Bakers: BakersStatus{
+			Level:  0,
+			Bakers: map[string]*BakerStakingStatus{},
+		},
+		Ledgers: LedgerStatus{
+			Level: 0,
+		},
+	}
 }
 
 type StatusUpdate struct {
@@ -28,31 +55,14 @@ func (statusUpdate *StatusUpdate) GetData() any {
 	return statusUpdate.Status
 }
 
-func GetEmptyStatus() *Status {
-	return &Status{
-		Rights: RightsStatus{
-			Level:  0,
-			Rights: []*BlockRights{},
-		},
-		Services: common.ServicesStatus{},
-		Bakers: BakersStatus{
-			Level:  0,
-			Bakers: map[string]*BakerStakingStatus{},
-		},
-		Ledgers: LedgerStatus{
-			Level: 0,
-		},
-	}
-}
-
-func SetupModule(ctx context.Context, configuration *configuration.TezbakeModuleConfiguration, app *fiber.Group, statusChannel chan<- common.StatusUpdatedReport) error {
+func SetupModule(ctx context.Context, configuration *configuration.TezbakeModuleConfiguration, app *fiber.Group, statusChannel chan<- common.StatusUpdate) error {
 	err := setupGovernanceProvider(configuration, app)
 	if err != nil {
 		return err
 	}
 
 	tezbakeStatus := GetEmptyStatus()
-	tezbakeStatusChannel := make(chan common.StatusUpdatedReport, 100)
+	tezbakeStatusChannel := make(chan common.StatusUpdate, 100)
 
 	go func() {
 		for {
@@ -60,23 +70,20 @@ func SetupModule(ctx context.Context, configuration *configuration.TezbakeModule
 			case <-ctx.Done():
 				return
 			case statusUpdate := <-tezbakeStatusChannel:
-				data := statusUpdate.GetData()
-				switch data := data.(type) {
-				case RightsStatus:
-					rightsStatus := data
-					tezbakeStatus.Rights = rightsStatus
-				case common.ServicesStatus:
-					servicesStatus := data
-					tezbakeStatus.Services = servicesStatus
-				case BakersStatus:
-					bakersStatus := data
-					tezbakeStatus.Bakers = bakersStatus
-				case LedgerStatus:
-					// not implemented
+				switch statusUpdate := statusUpdate.(type) {
+				case *common.ServicesStatusUpdate:
+					application := statusUpdate.Application
+					tezbakeStatus.Services[application] = statusUpdate.Status
+				case *RightsStatusUpdate:
+					tezbakeStatus.Rights = statusUpdate.RightsStatus
+				case *BakersStatusUpdate:
+					tezbakeStatus.Bakers = statusUpdate.BakersStatus
+					// case *LedgerStatusUpdate:
+					// TODO: LedgerStatusUpdate
 				}
 
 				statusChannel <- &StatusUpdate{
-					Status: tezbakeStatus,
+					Status: tezbakeStatus.Clone(),
 				}
 			}
 		}

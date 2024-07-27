@@ -28,7 +28,7 @@ func (s *WalletBalanceUpdate) GetData() any {
 	return s.Status
 }
 
-func startWalletStatusProviders(ctx context.Context, wallet string, preferences configuration.PayoutWalletPreferences, statusChannel chan<- common.StatusUpdatedReport) {
+func startWalletStatusProviders(ctx context.Context, wallet string, preferences configuration.PayoutWalletPreferences, statusChannel chan<- common.StatusUpdate) {
 	blockChannelId, blockChannel, err := common.SubscribeToBlockHeaderEvents()
 	if err != nil {
 		slog.Error("failed to subscribe to block events", "error", err.Error())
@@ -78,7 +78,6 @@ func startWalletStatusProviders(ctx context.Context, wallet string, preferences 
 				}
 
 				status.Balance = balance
-				//				fmt.Println("Balance: ", status.Balance, (preferences.BalanceErrorThreshold * 1000000))
 				switch {
 				case status.Balance < (preferences.BalanceErrorThreshold * 1000000) /* mutez */ :
 					status.Level = "error"

@@ -19,7 +19,7 @@ type BakersStatus struct {
 }
 
 type BakersStatusUpdate struct {
-	Status BakersStatus
+	BakersStatus
 }
 
 func (s *BakersStatusUpdate) GetId() string {
@@ -27,7 +27,7 @@ func (s *BakersStatusUpdate) GetId() string {
 }
 
 func (s *BakersStatusUpdate) GetData() any {
-	return s.Status
+	return s
 }
 
 type BakerStakingStatus struct {
@@ -105,7 +105,7 @@ func getBakerStatusFor(ctx context.Context, baker string) (*BakerStakingStatus, 
 	return status, err
 }
 
-func setupBakerStatusProviders(ctx context.Context, bakers []string, statusChannel chan<- common.StatusUpdatedReport) {
+func setupBakerStatusProviders(ctx context.Context, bakers []string, statusChannel chan<- common.StatusUpdate) {
 	blockChannelId, blockChannel, err := common.SubscribeToBlockHeaderEvents()
 	if err != nil {
 		slog.Error("failed to subscribe to block events", "error", err.Error())
@@ -117,10 +117,7 @@ func setupBakerStatusProviders(ctx context.Context, bakers []string, statusChann
 			common.UnsubscribeFromBlockHeaderEvents(blockChannelId)
 		}()
 
-		status := BakersStatus{
-			Level:  0,
-			Bakers: map[string]*BakerStakingStatus{},
-		}
+		level := int64(0)
 
 		for {
 			select {
@@ -136,16 +133,19 @@ func setupBakerStatusProviders(ctx context.Context, bakers []string, statusChann
 					return
 				}
 
-				if status.Level >= block.Level {
+				if level >= block.Level {
 					continue
 				}
 
+				bakersStatus := map[string]*BakerStakingStatus{}
 				for _, baker := range bakers {
-					status.Bakers[baker], _ = getBakerStatusFor(ctx, baker)
+					bakersStatus[baker], _ = getBakerStatusFor(ctx, baker)
 				}
-				status.Level = block.Level
 				statusChannel <- &BakersStatusUpdate{
-					Status: status,
+					BakersStatus: BakersStatus{
+						Level:  level,
+						Bakers: bakersStatus,
+					},
 				}
 			}
 		}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 
 	"github.com/samber/lo"
 	"github.com/tez-capital/tezpeak/core/common"
@@ -23,8 +24,15 @@ type RightsStatus struct {
 	Rights []*BlockRights `json:"rights"`
 }
 
+func (s *RightsStatus) Clone() RightsStatus {
+	return RightsStatus{
+		Level:  s.Level,
+		Rights: slices.Clone(s.Rights),
+	}
+}
+
 type RightsStatusUpdate struct {
-	Status RightsStatus
+	RightsStatus
 }
 
 func (s *RightsStatusUpdate) GetId() string {
@@ -32,7 +40,7 @@ func (s *RightsStatusUpdate) GetId() string {
 }
 
 func (s *RightsStatusUpdate) GetData() any {
-	return s.Status
+	return s.RightsStatus
 }
 
 func initRights(bakers []string) (map[string]int, map[string]int) {
@@ -208,7 +216,7 @@ func checkRealized(ctx context.Context, rights *BlockRights) (*BlockRights, erro
 	return rights, nil
 }
 
-func startRightsStatusProviders(ctx context.Context, bakers []string, blockWindow int64, statusChannel chan<- common.StatusUpdatedReport) {
+func startRightsStatusProviders(ctx context.Context, bakers []string, blockWindow int64, statusChannel chan<- common.StatusUpdate) {
 	blockChannelId, blockChannel, err := common.SubscribeToBlockHeaderEvents()
 	if err != nil {
 		slog.Error("failed to subscribe to block events", "error", err.Error())
@@ -275,9 +283,7 @@ func startRightsStatusProviders(ctx context.Context, bakers []string, blockWindo
 				status.Level = block.Level
 				status.Rights = newRights
 
-				statusChannel <- &RightsStatusUpdate{
-					Status: status,
-				}
+				statusChannel <- &RightsStatusUpdate{status}
 			}
 		}
 	}()

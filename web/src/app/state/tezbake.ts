@@ -9,18 +9,18 @@ export const state = derived(globalState, $state => {
 
 
 export const futureBakingRights = derived(state, $tezbakeState => {
-	return $tezbakeState?.rights.rights.filter(right => right.level > $tezbakeState.rights.level).sort((a, b) => a.level - b.level) ?? []
+	return $tezbakeState?.rights?.rights.filter(right => right.level > $tezbakeState.rights.level).sort((a, b) => a.level - b.level) ?? []
 })
 
 export const pastBakingRights = derived(state, $tezbakeState => {
-	return $tezbakeState?.rights.rights.filter(right => right.level <= $tezbakeState.rights.level).sort((a, b) => b.level - a.level) ?? []
+	return $tezbakeState?.rights?.rights.filter(right => right.level <= $tezbakeState.rights.level).sort((a, b) => b.level - a.level) ?? []
 })
 
 export const bakers = derived(state, $tezbakeStatus => {
-	if ($tezbakeStatus === undefined) {
+	if ($tezbakeStatus?.bakers === undefined) {
 		return []
 	}
-	return Object.entries($tezbakeStatus.bakers.bakers).sort(([a], [b]) => a.localeCompare(b))
+	return Object.entries($tezbakeStatus.bakers.bakers ?? []).sort(([a], [b]) => a.localeCompare(b))
 })
 
 export const votingPeriodInfo = derived(nodes, $nodes => {

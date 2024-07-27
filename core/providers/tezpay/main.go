@@ -6,11 +6,19 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/tez-capital/tezpeak/configuration"
 	"github.com/tez-capital/tezpeak/core/common"
+	"golang.org/x/exp/maps"
 )
 
 type Status struct {
-	Services common.ServicesStatus `json:"services,omitempty"`
-	Wallet   WalletStatus          `json:"wallet,omitempty"`
+	Services map[string]common.ApplicationServices `json:"services,omitempty"`
+	Wallet   WalletStatus                          `json:"wallet,omitempty"`
+}
+
+func (status *Status) Clone() *Status {
+	return &Status{
+		Services: maps.Clone(status.Services),
+		Wallet:   status.Wallet,
+	}
 }
 
 type StatusUpdate struct {
@@ -27,18 +35,18 @@ func (statusUpdate *StatusUpdate) GetData() any {
 
 func GetEmptyStatus() *Status {
 	return &Status{
-		Services: common.ServicesStatus{},
+		Services: make(map[string]common.ApplicationServices),
 	}
 }
 
-func SetupModule(ctx context.Context, configuration *configuration.TezpayModuleConfiguration, app *fiber.Group, statusChannel chan<- common.StatusUpdatedReport) error {
+func SetupModule(ctx context.Context, configuration *configuration.TezpayModuleConfiguration, app *fiber.Group, statusChannel chan<- common.StatusUpdate) error {
 	err := setupTezpayProvider(configuration, app)
 	if err != nil {
 		return err
 	}
 
 	tezpayStatus := GetEmptyStatus()
-	tezbakeStatusChannel := make(chan common.StatusUpdatedReport, 100)
+	tezbakeStatusChannel := make(chan common.StatusUpdate, 100)
 
 	go func() {
 		for {
@@ -46,17 +54,16 @@ func SetupModule(ctx context.Context, configuration *configuration.TezpayModuleC
 			case <-ctx.Done():
 				return
 			case statusUpdate := <-tezbakeStatusChannel:
-				data := statusUpdate.GetData()
-				switch data := data.(type) {
-				case common.ServicesStatus:
-					servicesStatus := data
-					tezpayStatus.Services = servicesStatus
-				case WalletStatus:
-					tezpayStatus.Wallet = data
+				switch statusUpdate := statusUpdate.(type) {
+				case *common.ServicesStatusUpdate:
+					application := statusUpdate.Application
+					tezpayStatus.Services[application] = statusUpdate.Status
+				case *WalletBalanceUpdate:
+					tezpayStatus.Wallet = statusUpdate.Status
 				}
 
 				statusChannel <- &StatusUpdate{
-					Status: tezpayStatus,
+					Status: tezpayStatus.Clone(),
 				}
 			}
 		}

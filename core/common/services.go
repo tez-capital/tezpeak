@@ -8,25 +8,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/samber/lo"
 	"github.com/tez-capital/tezbake/ami"
 	"github.com/tez-capital/tezbake/apps/base"
 	"github.com/tez-capital/tezpeak/constants"
 )
 
-type ApplicationServices map[string]base.AmiServiceInfo
-
-type ServicesStatus struct {
-	Timestamp    int64                          `json:"timestamp"`
-	Applications map[string]ApplicationServices `json:"applications"`
-}
+type ApplicationServices *map[string]base.AmiServiceInfo
 
 type ServicesStatusUpdate struct {
-	Status ServicesStatus
+	Application string
+	Status      ApplicationServices
 }
 
 func (s *ServicesStatusUpdate) GetId() string {
-	return "services"
+	return s.Application
 }
 
 func (s *ServicesStatusUpdate) GetData() any {
@@ -152,12 +147,7 @@ func startApplicationServiceStatusProvider(ctx context.Context, application stri
 	}()
 }
 
-func StartServiceStatusProviders(ctx context.Context, applications map[string]string, statusChannel chan<- StatusUpdatedReport) {
-	applicationsServices := lo.MapEntries(applications, func(k string, _ string) (string, ApplicationServices) {
-		return k, ApplicationServices{}
-	})
-	applicationsMtx := sync.RWMutex{}
-
+func StartServiceStatusProviders(ctx context.Context, applications map[string]string, statusChannel chan<- StatusUpdate) {
 	for name, path := range applications {
 		serviceStatusChannel := make(chan map[string]base.AmiServiceInfo)
 		startApplicationServiceStatusProvider(ctx, path, serviceStatusChannel)
@@ -168,14 +158,9 @@ func StartServiceStatusProviders(ctx context.Context, applications map[string]st
 				case <-ctx.Done():
 					return
 				case serviceStatus := <-serviceStatusChannel:
-					applicationsMtx.Lock()
-					applicationsServices[name] = serviceStatus
-					applicationsMtx.Unlock()
 					statusChannel <- &ServicesStatusUpdate{
-						Status: ServicesStatus{
-							Timestamp:    time.Now().Unix(),
-							Applications: applicationsServices,
-						},
+						Application: name,
+						Status:      &serviceStatus,
 					}
 				}
 			}

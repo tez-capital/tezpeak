@@ -72,22 +72,15 @@ func newClientStore() *clientStore {
 }
 
 var (
-	status = PeakStatus{
-		Modules: make(map[string]any),
-		Nodes:   make(map[string]common.NodeStatus),
-	}
-	statusMtx = sync.RWMutex{}
-	clients   = newClientStore()
+	status  = newPeakStatus()
+	clients = newClientStore()
 )
 
-func createModuleStatusChannel(id string, statusChannel chan<- common.ModuleStatusUpdatedReport) chan<- common.StatusUpdatedReport {
-	moduleStatusChannel := make(chan common.StatusUpdatedReport, 100)
+func createModuleStatusChannel(id string, statusChannel chan<- common.ModuleStatusUpdate) chan<- common.StatusUpdate {
+	moduleStatusChannel := make(chan common.StatusUpdate, 100)
 	go func() {
 		for statusUpdate := range moduleStatusChannel {
-			statusChannel <- common.ModuleStatusUpdatedReport{
-				Id:     id,
-				Report: statusUpdate,
-			}
+			statusChannel <- common.NewModuleStatusUpdate(id, statusUpdate)
 		}
 	}()
 
@@ -108,10 +101,8 @@ func registerStatusEndpoint(app *fiber.Group) {
 				c.Status(500).SendString("Failed to generate UUID")
 				return
 			}
-			statusMtx.RLock()
-			fmt.Fprintf(w, "data: %v\n\n", status.MarshalJSON())
-			statusMtx.RUnlock()
 
+			fmt.Fprintf(w, "data: %v\n\n", status.ToJSONString())
 			w.Flush()
 
 			defer func() {
@@ -134,22 +125,8 @@ func registerStatusEndpoint(app *fiber.Group) {
 
 }
 
-func updateStatus(moduleId string, data any) {
-	statusMtx.Lock()
-	defer statusMtx.Unlock()
-	status.Modules[moduleId] = data
-}
-
-func updateNodeStatus(nodeId string, data common.NodeStatus) {
-	statusMtx.Lock()
-	defer statusMtx.Unlock()
-	status.Nodes[nodeId] = data
-}
-
 func notifyClients() {
-	statusMtx.RLock()
-	serializedStatus := status.MarshalJSON()
-	statusMtx.RUnlock()
+	serializedStatus := status.ToJSONString()
 
 	clients.Each(func(_ uuid.UUID, c *client) {
 		go func() {
@@ -162,7 +139,7 @@ func notifyClients() {
 }
 
 // TODO: optimize - diffing, module updates, etc
-func runStatusUpdatesProcessing(moduleStatusChannel <-chan common.ModuleStatusUpdatedReport) {
+func runStatusUpdatesProcessing(moduleStatusChannel <-chan common.ModuleStatusUpdate) {
 	pendingUpdatesChannel := make(chan struct{}, 1)
 	defer close(pendingUpdatesChannel)
 	pendingUpdatesCounter := 0
@@ -176,13 +153,12 @@ func runStatusUpdatesProcessing(moduleStatusChannel <-chan common.ModuleStatusUp
 				notifyClients()
 				pendingUpdatesCounter = 0
 			}
-
-			id := statusUpdate.Id
-			switch data := statusUpdate.Report.GetData().(type) {
-			case common.NodeStatus:
-				updateNodeStatus(statusUpdate.Report.GetId(), data)
+			module := statusUpdate.GetModule()
+			switch statusUpdate := statusUpdate.GetStatusUpdate().(type) {
+			case *common.NodeStatusUpdate:
+				status.UpdateNodeStatus(statusUpdate.Id, statusUpdate.Status)
 			default:
-				updateStatus(id, data)
+				status.UpdateModuleStatus(module, statusUpdate.GetData())
 			}
 			pendingUpdatesCounter++
 			// try insert into pendingUpdatesChannel
@@ -200,10 +176,10 @@ func runStatusUpdatesProcessing(moduleStatusChannel <-chan common.ModuleStatusUp
 }
 
 func Run(ctx context.Context, config *configuration.Runtime, app *fiber.Group) error {
-	status.Id = config.Id
+	status.SetId(config.Id)
 	registerStatusEndpoint(app)
 
-	moduleStatusChannel := make(chan common.ModuleStatusUpdatedReport, 100)
+	moduleStatusChannel := make(chan common.ModuleStatusUpdate, 100)
 	go runStatusUpdatesProcessing(moduleStatusChannel)
 
 	common.StartNodeStatusProviders(ctx, config.Nodes, createModuleStatusChannel("global", moduleStatusChannel))

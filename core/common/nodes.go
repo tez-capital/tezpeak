@@ -67,7 +67,7 @@ func updateNetworkInfo(ctx context.Context, client *rpc.Client, nodeStatus *Node
 
 }
 
-func StartNodeStatusProviders(ctx context.Context, nodes map[string]configuration.TezosNode, statusChannel chan<- StatusUpdatedReport) {
+func StartNodeStatusProviders(ctx context.Context, nodes map[string]configuration.TezosNode, statusChannel chan<- StatusUpdate) {
 	for nodeId, node := range nodes {
 
 		if _, ok := activeRpcNodes[nodeId]; ok {
