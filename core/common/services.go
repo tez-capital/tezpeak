@@ -15,6 +15,11 @@ import (
 
 type ApplicationServices *map[string]base.AmiServiceInfo
 
+type AplicationServicesStatus struct {
+	Applications map[string]ApplicationServices `json:"applications,omitempty"`
+	Timestamp    int64                          `json:"timestamp,omitempty"` // last update
+}
+
 type ServicesStatusUpdate struct {
 	Application string
 	Status      ApplicationServices

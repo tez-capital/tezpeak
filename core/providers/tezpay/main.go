@@ -2,6 +2,7 @@ package tezpay
 
 import (
 	"context"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/tez-capital/tezpeak/configuration"
@@ -10,14 +11,17 @@ import (
 )
 
 type Status struct {
-	Services map[string]common.ApplicationServices `json:"services,omitempty"`
-	Wallet   WalletStatus                          `json:"wallet,omitempty"`
+	Services common.AplicationServicesStatus `json:"services,omitempty"`
+	Wallet   WalletStatus                    `json:"wallet,omitempty"`
 }
 
 func (status *Status) Clone() *Status {
 	return &Status{
-		Services: maps.Clone(status.Services),
-		Wallet:   status.Wallet,
+		Services: common.AplicationServicesStatus{
+			Applications: maps.Clone(status.Services.Applications),
+			Timestamp:    status.Services.Timestamp,
+		},
+		Wallet: status.Wallet,
 	}
 }
 
@@ -35,7 +39,10 @@ func (statusUpdate *StatusUpdate) GetData() any {
 
 func GetEmptyStatus() *Status {
 	return &Status{
-		Services: make(map[string]common.ApplicationServices),
+		Services: common.AplicationServicesStatus{
+			Applications: make(map[string]common.ApplicationServices),
+			Timestamp:    time.Now().Unix(),
+		},
 	}
 }
 
@@ -57,7 +64,8 @@ func SetupModule(ctx context.Context, configuration *configuration.TezpayModuleC
 				switch statusUpdate := statusUpdate.(type) {
 				case *common.ServicesStatusUpdate:
 					application := statusUpdate.Application
-					tezpayStatus.Services[application] = statusUpdate.Status
+					tezpayStatus.Services.Applications[application] = statusUpdate.Status
+					tezpayStatus.Services.Timestamp = time.Now().Unix()
 				case *WalletBalanceUpdate:
 					tezpayStatus.Wallet = statusUpdate.Status
 				}

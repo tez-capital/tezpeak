@@ -3,6 +3,7 @@ package tezbake
 import (
 	"context"
 	"maps"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/tez-capital/tezpeak/configuration"
@@ -10,17 +11,20 @@ import (
 )
 
 type Status struct {
-	Rights   RightsStatus                          `json:"rights,omitempty"`
-	Services map[string]common.ApplicationServices `json:"services,omitempty"`
-	Bakers   BakersStatus                          `json:"bakers,omitempty"`
-	Ledgers  LedgerStatus                          `json:"ledgers,omitempty"`
+	Rights   RightsStatus                    `json:"rights,omitempty"`
+	Services common.AplicationServicesStatus `json:"services,omitempty"`
+	Bakers   BakersStatus                    `json:"bakers,omitempty"`
+	Ledgers  LedgerStatus                    `json:"ledgers,omitempty"`
 }
 
 func (status *Status) Clone() *Status {
 	return &Status{
 		// no need to clone RightsStatus
 		status.Rights,
-		maps.Clone(status.Services),
+		common.AplicationServicesStatus{
+			Applications: maps.Clone(status.Services.Applications),
+			Timestamp:    status.Services.Timestamp,
+		},
 		status.Bakers,  // no need to clone BakersStatus
 		status.Ledgers, // no need to clone LedgerStatus
 	}
@@ -32,7 +36,10 @@ func GetEmptyStatus() *Status {
 			Level:  0,
 			Rights: []*BlockRights{},
 		},
-		Services: make(map[string]common.ApplicationServices),
+		Services: common.AplicationServicesStatus{
+			Applications: make(map[string]common.ApplicationServices),
+			Timestamp:    time.Now().Unix(),
+		},
 		Bakers: BakersStatus{
 			Level:  0,
 			Bakers: map[string]*BakerStakingStatus{},
@@ -73,7 +80,8 @@ func SetupModule(ctx context.Context, configuration *configuration.TezbakeModule
 				switch statusUpdate := statusUpdate.(type) {
 				case *common.ServicesStatusUpdate:
 					application := statusUpdate.Application
-					tezbakeStatus.Services[application] = statusUpdate.Status
+					tezbakeStatus.Services.Applications[application] = statusUpdate.Status
+					tezbakeStatus.Services.Timestamp = time.Now().Unix()
 				case *RightsStatusUpdate:
 					tezbakeStatus.Rights = statusUpdate.RightsStatus
 				case *BakersStatusUpdate:
