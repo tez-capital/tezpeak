@@ -19,12 +19,20 @@ Sample minimal configuration:
 ```hjson
 {
 	listen: "0.0.0.0:8733"
-	bakers: [
-		tz1P6WKJu2rcbxKiKRZHKQKmKrpC9TfW1AwM
-		tz1hZvgjekGo7DmQjWh7XnY5eLQD8wNYPczE
-	]
+    modules: {
+        tezbake: {
+            bakers: [
+                tz1S5WxdZR5f9NzsPXhr7L9L1vrEb5spZFur
+            ]
+        }
+        tezpay: {
+			payout_wallet: tz1X7U9XxVz6NDxL4DSZhijME61PW45bYUJE
+		}
+    }
 }
 ```
+
+NOTE: you can use only modules you prefer, for example if you don't want to use tezpay, you can remove it from the configuration.
 
 #### Standalone
 
@@ -37,16 +45,20 @@ You can run tezpeak as a standalone server as a binary or on linux as a service 
 - Sample standalone minimal configuration:
 ```hjson
 {
-	listen: "127.0.0.1:8733"
-	node: http://localhost:8732
-	bakers: [
-		tz1P6WKJu2rcbxKiKRZHKQKmKrpC9TfW1AwM
-		tz1hZvgjekGo7DmQjWh7XnY5eLQD8wNYPczE
-	]
-	providers: {
-		// right now only tezbake is supported, so disable it altogether with 'none' to suppress the warnings
-		services: none 
-	}
+	listen: "0.0.0.0:8733"
+    modules: {
+        tezbake: {
+            applications: null
+            bakers: [
+                tz1S5WxdZR5f9NzsPXhr7L9L1vrEb5spZFur
+            ]
+        }
+		# tezpay requires ami-tezpay package, it is used to run automatic and manual payouts
+        tezpay: {
+			applications: null
+			payout_wallet: tz1X7U9XxVz6NDxL4DSZhijME61PW45bYUJE
+		}
+    }
 }
 ```
 3. Run the binary

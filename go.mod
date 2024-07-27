@@ -11,6 +11,7 @@ require (
 	github.com/tez-capital/tezbake v0.0.0-20240711202102-da3c3ba099f1
 	github.com/tez-capital/tezpay v0.0.0-20240710214155-a3c78a2d3f66
 	github.com/trilitech/tzgo v1.19.8
+	golang.org/x/exp v0.0.0-20240707233637-46b078467d37
 )
 
 require (
@@ -40,7 +41,6 @@ require (
 	github.com/valyala/fasthttp v1.55.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/crypto v0.25.0 // indirect
-	golang.org/x/exp v0.0.0-20240707233637-46b078467d37 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/term v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
