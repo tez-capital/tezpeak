@@ -117,7 +117,7 @@ func registerStatusEndpoint(app *fiber.Group) {
 				return
 			}
 
-			fmt.Fprintf(w, "data: %v\n\n", status.ToJSONString())
+			fmt.Fprintf(w, "data: %v\n\n", status.String())
 			w.Flush()
 
 			defer unregisterClient()
@@ -137,7 +137,7 @@ func registerStatusEndpoint(app *fiber.Group) {
 }
 
 func notifyClients() {
-	serializedStatus := status.ToJSONString()
+	serializedStatus := status.String()
 
 	clients.Each(func(_ uuid.UUID, c *client) {
 		go c.Send(serializedStatus)
@@ -145,20 +145,17 @@ func notifyClients() {
 }
 
 // TODO: optimize - diffing, module updates, etc
-func runStatusUpdatesProcessing(moduleStatusChannel <-chan common.ModuleStatusUpdate) {
+func runStatusUpdatesProcessing(statusChannel <-chan common.ModuleStatusUpdate) {
 	pendingUpdatesChannel := make(chan struct{}, 1)
 	defer close(pendingUpdatesChannel)
-	pendingUpdatesCounter := 0
+
 	for {
 		select {
-		case statusUpdate, ok := <-moduleStatusChannel:
+		case statusUpdate, ok := <-statusChannel:
 			if !ok {
 				return
 			}
-			if pendingUpdatesCounter > 10 {
-				notifyClients()
-				pendingUpdatesCounter = 0
-			}
+
 			module := statusUpdate.GetModule()
 			switch statusUpdate := statusUpdate.GetStatusUpdate().(type) {
 			case *common.NodeStatusUpdate:
@@ -166,17 +163,13 @@ func runStatusUpdatesProcessing(moduleStatusChannel <-chan common.ModuleStatusUp
 			default:
 				status.UpdateModuleStatus(module, statusUpdate.GetData())
 			}
-			pendingUpdatesCounter++
 			// try insert into pendingUpdatesChannel
 			select {
 			case pendingUpdatesChannel <- struct{}{}:
 			default:
 			}
 		case <-pendingUpdatesChannel:
-			if pendingUpdatesCounter > 0 {
-				notifyClients()
-				pendingUpdatesCounter = 0
-			}
+			notifyClients()
 		}
 	}
 }
@@ -185,10 +178,10 @@ func Run(ctx context.Context, config *configuration.Runtime, app *fiber.Group) e
 	status.SetId(config.Id)
 	registerStatusEndpoint(app)
 
-	moduleStatusChannel := make(chan common.ModuleStatusUpdate, 100)
-	go runStatusUpdatesProcessing(moduleStatusChannel)
+	statusChannel := make(chan common.ModuleStatusUpdate, 100)
+	go runStatusUpdatesProcessing(statusChannel)
 
-	common.StartNodeStatusProviders(ctx, config.Nodes, createModuleStatusChannel("global", moduleStatusChannel))
+	common.StartNodeStatusProviders(ctx, config.Nodes, createModuleStatusChannel("global", statusChannel))
 	// modules
 	for id := range config.Modules {
 		switch id {
@@ -199,7 +192,7 @@ func Run(ctx context.Context, config *configuration.Runtime, app *fiber.Group) e
 				continue
 			}
 
-			err := tezbake.SetupModule(ctx, configuration, app, createModuleStatusChannel(id, moduleStatusChannel))
+			err := tezbake.SetupModule(ctx, configuration, app, createModuleStatusChannel(id, statusChannel))
 			if err != nil {
 				return err
 			}
@@ -210,7 +203,7 @@ func Run(ctx context.Context, config *configuration.Runtime, app *fiber.Group) e
 				continue
 			}
 
-			err := tezpay.SetupModule(ctx, configuration, app, createModuleStatusChannel(id, moduleStatusChannel))
+			err := tezpay.SetupModule(ctx, configuration, app, createModuleStatusChannel(id, statusChannel))
 			if err != nil {
 				return err
 			}

@@ -53,14 +53,14 @@ func SetupModule(ctx context.Context, configuration *configuration.TezpayModuleC
 	}
 
 	tezpayStatus := GetEmptyStatus()
-	tezbakeStatusChannel := make(chan common.StatusUpdate, 100)
+	tezpayStatusChannel := make(chan common.StatusUpdate, 100)
 
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case statusUpdate := <-tezbakeStatusChannel:
+			case statusUpdate := <-tezpayStatusChannel:
 				switch statusUpdate := statusUpdate.(type) {
 				case *common.ServicesStatusUpdate:
 					application := statusUpdate.Application
@@ -77,8 +77,8 @@ func SetupModule(ctx context.Context, configuration *configuration.TezpayModuleC
 		}
 	}()
 
-	common.StartServiceStatusProviders(ctx, configuration.Applications, tezbakeStatusChannel)
-	startWalletStatusProviders(ctx, configuration.PayoutWallet, configuration.PayoutWalletPreferences, tezbakeStatusChannel)
+	common.StartServiceStatusProviders(ctx, configuration.Applications, tezpayStatusChannel)
+	startWalletStatusProviders(ctx, configuration.PayoutWallet, configuration.PayoutWalletPreferences, tezpayStatusChannel)
 
 	return nil
 }

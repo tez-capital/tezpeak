@@ -20,8 +20,8 @@ type BlockRights struct {
 }
 
 type RightsStatus struct {
-	Level  int64          `json:"level"`
-	Rights []*BlockRights `json:"rights"`
+	Level  int64         `json:"level"`
+	Rights []BlockRights `json:"rights"`
 }
 
 func (s *RightsStatus) Clone() RightsStatus {
@@ -114,7 +114,7 @@ func getBlockRights(ctx context.Context, block int64) (rights, rights, error) {
 	return bakingRights, attestationRights, errors.Join(attestationRightsErr, bakingRightsErr)
 }
 
-func getBlockRightsFor(ctx context.Context, block int64, bakers []string) (*BlockRights, error) {
+func getBlockRightsFor(ctx context.Context, block int64, bakers []string) (BlockRights, error) {
 	relevantBakingRights, relevantAttestationRights := initRights(bakers)
 
 	bakingRights, attestationRights, err := getBlockRights(ctx, block-1)
@@ -142,13 +142,13 @@ func getBlockRightsFor(ctx context.Context, block int64, bakers []string) (*Bloc
 		rights[baker] = []int{relevantBakingRights[baker], relevantAttestationRights[baker]}
 	}
 
-	return &BlockRights{
+	return BlockRights{
 		Level:  block,
 		Rights: rights,
 	}, nil
 }
 
-func checkRealized(ctx context.Context, rights *BlockRights) (*BlockRights, error) {
+func checkRealized(ctx context.Context, rights BlockRights) (BlockRights, error) {
 	if rights.RealizedChecked {
 		return rights, nil
 	}
@@ -230,7 +230,7 @@ func startRightsStatusProviders(ctx context.Context, bakers []string, blockWindo
 
 		status := RightsStatus{
 			Level:  0,
-			Rights: []*BlockRights{},
+			Rights: []BlockRights{},
 		}
 
 		for {
@@ -254,7 +254,7 @@ func startRightsStatusProviders(ctx context.Context, bakers []string, blockWindo
 				// get slice of levels to query
 				minLevel := max(0, block.Level-blockWindow/2)
 				maxLevel := block.Level + blockWindow/2
-				newRights := []*BlockRights{}
+				newRights := []BlockRights{}
 				lastCachedLevel := int64(0)
 				for _, right := range status.Rights {
 					if right.Level < minLevel || right.Level > maxLevel {

@@ -34,7 +34,7 @@ func GetEmptyStatus() *Status {
 	return &Status{
 		Rights: RightsStatus{
 			Level:  0,
-			Rights: []*BlockRights{},
+			Rights: []BlockRights{},
 		},
 		Services: common.AplicationServicesStatus{
 			Applications: make(map[string]common.ApplicationServices),

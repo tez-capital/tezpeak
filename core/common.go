@@ -9,18 +9,19 @@ import (
 )
 
 type peakStatus struct {
-	Id      string                       `json:"id,omitempty"` // peak instance id
-	Modules map[string]any               `json:"modules,omitempty"`
-	Nodes   map[string]common.NodeStatus `json:"nodes,omitempty"`
+	Id        string                     `json:"id,omitempty"` // peak instance id
+	Modules   map[string]json.RawMessage `json:"modules,omitempty"`
+	Nodes     map[string]json.RawMessage `json:"nodes,omitempty"`
+	marshaled []byte                     `json:"-"`
 
-	mtx sync.RWMutex
+	mtx sync.RWMutex `json:"-"`
 }
 
 func newPeakStatus() *peakStatus {
 	return &peakStatus{
 		Id:      "",
-		Modules: make(map[string]any),
-		Nodes:   make(map[string]common.NodeStatus),
+		Modules: make(map[string]json.RawMessage),
+		Nodes:   make(map[string]json.RawMessage),
 		mtx:     sync.RWMutex{},
 	}
 }
@@ -29,36 +30,38 @@ func (s *peakStatus) SetId(id string) {
 	s.Id = id
 }
 
+func (s *peakStatus) updateMarshaled() {
+	s.marshaled, _ = json.Marshal(s)
+}
+
 func (s *peakStatus) UpdateModuleStatus(id string, status any) {
+	defer s.updateMarshaled()
+
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
-
-	if s.Modules == nil {
-		s.Modules = make(map[string]any)
+	marshaled, err := json.Marshal(status)
+	if err != nil {
+		slog.Error("failed to marshal module status", "error", err.Error())
+		return
 	}
-	s.Modules[id] = status
+	s.Modules[id] = marshaled
 }
 
 func (s *peakStatus) UpdateNodeStatus(id string, status common.NodeStatus) {
+	defer s.updateMarshaled()
+
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
-
-	if s.Nodes == nil {
-		s.Nodes = make(map[string]common.NodeStatus)
+	marshaled, err := json.Marshal(status)
+	if err != nil {
+		slog.Error("failed to marshal module status", "error", err.Error())
+		return
 	}
-	s.Nodes[id] = status
+	s.Nodes[id] = marshaled
 }
 
-func (s *peakStatus) ToJSONString() string {
-	s.mtx.RLock()
-	defer s.mtx.RUnlock()
-
-	resultBytes, err := json.Marshal(s)
-	if err != nil {
-		slog.Error("failed to marshal peak status", "error", err.Error())
-		return "{}"
-	}
-	return string(resultBytes)
+func (s *peakStatus) String() string {
+	return string(s.marshaled)
 }
 
 type PeakStatusUpdateReportKind string
