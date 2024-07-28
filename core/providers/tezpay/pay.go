@@ -22,40 +22,6 @@ import (
 	peakCommon "github.com/tez-capital/tezpeak/core/common"
 )
 
-/* TODO:
-[0] generate-payouts
-[-] import-configuration ?
-[-] pay-date-range
-[0] pay
-[ ] continual + status socket
-  [0] peak implementation
-  [0] lingering and ami package adjustmnents
-  [ ] status socket
-	[0] status socket
-	[ ] proxy ???
-	[ ] client
-[0] statistics
-[-] test-extension
-[0] test-notify
-[-] transfer
-[0] version
-[0] get reports
-
-all through ami ??
-
-generate-payouts - simple just provide params and process output
-import-configuration - wont be implemented
-pay-date-range - two pass - generate first, then confirm and process, provide logs
-pay - same as pay-date-range
-continual - hardest - we should probably expose some kind of server to provide status data, or expose it through extensions? logs wont be enough to provide nice state info
-				- server and possibly lock file would create nice state info with clean way to safeguard against multiple instances
-statistics - simple just provide params and process output
-test-extension - wont be implemented
-test-notify - wont be implemented
-transfer - wont be implemented
-version - simple just provide params and process output
-*/
-
 type TezpayProvider struct {
 	configuration *configuration.TezpayModuleConfiguration
 
