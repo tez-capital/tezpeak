@@ -22,7 +22,6 @@ require (
 	github.com/echa/log v1.2.4 // indirect
 	github.com/fatih/color v1.17.0 // indirect
 	github.com/hjson/hjson-go v3.3.0+incompatible // indirect
-	github.com/ietxaniz/delock v0.2.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jedib0t/go-pretty/v6 v6.5.9 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
