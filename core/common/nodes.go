@@ -4,9 +4,11 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/tez-capital/tezpeak/configuration"
 	"github.com/tez-capital/tezpeak/constants"
 	"github.com/trilitech/tzgo/rpc"
@@ -69,7 +71,6 @@ func updateNetworkInfo(ctx context.Context, client *rpc.Client, nodeStatus *Node
 
 func StartNodeStatusProviders(ctx context.Context, nodes map[string]configuration.TezosNode, statusChannel chan<- StatusUpdate) {
 	for nodeId, node := range nodes {
-
 		if _, ok := activeRpcNodes[nodeId]; ok {
 			slog.Warn("node already active", "source", node.Address, "id", nodeId)
 			continue
@@ -150,6 +151,11 @@ func isClientSynced(ctx context.Context, client *rpc.Client) bool {
 func AttemptWithRpcClients[T any](ctx context.Context, f func(client *ActiveRpcNode) (T, error)) (T, error) {
 	var err error
 	var result T
+
+	nodesByPriority := lo.Values(activeRpcNodes)
+	sort.Slice(nodesByPriority, func(i, j int) bool {
+		return nodesByPriority[i].Priority < nodesByPriority[j].Priority
+	})
 
 	for _, node := range activeRpcNodes {
 		if !isClientSynced(ctx, node.Client) {

@@ -18,29 +18,20 @@ import (
 
 type client struct {
 	channel chan string
-	closed  bool
-	mtx     sync.RWMutex
-}
-
-func (c *client) Close() {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-	c.closed = true
-	close(c.channel)
+	ctx     context.Context
 }
 
 func (c *client) Send(msg string) {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
-	if c.closed {
-		return
+	select {
+	case c.channel <- msg:
+	case <-c.ctx.Done():
 	}
-	c.channel <- msg
 }
 
-func newClient(statusChannel chan string) *client {
+func newClient(ctx context.Context, statusChannel chan string) *client {
 	return &client{
 		channel: statusChannel,
+		ctx:     ctx,
 	}
 }
 
@@ -54,8 +45,6 @@ type clientStore struct {
 func (c *clientStore) Remove(id uuid.UUID) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
-	client := c.clientStoreBase[id]
-	client.Close()
 	delete(c.clientStoreBase, id)
 }
 
@@ -67,7 +56,7 @@ func (c *clientStore) Each(f func(id uuid.UUID, client *client)) {
 	}
 }
 
-func (c *clientStore) Add(statusChannel chan string) (close func(), err error) {
+func (c *clientStore) Add(ctx context.Context, statusChannel chan string) (close func(), err error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err
@@ -76,7 +65,7 @@ func (c *clientStore) Add(statusChannel chan string) (close func(), err error) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
-	c.clientStoreBase[id] = newClient(statusChannel)
+	c.clientStoreBase[id] = newClient(ctx, statusChannel)
 	return func() { c.Remove(id) }, nil
 }
 
@@ -109,9 +98,11 @@ func registerStatusEndpoint(app *fiber.Group) {
 		c.Set("Connection", "keep-alive")
 		c.Set("Transfer-Encoding", "chunked")
 
+		context := c.Context()
+
 		c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
 			statusUpdateChannel := make(chan string, 100) // Buffer to avoid blocking
-			unregisterClient, err := clients.Add(statusUpdateChannel)
+			unregisterClient, err := clients.Add(context, statusUpdateChannel)
 			if err != nil {
 				c.Status(500).SendString("Failed to generate UUID")
 				return
@@ -125,7 +116,7 @@ func registerStatusEndpoint(app *fiber.Group) {
 			for msg := range statusUpdateChannel {
 				if _, err := fmt.Fprintf(w, "data: %v\n\n", msg); err != nil {
 					// Handle client disconnection or error in sending message
-					slog.Warn("error sending message to client", "error", err.Error())
+					slog.Debug("error sending message to client", "error", err.Error())
 					return
 				}
 				w.Flush()

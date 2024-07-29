@@ -41,6 +41,7 @@ type TezosNode struct {
 	IsGovernanceProvider  bool   `json:"is_governance_provider,omitempty"`
 	IsNetworkInfoProvider bool   `json:"is_network_info_provider,omitempty"`
 	IsEssential           bool   `json:"is_essential,omitempty"`
+	Priority              int    `json:"priority,omitempty"`
 }
 
 var (
@@ -59,12 +60,14 @@ var (
 		IsBlockProvider:      true,
 		IsRightsProvider:     true,
 		IsGovernanceProvider: true,
+		Priority:             50,
 	}
 	TZC_US_RPC = TezosNode{
 		Address:              "https://us.rpc.tez.capital/",
 		IsBlockProvider:      true,
 		IsRightsProvider:     true,
 		IsGovernanceProvider: true,
+		Priority:             50,
 	}
 	BAKER_NODE = TezosNode{
 		Address:               "http://127.0.0.1:8732/",
@@ -73,6 +76,7 @@ var (
 		IsGovernanceProvider:  true,
 		IsNetworkInfoProvider: true,
 		IsEssential:           true,
+		Priority:              100,
 	}
 )
 

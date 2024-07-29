@@ -31,6 +31,8 @@ github.com/hjson/hjson-go v3.3.0+incompatible h1:Rqr+Ya+0aCJMjaE4s8E9YKvuJLuLVpE
 github.com/hjson/hjson-go v3.3.0+incompatible/go.mod h1:qsetwF8NlsTsOTwZTApNlTCerV+b2GjYRRcIk4JMFio=
 github.com/hjson/hjson-go/v4 v4.4.0 h1:D/NPvqOCH6/eisTb5/ztuIS8GUvmpHaLOcNk1Bjr298=
 github.com/hjson/hjson-go/v4 v4.4.0/go.mod h1:KaYt3bTw3zhBjYqnXkYywcYctk0A2nxeEFTse3rH13E=
+github.com/ietxaniz/delock v0.2.0 h1:1KFR+NkUr3TE5OS58B8Crlc7F0YNQXu/NDncwPvWA/M=
+github.com/ietxaniz/delock v0.2.0/go.mod h1:zJuHarV3NdiZD7szgx7yYGLGiLn0I6IHhiomHbYfa7I=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/jedib0t/go-pretty/v6 v6.5.9 h1:ACteMBRrrmm1gMsXe9PSTOClQ63IXDUt03H5U+UV8OU=

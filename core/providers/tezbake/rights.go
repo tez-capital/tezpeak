@@ -273,11 +273,11 @@ func startRightsStatusProviders(ctx context.Context, bakers []string, blockWindo
 					newRights = append(newRights, rights)
 				}
 
-				for _, right := range newRights {
+				for i, right := range newRights {
 					if right.Level > block.Level { // we do not check future rights
 						break
 					}
-					checkRealized(ctx, right)
+					newRights[i], _ = checkRealized(ctx, right)
 				}
 
 				status.Level = block.Level
