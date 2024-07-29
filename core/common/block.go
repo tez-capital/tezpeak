@@ -157,8 +157,16 @@ func (es *BlockEventSource) RemoveBlockMonitor(id uuid.UUID) {
 }
 
 func NewBlockEventSource() *BlockEventSource {
+	lastLevel := int64(0)
+
 	return &BlockEventSource{
-		EventSource:   NewEventSource[*rpc.BlockHeaderLogEntry](nil),
+		EventSource: NewEventSource(func(h *rpc.BlockHeaderLogEntry) bool {
+			if h.Level <= lastLevel {
+				return true
+			}
+			lastLevel = h.Level
+			return false
+		}),
 		blockMonitors: make(map[uuid.UUID]blockMonitor),
 	}
 }

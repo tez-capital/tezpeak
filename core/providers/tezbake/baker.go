@@ -117,8 +117,6 @@ func setupBakerStatusProviders(ctx context.Context, bakers []string, statusChann
 			common.UnsubscribeFromBlockHeaderEvents(blockChannelId)
 		}()
 
-		level := int64(0)
-
 		for {
 			select {
 			case <-ctx.Done():
@@ -133,17 +131,13 @@ func setupBakerStatusProviders(ctx context.Context, bakers []string, statusChann
 					return
 				}
 
-				if level >= block.Level {
-					continue
-				}
-
 				bakersStatus := map[string]*BakerStakingStatus{}
 				for _, baker := range bakers {
 					bakersStatus[baker], _ = getBakerStatusFor(ctx, baker)
 				}
 				statusChannel <- &BakersStatusUpdate{
 					BakersStatus: BakersStatus{
-						Level:  level,
+						Level:  block.Level,
 						Bakers: bakersStatus,
 					},
 				}
