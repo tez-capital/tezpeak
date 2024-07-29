@@ -52,30 +52,27 @@ func newClient(ctx context.Context, statusChannel chan string) *client {
 	}
 }
 
-type clientStoreBase map[uuid.UUID]*client
-
 type clientStore struct {
-	clientStoreBase
-	mtx sync.RWMutex
+	m sync.Map
 }
 
 func (c *clientStore) Remove(id uuid.UUID) {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-	client, ok := c.clientStoreBase[id]
+	entry, ok := c.m.Load(id)
 	if !ok {
 		return
 	}
+	client := entry.(*client)
 	defer client.Close()
-	delete(c.clientStoreBase, id)
+	c.m.Delete(id)
 }
 
 func (c *clientStore) Each(f func(id uuid.UUID, client *client)) {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
-	for id, client := range c.clientStoreBase {
+	c.m.Range(func(key, value any) bool {
+		id := key.(uuid.UUID)
+		client := value.(*client)
 		f(id, client)
-	}
+		return true
+	})
 }
 
 func (c *clientStore) Add(ctx context.Context, statusChannel chan string) (close func(), err error) {
@@ -84,16 +81,13 @@ func (c *clientStore) Add(ctx context.Context, statusChannel chan string) (close
 		return nil, err
 	}
 
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-
-	c.clientStoreBase[id] = newClient(ctx, statusChannel)
+	c.m.Store(id, newClient(ctx, statusChannel))
 	return func() { c.Remove(id) }, nil
 }
 
 func newClientStore() *clientStore {
 	return &clientStore{
-		clientStoreBase: make(clientStoreBase),
+		m: sync.Map{},
 	}
 }
 
