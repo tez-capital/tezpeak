@@ -18,14 +18,31 @@ import (
 
 type client struct {
 	channel chan string
+	closed  bool
 	ctx     context.Context
+	mtx     sync.Mutex
 }
 
 func (c *client) Send(msg string) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	if c.closed {
+		return
+	}
+
 	select {
 	case c.channel <- msg:
 	case <-c.ctx.Done():
+		c.closed = true
+		close(c.channel)
 	}
+}
+
+func (c *client) Close() {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	c.closed = true
+	close(c.channel)
 }
 
 func newClient(ctx context.Context, statusChannel chan string) *client {
@@ -45,6 +62,11 @@ type clientStore struct {
 func (c *clientStore) Remove(id uuid.UUID) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
+	client, ok := c.clientStoreBase[id]
+	if !ok {
+		return
+	}
+	defer client.Close()
 	delete(c.clientStoreBase, id)
 }
 
