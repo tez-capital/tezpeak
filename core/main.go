@@ -41,6 +41,9 @@ func (c *client) Send(msg string) {
 func (c *client) Close() {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
+	if c.closed {
+		return
+	}
 	c.closed = true
 	close(c.channel)
 }
