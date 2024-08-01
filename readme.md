@@ -19,6 +19,7 @@ Sample minimal configuration:
 ```hjson
 {
     listen: 0.0.0.0:8733
+    app_root: /bake-buddy
     modules: {
         tezbake: {
             bakers: [
@@ -47,6 +48,7 @@ You can run tezpeak as a standalone server as a binary or on linux as a service 
 ```hjson
 {
     listen: 0.0.0.0:8733
+    app_root: /bake-buddy
     modules: {
         tezbake: {
             applications: null
@@ -78,6 +80,7 @@ Refer to the [ami-tezpeak readme](https://github.com/tez-capital/ami-tezpeak) fo
     id: ""
 	# Address to listen on
     listen: 127.0.0.1:8733
+    app_root: /bake-buddy
     modules: {
         tezbake: {
 			# uncomment bellow to disable tezbake package monitoring
