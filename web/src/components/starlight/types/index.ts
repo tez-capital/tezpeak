@@ -47,7 +47,7 @@ export type ValidationRules<T = any> = Array<ValidationRule<T>>
 export type ProgressValue = number | "indeterminate"
 
 export type PromiseFinalizers = {
-	resolve: (value: any) => void
+	resolve: (value?: any) => void
 	reject: (reason?: any) => void
 }
 

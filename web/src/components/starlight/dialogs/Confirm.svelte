@@ -1,34 +1,25 @@
 <script lang="ts">
 	import OverlayDialog from './Overlay.svelte';
 	import Card from '@components/starlight/components/Card.svelte';
-	import type { PromiseFinalizers, SelectItem } from '../types';
+	import type { PromiseFinalizers } from '../types';
 	import { USER_CANCELED } from '../src/constants';
 	import Button from '../components/Button.svelte';
-	import Select from '../components/Select.svelte';
 
-	interface SelectDialogState<TValue> {
+	interface ConfirmDialogState {
 		title: string;
 		message: string;
-		hint: string;
-		value: TValue;
-		options: Array<SelectItem<TValue> | TValue>;
 		confirmText: string;
 		cancelText: string;
 	}
 
-	const defaultState: SelectDialogState<any> = {
-		title: 'Select',
+	const defaultState: ConfirmDialogState = {
+		title: 'Confirm',
 		message: '',
-		hint: '',
-		value: '',
-		options: [],
 		confirmText: 'Confirm',
 		cancelText: 'Cancel'
 	};
 	export let state = defaultState;
 	export let isOpen = false;
-	let value: SelectItem<any> | undefined = undefined;
-	let options: Array<SelectItem<any>> = [];
 
 	let promptFinalizers: PromiseFinalizers = {
 		resolve: () => close(),
@@ -39,27 +30,14 @@
 		isOpen = false;
 	}
 
-	export async function prompt<TValue>(
-		promptOptions: Partial<SelectDialogState<TValue>>
-	): Promise<TValue> {
+	export async function request_confirmation<TValue>(options: Partial<ConfirmDialogState>): Promise<TValue> {
 		isOpen = true;
-		options = (promptOptions.options ?? []).map(
-			(v) => {
-				if (typeof v === 'object') {
-					return v as SelectItem<TValue>;
-				}
-				return { label: v, value: v } as SelectItem<TValue>;
-			}
-		);
-
-		state = { ...defaultState, ...promptOptions };
-		value = options.find((v) => (v as SelectItem<TValue>).value === state.value) as SelectItem<TValue>;
-		
+		state = { ...defaultState, ...options };
 		return new Promise<TValue>((resolve, reject) => {
 			promptFinalizers = {
-				resolve: () => {
+				resolve: (v) => {
 					close();
-					resolve(value?.value);
+					resolve(v);
 				},
 				reject: (e) => {
 					close();
@@ -68,13 +46,11 @@
 			};
 		});
 	}
-
-	$: isValid = state.options.includes(value);
 </script>
 
 <OverlayDialog bind:open={isOpen} persistent>
 	<Card>
-		<div class="prompt-wrap">
+		<div class="confirm-wrap">
 			<slot name="title" {...state}>
 				<h3 class="title">{state.title}</h3>
 			</slot>
@@ -83,19 +59,12 @@
 					<p class="message">{state.message}</p>
 				{/if}
 			</slot>
-			<Select bind:value options={options} />
 			<div class="controls padding-top">
 				<div class="control-button" style:grid-column="1">
-					<Button
-						label={state.cancelText}
-						on:click={() => promptFinalizers.reject(USER_CANCELED)}
-					/>
+					<Button label={state.cancelText} on:click={() => promptFinalizers.reject(USER_CANCELED)} />
 				</div>
-				<div class="control-button" class:disabled={isValid} style:grid-column="3">
-					<Button
-						label={state.confirmText}
-						on:click={() => promptFinalizers.resolve(state.value)}
-					/>
+				<div class="control-button" style:grid-column="3">
+					<Button label={state.confirmText} on:click={() => promptFinalizers.resolve()} />
 				</div>
 			</div>
 		</div>
@@ -103,22 +72,24 @@
 </OverlayDialog>
 
 <style lang="sass">
-.prompt-wrap	
+.confirm-wrap	
 	position: relative
 	display: grid
 	grid-auto-rows: auto
 	grid-template-columns: minmax(100px, 1fr)
 	gap: var(--spacing)
 	
-	width: var(--select-dialog-width, auto)
-	min-width: var(--select-dialog-min-width, 280px)
-	max-width: var(--select-dialog-max-width, 500px)
+	width: var(--confirm-dialog-width, auto)
+	min-width: var(--confirm-dialog-min-width, 280px)
+	max-width: var(--confirm-dialog-max-width, 500px)
+	padding: var(--confirm-dialog-padding, var(--spacing-x2))
 
 	.title 
 		text-align: center
 
 	.message
 		margin-top: 0px
+		padding: var(--spacing)
 
 	.controls
 		display: grid
@@ -127,4 +98,5 @@
 		.control-button
 			min-width: 100px
 			--button-horizontal-spacing: var(--spacing-x2)
+			
 </style>

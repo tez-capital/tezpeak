@@ -53,9 +53,6 @@
 			<div class="disconnected-status">DISCONNECTED</div>
 		{/if}
 		{#if node.network_info}
-			<div class="bottom-separator">
-				<Separator />
-			</div>
 			<div class="network-info">
 				<div class="connections">
 					<div class="value">{node.network_info?.connection_count}</div>

@@ -47,7 +47,6 @@
 				<!-- <Button on:click={() => dispatch('preview')}>PREVIEW</Button> -->
 			</div>
 			<div class="note">NOTE: You will be prompted for a confirmation 😉</div>
-			<Separator />
 			<div class="pay-btn" class:disabled={!isValidCycle}>
 				<Button on:click={() => dispatch('pay', { cycle, dry: dryRun })}>Pay</Button>
 			</div>

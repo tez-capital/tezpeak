@@ -257,6 +257,28 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.Group) error {
 		return c.Status(200).SendString("service started")
 	})
 
+	app.Get("/tezpay/enable-continual", func(c *fiber.Ctx) error {
+		if !tezpayProvider.CanPay() {
+			return c.Status(fiber.StatusForbidden).SendString("not allowed")
+		}
+		err := tezpayProvider.EnableContinualPayouts()
+		if err != nil {
+			return c.Status(500).SendString("failed to enable continual services: " + err.Error())
+		}
+		return c.Status(200).SendString("continual enabled")
+	})
+
+	app.Get("/tezpay/disabled-continual", func(c *fiber.Ctx) error {
+		if !tezpayProvider.CanPay() {
+			return c.Status(fiber.StatusForbidden).SendString("not allowed")
+		}
+		err := tezpayProvider.DisableContinualPayouts()
+		if err != nil {
+			return c.Status(500).SendString("failed to disable continual services: " + err.Error())
+		}
+		return c.Status(200).SendString("continual disabled")
+	})
+
 	return nil
 }
 
@@ -506,6 +528,30 @@ func (t *TezpayProvider) StartContinualPayouts() error {
 	}
 	if exitCode != 0 {
 		return errors.New("failed to start continual payouts")
+	}
+	return nil
+}
+
+func (t *TezpayProvider) DisableContinualPayouts() error {
+	defer peakCommon.UpdateServiceStatus(t.tezpay.GetPath())
+	exitCode, err := t.tezpay.Execute("continual", "--disable")
+	if err != nil {
+		return err
+	}
+	if exitCode != 0 {
+		return errors.New("failed to disable continual payouts")
+	}
+	return nil
+}
+
+func (t *TezpayProvider) EnableContinualPayouts() error {
+	defer peakCommon.UpdateServiceStatus(t.tezpay.GetPath())
+	exitCode, err := t.tezpay.Execute("continual", "--enable")
+	if err != nil {
+		return err
+	}
+	if exitCode != 0 {
+		return errors.New("failed to enable continual payouts")
 	}
 	return nil
 }

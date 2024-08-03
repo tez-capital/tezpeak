@@ -41,10 +41,6 @@
 						<div class="value">{timeLeft}</div>
 					</div>
 				</div>
-		
-				<Separator />
-
-			
 			{:else}
 				<div class="no-data">NO DATA</div>
 			{/if}

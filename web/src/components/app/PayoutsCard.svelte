@@ -10,8 +10,8 @@
 		goto('/tezpay');
 	}
 
-	$: hasTezpayStatus = !!$services.applications?.tezpay?.['tezpay'];
-	$: isTezpayRunning = $services.applications?.tezpay?.['tezpay']?.status === 'running';
+	$: hasTezpayStatus = !!$services.applications?.tezpay?.continual;
+	$: isTezpayRunning = $services.applications?.tezpay?.continual?.status === 'running';
 </script>
 
 <div class="governance-wrap">
@@ -26,7 +26,7 @@
 				<div class="row" />
 				<div class="property">Automatic Payouts:</div>
 				{#if !hasTezpayStatus}
-					<div class="value automatic-payouts-status warn">UNKNOWN</div>
+					<div class="value automatic-payouts-status ok">DISABLED</div>
 				{:else if isTezpayRunning}
 					<div class="value automatic-payouts-status ok">ACTIVE</div>
 				{:else}
@@ -45,7 +45,6 @@
 				{/if}
 				<div class="row" />
 			</div>
-			<Separator />
 			<div class="enter">
 				<Button on:click={open_governance}>OPEN</Button>
 			</div>

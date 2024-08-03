@@ -47,9 +47,7 @@
 			<div class="title">Free Space</div>
 			<div class="value">{formatBalance(calculateFreeSpace(status))}</div>
 		</div> -->
-		<div class="bottom-separator">
-			<Separator />
-		</div>
+
 		<div class="delegators">
 			<div class="value">{status.delegators_count}</div>
 			delegators

@@ -100,7 +100,28 @@ export async function startContinual() {
 
 	if (response.status !== 200) {
 		const body = await response.text()
-		console.log(body)
+		throw new Error(body)
+	}
+}
+
+export async function disableContinual() {
+	const response = await fetch('/api/tezpay/disable-continual', {
+		method: 'GET',
+	})
+
+	if (response.status !== 200) {
+		const body = await response.text()
+		throw new Error(body)
+	}
+}
+
+export async function enableContinual() {
+	const response = await fetch('/api/tezpay/enable-continual', {
+		method: 'GET',
+	})
+
+	if (response.status !== 200) {
+		const body = await response.text()
 		throw new Error(body)
 	}
 }

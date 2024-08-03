@@ -1,15 +1,11 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import Card from '@components/starlight/components/Card.svelte';
 	import Button from '@components/starlight/components/Button.svelte';
 	import Separator from '@components/app/Separator.svelte';
 	import { services, wallet } from '@app/state/tezpay';
 	import { formatBalance } from '@src/util/format';
 
-	function open_governance() {
-		goto('/tezpay');
-	}
-	import { createEventDispatcher, onDestroy } from 'svelte';
+	import { createEventDispatcher } from 'svelte';
 
 	export let phase: string;
 
@@ -17,11 +13,13 @@
 		view_configuration: void;
 		stop: void;
 		start: void;
+		enable: void;
+		disable: void;
 	}>();
 
-	$: hasTezpayStatus = !!$services.applications?.tezpay?.['tezpay'];
+	$: hasTezpayStatus = !!$services.applications?.tezpay?.continual;
 
-	$: isTezpayRunning = $services.applications?.tezpay?.['tezpay']?.status === 'running';
+	$: isTezpayRunning = $services.applications?.tezpay?.continual?.status === 'running';
 </script>
 
 <div class="governance-wrap">
@@ -36,7 +34,7 @@
 				<div class="row" />
 				<div class="property">Automatic Payouts:</div>
 				{#if !hasTezpayStatus}
-					<div class="value automatic-payouts-status warn">UNKNOWN</div>
+					<div class="value automatic-payouts-status">DISABLED</div>
 				{:else if isTezpayRunning}
 					<div class="value automatic-payouts-status ok">ACTIVE</div>
 				{:else}
@@ -55,12 +53,21 @@
 				{/if}
 				<div class="row" />
 			</div>
-			<Separator />
-			<div class="tools" class:disabled={!hasTezpayStatus}>
-				{#if isTezpayRunning}
-					<Button on:click={() => dispatch('stop')}>STOP</Button>
+
+			<div class="tools">
+				{#if hasTezpayStatus}
+					<div class="enable-btn">
+						<Button on:click={() => dispatch('enable')}>ENABLE</Button>
+					</div>
 				{:else}
-					<Button on:click={() => dispatch('start')}>START</Button>
+					<div class="disable-btn">
+						<Button on:click={() => dispatch('disable')}>DISABLE</Button>
+					</div>
+					{#if isTezpayRunning}
+						<Button on:click={() => dispatch('stop')}>STOP</Button>
+					{:else}
+						<Button on:click={() => dispatch('start')}>START</Button>
+					{/if}
 				{/if}
 			</div>
 		</div>
@@ -148,4 +155,17 @@
 .ok
 	color: var(--success-color)
 
+.tools
+	display: grid
+	grid-template-columns: 1fr 1fr
+	gap: var(--spacing)
+
+	.disable-btn
+		font-weight: bold
+		--button-text-color: var(--error-color)
+
+	.enable-btn
+		grid-column: 1 / -1
+		font-weight: bold
+		--button-text-color: var(--success-color)
 </style>

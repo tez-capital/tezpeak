@@ -5,6 +5,7 @@
 	import ProgressDialog from '@components/starlight/dialogs/Progress.svelte';
 	import SelectDialog from '@components/starlight/dialogs/Select.svelte';
 	import TerminalDialog from '@components/starlight/dialogs/Terminal.svelte';
+	import ConfirmDialog from '@components/starlight/dialogs/Confirm.svelte';
 
 	import ManualCard from '@src/components/app/tezpay/ManualCard.svelte';
 	import TestCard from '@src/components/app/tezpay/TestCard.svelte';
@@ -13,6 +14,8 @@
 	import HomeIcon from '@components/la/icons/home-solid.svelte';
 	import ScrollIcon from '@components/la/icons/scroll-solid.svelte';
 	import {
+		disableContinual,
+		enableContinual,
 		getTezpayInfo,
 		startContinual,
 		stopContinual,
@@ -23,6 +26,7 @@
 	import { onMount } from 'svelte';
 	import { EmptyTezpayInfo, type TezpayInfo } from '@src/common/types/tezpay';
 	import { formatLogMessageForTerminal } from '@src/util/log';
+	import { USER_CANCELED } from '@src/components/starlight/src/constants';
 
 	let info: TezpayInfo = EmptyTezpayInfo;
 	let payoutDialog: PayoutDialog;
@@ -30,6 +34,7 @@
 	let progressDialog: ProgressDialog;
 	let selectDialog: SelectDialog;
 	let terminalDialog: TerminalDialog;
+	let confirmDialog: ConfirmDialog;
 
 	onMount(async () => {
 		info = await getTezpayInfo();
@@ -39,7 +44,7 @@
 	async function start() {
 		try {
 			progressDialog.show({
-				title: 'Starting tezpay service...',
+				title: 'Starting continual services...',
 				progress: 'indeterminate'
 			});
 			await startContinual();
@@ -52,14 +57,58 @@
 			progressDialog.hide();
 		}
 	}
+
+	async function enable() {
+		try {
+			progressDialog.show({
+				title: 'Enabling continual services...',
+				progress: 'indeterminate'
+			});
+			await enableContinual();
+		} catch (e: any) {
+			await alertDialog.alert({
+				title: '⚠️',
+				message: e.message
+			});
+		} finally {
+			progressDialog.hide();
+		}
+	}
+
 	async function stop() {
 		try {
 			progressDialog.show({
-				title: 'Stopping tezpay service...',
+				title: 'Stopping continual services...',
 				progress: 'indeterminate'
 			});
 			await stopContinual();
 		} catch (e: any) {
+			await alertDialog.alert({
+				title: '⚠️',
+				message: e.message
+			});
+		} finally {
+			progressDialog.hide();
+		}
+	}
+
+	async function disable() {
+		try {
+			await confirmDialog.request_confirmation({
+				title: 'Disable Continual Services',
+				message: 'Are you sure you want to disable continual payouts?',
+				confirmText: 'Yes, Disable',
+				cancelText: 'Cancel'
+			});
+
+			progressDialog.show({
+				title: 'Enabling continual services...',
+				progress: 'indeterminate'
+			});
+			await disableContinual();
+		} catch (e: any) {
+			if (e === USER_CANCELED) return;
+
 			await alertDialog.alert({
 				title: '⚠️',
 				message: e.message
@@ -122,7 +171,7 @@
 	</div>
 	<div class="dashboard-grid">
 		<div class="info-card">
-			<InfoCard phase="" on:start={start} on:stop={stop} />
+			<InfoCard phase="" on:start={start} on:stop={stop} on:disable={disable} on:enable={enable} />
 		</div>
 		<!-- <AutomaticCard services={$services}  /> -->
 		<ManualCard on:pay={({ detail: { cycle, dry } }) => payoutDialog.generate(cycle, dry)} />
@@ -137,6 +186,7 @@
 	<AlertDialog bind:this={alertDialog} />
 	<SelectDialog bind:this={selectDialog} />
 	<TerminalDialog bind:this={terminalDialog} />
+	<ConfirmDialog bind:this={confirmDialog} />
 </div>
 
 <style lang="sass">

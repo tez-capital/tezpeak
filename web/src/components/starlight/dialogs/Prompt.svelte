@@ -108,4 +108,5 @@
 
 		.control-button
 			min-width: 100px
+			--button-horizontal-spacing: var(--spacing-x2)
 </style>
