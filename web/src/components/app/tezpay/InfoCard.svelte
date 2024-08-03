@@ -55,7 +55,7 @@
 			</div>
 
 			<div class="tools">
-				{#if hasTezpayStatus}
+				{#if !hasTezpayStatus}
 					<div class="enable-btn">
 						<Button on:click={() => dispatch('enable')}>ENABLE</Button>
 					</div>
