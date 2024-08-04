@@ -26,7 +26,7 @@
 				<div class="row" />
 				<div class="property">Automatic Payouts:</div>
 				{#if !hasTezpayStatus}
-					<div class="value automatic-payouts-status ok">DISABLED</div>
+					<div class="value automatic-payouts-status">DISABLED</div>
 				{:else if isTezpayRunning}
 					<div class="value automatic-payouts-status ok">ACTIVE</div>
 				{:else}
