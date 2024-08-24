@@ -5,7 +5,9 @@ import (
 	"embed"
 	"flag"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/filesystem"
@@ -40,7 +42,20 @@ func (c staticFs) Open(name string) (http.File, error) {
 func main() {
 	logLevelFlag := flag.String("log-level", "info", "Log level")
 	versionFlag := flag.Bool("version", false, "Print version and exit")
+	rootDirFlag := flag.String("root-dir", "", "Root directory (relevant only if auto detecting configuration)")
+	autodetectConfigurationFlag := flag.String("autodetect-configuration", "", "Path to file where to save autodetected configuration")
 	flag.Parse()
+
+	if autodetectConfigurationFlag != nil && *autodetectConfigurationFlag != "" {
+		rootDir := "."
+		if rootDirFlag != nil && *rootDirFlag != "" {
+			rootDir = *rootDirFlag
+		}
+
+		slog.Info("Autodetecting configuration", "rootDir", rootDir, "autodetectConfiguration", *autodetectConfigurationFlag)
+		configuration.AutoDetect(rootDir, *autodetectConfigurationFlag)
+		os.Exit(0)
+	}
 
 	if *versionFlag {
 		fmt.Printf("tezpeak %s - %s \n", constants.TEZPEAK_VERSION, constants.TEZPEAK_CODENAME)
