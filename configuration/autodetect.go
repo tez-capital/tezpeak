@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"path"
+	"path/filepath"
 	"slices"
 
 	"github.com/hjson/hjson-go/v4"
@@ -169,6 +170,12 @@ func autoDetectTezbakeConfiguration(rootDir string) (json.RawMessage, error) {
 
 func AutoDetect(rootDir string, destinationFile string) {
 	modules := map[string]json.RawMessage{}
+	absRootDir, err := filepath.Abs(rootDir)
+	if err != nil {
+		slog.Warn("Failed to get absolute path to root dir", "error", err.Error())
+	} else {
+		rootDir = absRootDir
+	}
 
 	tezpayConfig, err := autoDetectTezpayConfiguration(rootDir)
 	if err != nil {
@@ -186,6 +193,7 @@ func AutoDetect(rootDir string, destinationFile string) {
 
 	config := Runtime{
 		Id:      "",
+		AppRoot: rootDir,
 		Listen:  constants.DEFAULT_LISTEN_ADDRESS,
 		Modules: modules,
 		Mode:    AutoPeakMode,
