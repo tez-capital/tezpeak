@@ -13,7 +13,7 @@ Right now there are two supported ways to run tezpeak:
 Since tezbake 0.13.0-alpha the tezpeak is natively supported module. You can setup it in 3 simple steps:
 1. `tezbake setup --peak`
 2. Adjust configuration as needed
-NOTE: *You can autodetect basic setups with `tezpeak -root-dir <path to where are apps stored> -autodetect-configuration <config file name>`*
+    - NOTE: *You can autodetect basic setups with `tezpeak -root-dir <path to where are apps stored> -autodetect-configuration <config file name>`*
 3. `tezbake start --peak`
 
 Sample minimal configuration:
