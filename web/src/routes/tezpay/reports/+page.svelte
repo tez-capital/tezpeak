@@ -56,7 +56,7 @@
 						<div class="no-data">NO DATA</div>
 					{:else}
 						{#each sortedReports as report}
-							<Button label={report} on:click={() => goto(`/tezpay/reports/${report}?dry=true`)} />
+							<Button label={report} on:click={() => goto(`/tezpay/reports/${report}`)} />
 						{/each}
 					{/if}
 				</div>

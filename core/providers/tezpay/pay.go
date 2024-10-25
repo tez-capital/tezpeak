@@ -84,6 +84,7 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.Group) error {
 		if cycleQuery != "" {
 			cycle, err := strconv.ParseInt(cycleQuery, 10, 64)
 			if err != nil || cycle < 0 {
+				slog.Error("failed to parse cycle", "error", err.Error())
 				return c.Status(fiber.StatusBadRequest).SendString("Invalid 'cycle' parameter")
 			}
 		}
@@ -144,6 +145,7 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.Group) error {
 			var err error
 			numberOfCycles, err = strconv.ParseInt(numCycles, 10, 64)
 			if err != nil {
+				slog.Error("failed to parse numberOfCycles", "error", err.Error())
 				return c.Status(fiber.StatusBadRequest).SendString("Invalid 'numberOfCycles' parameter")
 			}
 		}
@@ -153,6 +155,7 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.Group) error {
 			var err error
 			lastCycle, err = strconv.ParseInt(lastCyc, 10, 64)
 			if err != nil {
+				slog.Error("failed to parse lastCycle", "error", err.Error())
 				return c.Status(fiber.StatusBadRequest).SendString("Invalid 'lastCycle' parameter")
 			}
 		}
@@ -220,6 +223,7 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.Group) error {
 	app.Get("/tezpay/list-reports", func(c *fiber.Ctx) error {
 		reports, err := tezpayProvider.ListReports(c.Query("dry") == "true")
 		if err != nil {
+			slog.Error("failed to list reports", "error", err.Error())
 			return c.Status(500).SendString("failed to list reports")
 		}
 
@@ -229,6 +233,7 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.Group) error {
 	app.Get("/tezpay/report", func(c *fiber.Ctx) error {
 		report, err := tezpayProvider.GetReport(c.Query("id"), c.Query("dry") == "true")
 		if err != nil {
+			slog.Error("failed to get report", "error", err.Error())
 			return c.Status(500).SendString("failed to get report")
 		}
 
@@ -241,6 +246,7 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.Group) error {
 		}
 		err := tezpayProvider.StopContinualPayouts()
 		if err != nil {
+			slog.Error("failed to stop service", "error", err.Error())
 			return c.Status(500).SendString("failed to stop service: " + err.Error())
 		}
 		return c.Status(200).SendString("service stopped")
@@ -252,6 +258,7 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.Group) error {
 		}
 		err := tezpayProvider.StartContinualPayouts()
 		if err != nil {
+			slog.Error("failed to start service", "error", err.Error())
 			return c.Status(500).SendString("failed to start service: " + err.Error())
 		}
 		return c.Status(200).SendString("service started")
@@ -263,6 +270,7 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.Group) error {
 		}
 		err := tezpayProvider.EnableContinualPayouts()
 		if err != nil {
+			slog.Error("failed to enable continual services", "error", err.Error())
 			return c.Status(500).SendString("failed to enable continual services: " + err.Error())
 		}
 		return c.Status(200).SendString("continual enabled")
@@ -274,6 +282,7 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.Group) error {
 		}
 		err := tezpayProvider.DisableContinualPayouts()
 		if err != nil {
+			slog.Error("failed to disable continual services", "error", err.Error())
 			return c.Status(500).SendString("failed to disable continual services: " + err.Error())
 		}
 		return c.Status(200).SendString("continual disabled")
@@ -371,6 +380,7 @@ func (t *TezpayProvider) Pay(blueprint *CyclePayoutBlueprint, outputChannel chan
 func (t *TezpayProvider) Version() (string, error) {
 	output, exitCode, err := t.tezpay.ExecuteGetOutput("version")
 	if err != nil {
+		slog.Error("failed to get version", "error", err.Error())
 		return "", err
 	}
 	if exitCode != 0 {
