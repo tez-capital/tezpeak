@@ -184,7 +184,7 @@ func checkRealized(ctx context.Context, rights BlockRights) (BlockRights, error)
 	validAttestations := lo.Reduce(ops, func(acc []string, g []rpc.Operation, _ int) []string {
 		for _, tx := range g {
 			for _, c := range tx.Contents {
-				if c.Kind() == tezos.OpTypeAttestation {
+				if c.Kind() == tezos.OpTypeAttestation || c.Kind() == tezos.OpTypeAttestationWithDal {
 					acc = append(acc, c.Meta().Delegate.String())
 				}
 			}
