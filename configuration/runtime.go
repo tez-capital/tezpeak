@@ -118,6 +118,9 @@ func (v *Runtime) GetTezbakeModuleConfiguration() (bool, *TezbakeModuleConfigura
 		if filepath.IsAbs(value) {
 			continue // skip absolute paths
 		}
+		if value == "" {
+			continue // skip empty paths
+		}
 		configuration.Applications[key] = filepath.Join(v.AppRoot, value)
 	}
 
@@ -179,18 +182,7 @@ func (r *Runtime) Validate() (*Runtime, error) {
 		return nil, constants.ErrInvalidWorkingDirectory
 	}
 
-	// TODO: optimize?
-	if ok, module := r.GetTezbakeModuleConfiguration(); ok {
-		if err := module.Validate(); err != nil {
-			return nil, err
-		}
-	}
-
-	if ok, module := r.GetTezpayModuleConfiguration(); ok {
-		if err := module.Validate(); err != nil {
-			return nil, err
-		}
-	}
+	// NOTE: should we validate child configurations and exit early if invalid?
 
 	return r, nil
 }

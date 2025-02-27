@@ -2,7 +2,6 @@ package common
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -84,6 +83,10 @@ var (
 )
 
 type GenericAmiApp struct{}
+type GenericAmiAppInfo struct {
+	base.InfoBase
+	Services map[string]base.AmiServiceInfo `json:"services"`
+}
 
 func GetServiceInfo(appPath string) (map[string]base.AmiServiceInfo, error) {
 	infoBytes, _, err := ami.ExecuteInfo(appPath, "--services")
@@ -91,12 +94,8 @@ func GetServiceInfo(appPath string) (map[string]base.AmiServiceInfo, error) {
 		return nil, fmt.Errorf("failed to collect app info (%s)", err.Error())
 	}
 
-	info, err := base.ParseInfoOutput(infoBytes)
-	infoString, _ := json.Marshal(info["services"])
-	result := map[string]base.AmiServiceInfo{}
-	json.Unmarshal(infoString, &result)
-
-	return result, err
+	info, err := base.ParseInfoOutput[GenericAmiAppInfo](infoBytes)
+	return info.Services, err
 }
 
 func getApplicationServiceStatus(_ context.Context, application string) (result map[string]base.AmiServiceInfo) {
@@ -154,6 +153,9 @@ func startApplicationServiceStatusProvider(ctx context.Context, application stri
 
 func StartServiceStatusProviders(ctx context.Context, applications map[string]string, statusChannel chan<- StatusUpdate) {
 	for name, path := range applications {
+		if path == "" {
+			continue
+		}
 		serviceStatusChannel := make(chan map[string]base.AmiServiceInfo)
 		startApplicationServiceStatusProvider(ctx, path, serviceStatusChannel)
 

@@ -2,10 +2,12 @@ package tezbake
 
 import (
 	"context"
+	"log/slog"
 	"maps"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/tez-capital/tezbake/apps/base"
 	"github.com/tez-capital/tezpeak/configuration"
 	"github.com/tez-capital/tezpeak/core/common"
 )
@@ -14,7 +16,7 @@ type Status struct {
 	Rights   RightsStatus                    `json:"rights,omitempty"`
 	Services common.AplicationServicesStatus `json:"services,omitempty"`
 	Bakers   BakersStatus                    `json:"bakers,omitempty"`
-	Ledgers  LedgerStatus                    `json:"ledgers,omitempty"`
+	Wallets  map[string]base.AmiWalletInfo   `json:"wallets,omitempty"`
 }
 
 func (status *Status) Clone() *Status {
@@ -26,7 +28,7 @@ func (status *Status) Clone() *Status {
 			Timestamp:    status.Services.Timestamp,
 		},
 		status.Bakers,  // no need to clone BakersStatus
-		status.Ledgers, // no need to clone LedgerStatus
+		status.Wallets, // no need to clone LedgerStatus
 	}
 }
 
@@ -44,9 +46,7 @@ func GetEmptyStatus() *Status {
 			Level:  0,
 			Bakers: map[string]*BakerStakingStatus{},
 		},
-		Ledgers: LedgerStatus{
-			Level: 0,
-		},
+		Wallets: make(map[string]base.AmiWalletInfo),
 	}
 }
 
@@ -86,6 +86,9 @@ func SetupModule(ctx context.Context, configuration *configuration.TezbakeModule
 					tezbakeStatus.Rights = statusUpdate.RightsStatus
 				case *BakersStatusUpdate:
 					tezbakeStatus.Bakers = statusUpdate.BakersStatus
+				case *WalletsStatusUpdate:
+					tezbakeStatus.Wallets = statusUpdate.WalletsStatus
+					slog.Info("Ledger status updated", "wallets", len(tezbakeStatus.Wallets), "status", tezbakeStatus.Wallets)
 					// case *LedgerStatusUpdate:
 					// TODO: LedgerStatusUpdate
 				}
@@ -97,8 +100,13 @@ func SetupModule(ctx context.Context, configuration *configuration.TezbakeModule
 		}
 	}()
 
-	startRightsStatusProviders(ctx, configuration.Bakers, configuration.RightsBlockWindow, tezbakeStatusChannel)
+	if configuration.RightsBlockWindow > 1 {
+		startRightsStatusProviders(ctx, configuration.Bakers, configuration.RightsBlockWindow, tezbakeStatusChannel)
+	}
 	setupBakerStatusProviders(ctx, configuration.Bakers, tezbakeStatusChannel)
+	if configuration.ArcBinaryPath != "" {
+		startWalletsStatusProvider(ctx, configuration.Applications["signer"], configuration.ArcBinaryPath, configuration.LedgerWallets, tezbakeStatusChannel)
+	}
 	common.StartServiceStatusProviders(ctx, configuration.Applications, tezbakeStatusChannel)
 
 	return nil

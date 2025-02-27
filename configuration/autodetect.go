@@ -206,5 +206,4 @@ func AutoDetect(rootDir string, destinationFile string) {
 	} else {
 		slog.Error("Failed to marshal autodetected configuration", "error", err.Error())
 	}
-
 }

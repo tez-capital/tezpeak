@@ -21,4 +21,8 @@ var (
 	ErrFailedToCreateRemoteSigner = errors.New("failed to create remote signer")
 	ErrFailedToBroadcastOperation = errors.New("failed to broadcast operation")
 	ErrDelegateNotRegistered      = errors.New("delegate not registered")
+
+	ErrArcBinaryVersionCheckFailed = errors.New("arc binary version check failed")
+	ErrInvalidArcBinaryVersion     = errors.New("invalid arc binary version")
+	ErrArcBinaryVersionTooOld      = errors.New("arc binary version too old")
 )

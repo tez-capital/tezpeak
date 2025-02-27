@@ -4,11 +4,14 @@ import (
 	"log/slog"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/hjson/hjson-go/v4"
 	"github.com/tez-capital/tezpeak/constants"
 	"github.com/trilitech/tzgo/tezos"
+	"golang.org/x/mod/semver"
 )
 
 type TezbakeModuleConfiguration struct {
@@ -17,6 +20,8 @@ type TezbakeModuleConfiguration struct {
 	SignerUrl         string   `json:"signer_url"`
 	RightsBlockWindow int64    `json:"rights_block_window"`
 	Bakers            []string `json:"bakers"`
+	LedgerWallets     []string `json:"ledger_wallets"`
+	ArcBinaryPath     string   `json:"arc_binary_path"`
 }
 
 func getDefaultTezbakeModuleConfiguration() *TezbakeModuleConfiguration {
@@ -29,6 +34,9 @@ func getDefaultTezbakeModuleConfiguration() *TezbakeModuleConfiguration {
 		},
 		SignerUrl:         constants.DEFAULT_BAKER_SIGNER_URL,
 		RightsBlockWindow: constants.DEFAULT_RIGHTS_BLOCK_WINDOW,
+		// ledger
+		LedgerWallets: constants.DEFAULT_LEDGER_WALLETS,
+		ArcBinaryPath: constants.DEFAULT_ARC_BINARY_PATH,
 	}
 }
 
@@ -127,6 +135,37 @@ func (c *TezbakeModuleConfiguration) Hydrate() {
 	if c.RightsBlockWindow <= 0 {
 		c.RightsBlockWindow = constants.DEFAULT_RIGHTS_BLOCK_WINDOW
 	}
+
+	if c.ArcBinaryPath == "" {
+		exePath, err := os.Executable()
+		if err == nil {
+			exeDir := filepath.Dir(exePath)
+			arcBinaryPath := filepath.Join(exeDir, "arc")
+			if _, err := os.Stat(arcBinaryPath); err == nil {
+				c.ArcBinaryPath = arcBinaryPath
+			}
+		}
+	}
+	if c.ArcBinaryPath == "" {
+		cwd, err := os.Getwd()
+		if err == nil {
+			arcBinaryPath := filepath.Join(cwd, "arc")
+			if _, err := os.Stat(arcBinaryPath); err == nil {
+				c.ArcBinaryPath = arcBinaryPath
+			}
+		}
+	}
+
+	if len(c.LedgerWallets) == 0 {
+		c.LedgerWallets = constants.DEFAULT_LEDGER_WALLETS
+	}
+}
+
+func normalizeVersion(version string) string {
+	if strings.HasPrefix(version, "v") {
+		return version
+	}
+	return "v" + version
 }
 
 func (c *TezbakeModuleConfiguration) Validate() error {
@@ -136,6 +175,28 @@ func (c *TezbakeModuleConfiguration) Validate() error {
 
 	if len(c.Bakers) == 0 {
 		return constants.ErrNoValidBakers
+	}
+
+	arcBinaryPath, err := exec.LookPath(c.ArcBinaryPath)
+	if err == nil {
+		cmd := exec.Command(arcBinaryPath, "--version")
+		output, err := cmd.Output()
+		if err != nil {
+			slog.Warn("Failed to get arc binary version", "error", err.Error())
+		} else {
+			version := normalizeVersion(strings.TrimSpace(string(output)))
+			if !semver.IsValid(version) {
+				slog.Warn("Invalid arc binary version", "version", version)
+			}
+
+			if semver.Compare(version, "v0.0.11") < 0 {
+				slog.Warn("Arc binary version is too old, please update", "version", version)
+			}
+		}
+	} else {
+		slog.Warn("Failed to find arc binary, ledger monitoring disabled", "error", err.Error())
+		// TODO: whether to monitor would be nicer through a flag in runtime configuration
+		c.ArcBinaryPath = ""
 	}
 
 	return nil

@@ -17,6 +17,8 @@ const (
 	DEFAULT_BAKER_NODE_URL        = "http://localhost:8732"
 	DEFAULT_BAKER_SIGNER_URL      = "http://localhost:20090"
 	DEFAULT_RIGHTS_BLOCK_WINDOW   = 50
+	DEFAULT_MONITOR_LEDGER_STATUS = true
+	DEFAULT_ARC_BINARY_PATH       = ""
 
 	// tezpay
 	TEZPAY_MODULE_ID        = "tezpay"
@@ -32,5 +34,8 @@ var (
 		"localhost",
 		"127.0.0.1",
 		"::1",
+	}
+	DEFAULT_LEDGER_WALLETS = []string{
+		"baker",
 	}
 )

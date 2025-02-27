@@ -252,8 +252,8 @@ func startRightsStatusProviders(ctx context.Context, bakers []string, blockWindo
 				}
 
 				// get slice of levels to query
-				minLevel := max(0, block.Level-blockWindow/2)
-				maxLevel := block.Level + blockWindow/2
+				minLevel := max(0, block.Level-blockWindow/2+1)
+				maxLevel := block.Level + blockWindow/2 + 1
 				newRights := []BlockRights{}
 				lastCachedLevel := int64(0)
 				for _, right := range status.Rights {
@@ -282,7 +282,6 @@ func startRightsStatusProviders(ctx context.Context, bakers []string, blockWindo
 
 				status.Level = block.Level
 				status.Rights = newRights
-
 				statusChannel <- &RightsStatusUpdate{status}
 			}
 		}

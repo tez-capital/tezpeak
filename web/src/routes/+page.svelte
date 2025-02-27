@@ -4,6 +4,7 @@
 		state as tezbakeStatus,
 		bakers as tezbakeBakers,
 		services as tezbakeServices,
+		wallets as tezbakeWallets,
 		futureBakingRights,
 		pastBakingRights,
 		votingPeriodInfo
@@ -16,6 +17,7 @@
 
 	import GovernancePeriodCard from '@src/components/app/GovernancePeriodCard.svelte';
 	import PayoutsCard from '@src/components/app/PayoutsCard.svelte';
+	import LedgerStatusCard from '@src/components/app/LedgerStatusCard.svelte';
 
 	$: showBakerColors = $tezbakeBakers.length > 1;
 	$: expandedBakingRights = $tezbakeBakers.length > 1;
@@ -26,6 +28,9 @@
 		{#if $tezbakeStatus}
 			{#each $tezbakeBakers as [baker, info]}
 				<BakerStatusCard baker={baker ?? {}} status={info} showColor={showBakerColors} />
+			{/each}
+			{#each $tezbakeWallets as [walletId, info]}
+				<LedgerStatusCard id={walletId.toUpperCase()} {info} />
 			{/each}
 		{/if}
 		{#if $tezpayStatus}

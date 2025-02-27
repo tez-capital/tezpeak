@@ -80,13 +80,19 @@ export type BakersStatus = {
 	}
 }
 
-export type LedgerStatus = unknown
+export type LedgerWalletStatus = {
+	app_version: string
+	authorized: boolean
+	ledger: string
+	ledger_status: string
+	pkh: string
+}
 
 export type TezbakeStatus = {
 	rights: RightsStatus,
 	services: ServicesStatus,
 	bakers: BakersStatus,
-	ledgers: LedgerStatus,
+	wallets: { [key: string]: LedgerWalletStatus },
 }
 
 export type WalletStatus = {
