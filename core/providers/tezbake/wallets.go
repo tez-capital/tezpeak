@@ -187,15 +187,26 @@ func collectWalletInfo(signerPath string, walletIds ...string) (map[string]base.
 	return info.Wallets, nil
 }
 
-func RefresActiveWalletsStatus(signerPath string) error {
-	wallets, err := collectWalletInfo(signerPath)
+func RefresActiveWalletsStatus(signerPath string, wallets []string) error {
+	info, err := collectWalletInfo(signerPath)
 	if err != nil {
 		slog.Error("failed to collect wallet info", "error", err.Error())
 		return err
 	}
+	newStatus := WalletsStatus{}
+	for walletId, wallet := range info {
+		if wallet.Kind != "ledger" {
+			continue
+		}
+		if !slices.Contains(wallets, walletId) {
+			continue
+		}
+		newStatus[walletId] = wallet
+	}
+
 	activeWalletStatusMtx.Lock()
 	defer activeWalletStatusMtx.Unlock()
-	activeWalletStatus = wallets
+	activeWalletStatus = newStatus
 	return nil
 }
 
@@ -207,7 +218,7 @@ func startWalletsStatusProvider(ctx context.Context, signerPath, arcPath string,
 	arcEventChannel := RunArcMonitor(ctx, arcPath)
 
 	for {
-		if err := RefresActiveWalletsStatus(signerPath); err != nil {
+		if err := RefresActiveWalletsStatus(signerPath, wallets); err != nil {
 			slog.Error("failed to collect wallet info", "error", err.Error())
 			time.Sleep(1 * time.Second)
 			continue
