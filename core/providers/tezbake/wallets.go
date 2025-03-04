@@ -198,7 +198,7 @@ func RefresActiveWalletsStatus(signerPath string, wallets []string) error {
 		if wallet.Kind != "ledger" {
 			continue
 		}
-		if !slices.Contains(wallets, walletId) {
+		if len(wallets) > 0 && !slices.Contains(wallets, walletId) {
 			continue
 		}
 		newStatus[walletId] = wallet
@@ -251,7 +251,7 @@ func startWalletsStatusProvider(ctx context.Context, signerPath, arcPath string,
 						if wallet.Kind != "ledger" {
 							continue
 						}
-						if !slices.Contains(wallets, walletId) {
+						if len(wallets) > 0 && !slices.Contains(wallets, walletId) {
 							continue
 						}
 

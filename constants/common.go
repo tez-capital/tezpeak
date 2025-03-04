@@ -35,7 +35,4 @@ var (
 		"127.0.0.1",
 		"::1",
 	}
-	DEFAULT_LEDGER_WALLETS = []string{
-		"baker",
-	}
 )

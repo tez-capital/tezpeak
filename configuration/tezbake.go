@@ -35,7 +35,7 @@ func getDefaultTezbakeModuleConfiguration() *TezbakeModuleConfiguration {
 		SignerUrl:         constants.DEFAULT_BAKER_SIGNER_URL,
 		RightsBlockWindow: constants.DEFAULT_RIGHTS_BLOCK_WINDOW,
 		// ledger
-		LedgerWallets: constants.DEFAULT_LEDGER_WALLETS,
+		LedgerWallets: []string{},
 		ArcBinaryPath: constants.DEFAULT_ARC_BINARY_PATH,
 	}
 }
@@ -154,10 +154,6 @@ func (c *TezbakeModuleConfiguration) Hydrate() {
 				c.ArcBinaryPath = arcBinaryPath
 			}
 		}
-	}
-
-	if len(c.LedgerWallets) == 0 {
-		c.LedgerWallets = constants.DEFAULT_LEDGER_WALLETS
 	}
 }
 
