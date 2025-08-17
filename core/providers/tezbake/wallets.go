@@ -56,8 +56,7 @@ type ArcEvent struct {
 	Level     string `json:"level"`
 	Fields    struct {
 		Message   string `json:"message"`
-		Bus       string `json:"bus"`
-		Address   string `json:"address"`
+		Path      string `json:"path"`
 		VendorID  string `json:"vendor_id"`
 		ProductID string `json:"product_id"`
 	} `json:"fields"`
@@ -65,8 +64,7 @@ type ArcEvent struct {
 
 type CheckLedgerResult struct {
 	Ledger     string `json:"ledger"`
-	Bus        string `json:"bus"`
-	Address    string `json:"address"`
+	DevicePath string `json:"device_path"`
 	Path       string `json:"path"`
 	AppVersion string `json:"app_version"`
 }
@@ -240,7 +238,7 @@ func startWalletsStatusProvider(ctx context.Context, signerPath, arcPath string,
 
 				switch event.Fields.Message {
 				case "connected":
-					slog.Info("ledger connected", "bus", event.Fields.Bus, "address", event.Fields.Address)
+					slog.Info("ledger connected", "path", event.Fields.Path)
 					// TODO: check directly
 					info, err := collectWalletInfo(signerPath, activeWalletStatus.DisconnectedWallets()...)
 					if err != nil {
@@ -263,20 +261,19 @@ func startWalletsStatusProvider(ctx context.Context, signerPath, arcPath string,
 						sendWalletStatusUpdate(statusChannel)
 					}
 				case "disconnected":
-					slog.Info("ledger disconnected", "bus", event.Fields.Bus, "address", event.Fields.Address)
+					slog.Info("ledger disconnected", "path", event.Fields.Path)
 					for walletId, wallet := range activeWalletStatus {
 						if wallet.Kind != "ledger" {
 							continue
 						}
 
-						if parseHexNumber(wallet.DeviceAddress) != parseHexNumber(event.Fields.Address) || parseHexNumber(wallet.DeviceBus) != parseHexNumber(event.Fields.Bus) {
+						if wallet.DevicePath != event.Fields.Path {
 							continue
 						}
 
 						newWallet := wallet
 						newWallet.LedgerStatus = "disconnected"
-						newWallet.DeviceBus = ""
-						newWallet.DeviceAddress = ""
+						newWallet.DevicePath = ""
 
 						func() {
 							activeWalletStatusMtx.Lock()

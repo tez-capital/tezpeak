@@ -1,6 +1,7 @@
 package configuration
 
 import (
+	"go/version"
 	"log/slog"
 	"net/url"
 	"os"
@@ -11,7 +12,6 @@ import (
 	"github.com/hjson/hjson-go/v4"
 	"github.com/tez-capital/tezpeak/constants"
 	"github.com/trilitech/tzgo/tezos"
-	"golang.org/x/mod/semver"
 )
 
 type TezbakeModuleConfiguration struct {
@@ -180,13 +180,13 @@ func (c *TezbakeModuleConfiguration) Validate() error {
 		if err != nil {
 			slog.Warn("Failed to get arc binary version", "error", err.Error())
 		} else {
-			version := normalizeVersion(strings.TrimSpace(string(output)))
-			if !semver.IsValid(version) {
-				slog.Warn("Invalid arc binary version", "version", version)
+			ver := normalizeVersion(strings.TrimSpace(string(output)))
+			if !version.IsValid(ver) {
+				slog.Warn("Invalid arc binary version", "version", ver)
 			}
 
-			if semver.Compare(version, "v0.0.11") < 0 {
-				slog.Warn("Arc binary version is too old, please update", "version", version)
+			if version.Compare(ver, "v0.0.11") < 0 {
+				slog.Warn("Arc binary version is too old, please update", "version", ver)
 			}
 		}
 	} else {
