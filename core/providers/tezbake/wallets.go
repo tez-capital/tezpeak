@@ -186,7 +186,7 @@ func collectWalletInfo(signerPath string, walletIds ...string) (map[string]base.
 	return info.Wallets, nil
 }
 
-func RefresActiveWalletsStatus(signerPath string, wallets []string) error {
+func RefreshActiveWalletsStatus(signerPath string, wallets []string) error {
 	if isCollectingWalletInfo.Load() {
 		return nil
 	}
@@ -221,7 +221,7 @@ func startWalletsStatusProvider(ctx context.Context, signerPath, arcPath string,
 	arcEventChannel := RunArcMonitor(ctx, arcPath)
 
 	for {
-		if err := RefresActiveWalletsStatus(signerPath, wallets); err != nil {
+		if err := RefreshActiveWalletsStatus(signerPath, wallets); err != nil {
 			slog.Error("failed to collect wallet info", "error", err.Error())
 			time.Sleep(1 * time.Second)
 			continue
@@ -294,6 +294,11 @@ func startWalletsStatusProvider(ctx context.Context, signerPath, arcPath string,
 				}
 
 				sendWalletStatusUpdate(statusChannel)
+			case <-time.After(5 * time.Second):
+				disconnectedWallets := activeWalletStatus.DisconnectedWallets()
+				if len(disconnectedWallets) > 0 {
+					RefreshActiveWalletsStatus(signerPath, disconnectedWallets)
+				}
 			}
 		}
 	}()
