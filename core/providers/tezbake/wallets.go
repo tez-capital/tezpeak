@@ -12,6 +12,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/tez-capital/tezbake/ami"
@@ -159,20 +160,20 @@ func RunArcMonitor(ctx context.Context, arcPath string) <-chan ArcEvent {
 var (
 	activeWalletStatus    = WalletsStatus{}
 	activeWalletStatusMtx = sync.RWMutex{}
+
+	isCollectingWalletInfo = atomic.Bool{}
 )
 
-func parseHexNumber(hex string) int {
-	var num int
-	fmt.Sscanf(hex, "%x", &num)
-	return num
-}
-
 func collectWalletInfo(signerPath string, walletIds ...string) (map[string]base.AmiWalletInfo, error) {
+	isCollectingWalletInfo.Store(true)
+	defer isCollectingWalletInfo.Store(false)
+
 	walletsIdsJoined := strings.Join(walletIds, ",")
 	walletsArg := fmt.Sprintf("--wallets=%s", walletsIdsJoined)
 	if len(walletIds) == 0 {
 		walletsArg = "--wallets"
 	}
+
 	args := []string{walletsArg}
 	infoBytes, _, err := ami.ExecuteInfo(signerPath, args...)
 	if err != nil {
@@ -186,6 +187,10 @@ func collectWalletInfo(signerPath string, walletIds ...string) (map[string]base.
 }
 
 func RefresActiveWalletsStatus(signerPath string, wallets []string) error {
+	if isCollectingWalletInfo.Load() {
+		return nil
+	}
+
 	info, err := collectWalletInfo(signerPath)
 	if err != nil {
 		slog.Error("failed to collect wallet info", "error", err.Error())

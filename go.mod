@@ -4,20 +4,20 @@ go 1.25.0
 
 require (
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
-	github.com/gofiber/fiber/v2 v2.52.6
+	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/google/uuid v1.6.0
 	github.com/hjson/hjson-go/v4 v4.5.0
 	github.com/samber/lo v1.51.0
-	github.com/tez-capital/tezbake v0.0.0-20250817211908-db404392eacc
-	github.com/tez-capital/tezpay v0.0.0-20250216135703-9cbe923cae55
-	github.com/trilitech/tzgo v1.21.1
-	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa
+	github.com/tez-capital/tezbake v0.0.0-20250819180118-ae234149eacc
+	github.com/tez-capital/tezpay v0.0.0-20250817145216-6862452713e2
+	github.com/trilitech/tzgo v1.22.0
+	golang.org/x/exp v0.0.0-20250819170805-f6d41f060dd3
 )
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7 // indirect
-	github.com/andybalholm/brotli v1.1.1 // indirect
-	github.com/bwmarrin/discordgo v0.28.1 // indirect
+	github.com/andybalholm/brotli v1.2.0 // indirect
+	github.com/bwmarrin/discordgo v0.29.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
 	github.com/dghubble/oauth1 v0.7.3 // indirect
 	github.com/echa/bson v0.0.0-20220430141917-c0fbdf7f8b79 // indirect
@@ -44,7 +44,7 @@ require (
 	github.com/spf13/pflag v1.0.7 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasthttp v1.59.0 // indirect
+	github.com/valyala/fasthttp v1.65.0 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/term v0.34.0 // indirect

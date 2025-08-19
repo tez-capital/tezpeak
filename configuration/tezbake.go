@@ -185,7 +185,7 @@ func (c *TezbakeModuleConfiguration) Validate() error {
 				slog.Warn("Invalid arc binary version", "version", ver)
 			}
 
-			if version.Compare(ver, "v0.0.11") < 0 {
+			if version.Compare(ver, "v0.0.12") < 0 {
 				slog.Warn("Arc binary version is too old, please update", "version", ver)
 			}
 		}
