@@ -297,10 +297,28 @@ func startWalletsStatusProvider(ctx context.Context, signerPath, arcPath string,
 			case <-time.After(5 * time.Second):
 				disconnectedWallets := activeWalletStatus.DisconnectedWallets()
 				if len(disconnectedWallets) > 0 {
-					RefreshActiveWalletsStatus(signerPath, disconnectedWallets)
+					info, err := collectWalletInfo(signerPath, disconnectedWallets...)
+					if err != nil {
+						slog.Error("failed to collect wallet info", "error", err.Error())
+						continue
+					}
+					for walletId, wallet := range info {
+						if wallet.Kind != "ledger" {
+							continue
+						}
+						if len(wallets) > 0 && !slices.Contains(wallets, walletId) {
+							continue
+						}
+
+						func() {
+							activeWalletStatusMtx.Lock()
+							defer activeWalletStatusMtx.Unlock()
+							activeWalletStatus[walletId] = wallet
+						}()
+						sendWalletStatusUpdate(statusChannel)
+					}
 				}
 			}
 		}
 	}()
-
 }
