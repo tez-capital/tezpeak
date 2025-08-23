@@ -6,6 +6,7 @@
 	import { formatBalance } from '@src/util/format';
 
 	import { createEventDispatcher } from 'svelte';
+	import { extractContinualServiceInfo } from '@src/util/tezpay';
 
 	export let phase: string;
 
@@ -17,9 +18,9 @@
 		disable: void;
 	}>();
 
-	$: hasTezpayStatus = !!$services.applications?.tezpay?.["tezpay-continual"];
+	$: hasTezpayStatus = !!extractContinualServiceInfo($services.applications?.tezpay);
 
-	$: isTezpayRunning = $services.applications?.tezpay?.["tezpay-continual"]?.status === 'running';
+	$: isTezpayRunning = extractContinualServiceInfo($services.applications?.tezpay)?.status === 'running';
 </script>
 
 <div class="governance-wrap">

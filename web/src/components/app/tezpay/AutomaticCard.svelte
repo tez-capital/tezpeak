@@ -5,6 +5,7 @@
 	import { formatTimestamp, formatTimestampAgo } from '@src/util/format';
 	import { createEventDispatcher, onDestroy } from 'svelte';
 	import Button from '@components/starlight/components/Button.svelte';
+	import { extractContinualServiceInfo } from '@src/util/tezpay';
 
 	export let services: ServicesStatus = {
 		timestamp: 0,
@@ -34,8 +35,8 @@
 	}>();
 
 	// this is ugly af but it works
-	$: hasTezpayStatus = !!services.applications?.tezpay?.["tezpay-continual"];
-	$: isTezpayRunning = services.applications?.tezpay?.["tezpay-continual"]?.status === 'running';
+	$: hasTezpayStatus = !!extractContinualServiceInfo(services.applications?.tezpay);
+	$: isTezpayRunning = extractContinualServiceInfo(services.applications?.tezpay)?.status === 'running';
 </script>
 
 <Card>

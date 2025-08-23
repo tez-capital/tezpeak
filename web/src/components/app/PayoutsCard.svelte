@@ -5,13 +5,14 @@
 	import Separator from './Separator.svelte';
 	import { services, wallet } from '@app/state/tezpay';
 	import { formatBalance } from '@src/util/format';
+	import { extractContinualServiceInfo } from '@src/util/tezpay';
 
 	function open_governance() {
 		goto('/tezpay');
 	}
 
-	$: hasTezpayStatus = !!$services.applications?.tezpay?.["tezpay-continual"];
-	$: isTezpayRunning = $services.applications?.tezpay?.["tezpay-continual"]?.status === 'running';
+	$: hasTezpayStatus = !!extractContinualServiceInfo($services.applications?.tezpay);
+	$: isTezpayRunning = extractContinualServiceInfo($services.applications?.tezpay)?.status === 'running';
 </script>
 
 <div class="governance-wrap">
