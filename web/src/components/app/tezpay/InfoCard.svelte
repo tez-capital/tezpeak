@@ -17,9 +17,9 @@
 		disable: void;
 	}>();
 
-	$: hasTezpayStatus = !!$services.applications?.tezpay?.continual;
+	$: hasTezpayStatus = !!$services.applications?.tezpay?.["tezpay-continual"];
 
-	$: isTezpayRunning = $services.applications?.tezpay?.continual?.status === 'running';
+	$: isTezpayRunning = $services.applications?.tezpay?.["tezpay-continual"]?.status === 'running';
 </script>
 
 <div class="governance-wrap">

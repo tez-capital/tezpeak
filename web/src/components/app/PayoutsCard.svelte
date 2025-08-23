@@ -10,8 +10,8 @@
 		goto('/tezpay');
 	}
 
-	$: hasTezpayStatus = !!$services.applications?.tezpay?.continual;
-	$: isTezpayRunning = $services.applications?.tezpay?.continual?.status === 'running';
+	$: hasTezpayStatus = !!$services.applications?.tezpay?.["tezpay-continual"];
+	$: isTezpayRunning = $services.applications?.tezpay?.["tezpay-continual"]?.status === 'running';
 </script>
 
 <div class="governance-wrap">

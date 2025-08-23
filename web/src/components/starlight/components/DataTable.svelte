@@ -13,7 +13,7 @@
 	} from '../types';
 	import CheckBox from './CheckBox.svelte';
 	import ArrowDown from '../icons/arrow-down.svelte';
-	import { onDestroy, onMount, SvelteComponent } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { createKeyPressHandler } from '../src/util';
 
 	export let hideControls = false;
@@ -224,6 +224,7 @@
 <div class="data-table">
 	<div class="width-observer">
 		<table bind:this={widthObserverTable}>
+			<thead>
 			<tr bind:this={widthObserverHeader}>
 				{#if selectionEnabled}
 					<div class="header cell checkbox*cell">
@@ -247,6 +248,7 @@
 					{/each}
 				</slot>
 			</tr>
+			</thead>
 		</table>
 	</div>
 	{#if !hideControls}
@@ -374,7 +376,7 @@
 								class:highlight-cell={[DataTableHighlightMode.cell].includes(highlightMode)}
 							>
 								{#if column.component !== undefined}
-									<SvelteComponent this={column.component} {item} {compactModeEnabled} />
+									<svelte:component this={column.component} {item} {compactModeEnabled} />
 								{:else if column.getValue !== undefined}
 									{column.getValue(item)}
 								{:else}
@@ -391,7 +393,7 @@
 								on:click={() => selectionEnabled && selectItem(item)}
 							>
 								{#if column.component !== undefined}
-									<SvelteComponent this={column.component} {item} {compactModeEnabled} />
+									<svelte:component this={column.component} {item} {compactModeEnabled} />
 								{:else}
 									<b class="compact-mode-row-header">{column.label ?? column.name}</b>
 

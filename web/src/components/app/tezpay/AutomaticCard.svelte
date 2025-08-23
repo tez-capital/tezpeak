@@ -34,8 +34,8 @@
 	}>();
 
 	// this is ugly af but it works
-	$: hasTezpayStatus = !!services.applications?.tezpay?.['tezpay'];
-	$: isTezpayRunning = services.applications?.tezpay?.['tezpay']?.status === 'running';
+	$: hasTezpayStatus = !!services.applications?.tezpay?.["tezpay-continual"];
+	$: isTezpayRunning = services.applications?.tezpay?.["tezpay-continual"]?.status === 'running';
 </script>
 
 <Card>

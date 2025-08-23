@@ -276,7 +276,7 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.Group) error {
 		return c.Status(200).SendString("continual enabled")
 	})
 
-	app.Get("/tezpay/disabled-continual", func(c *fiber.Ctx) error {
+	app.Get("/tezpay/disable-continual", func(c *fiber.Ctx) error {
 		if !tezpayProvider.CanPay() {
 			return c.Status(fiber.StatusForbidden).SendString("not allowed")
 		}
