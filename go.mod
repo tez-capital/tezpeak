@@ -8,10 +8,10 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hjson/hjson-go/v4 v4.5.0
 	github.com/samber/lo v1.51.0
-	github.com/tez-capital/tezbake v0.0.0-20250819180118-ae234149eacc
-	github.com/tez-capital/tezpay v0.0.0-20250817145216-6862452713e2
+	github.com/tez-capital/tezbake v0.0.0-20250907113433-9aad855c9ea3
+	github.com/tez-capital/tezpay v0.0.0-20250908130457-31533d0c0fb9
 	github.com/trilitech/tzgo v1.22.0
-	golang.org/x/exp v0.0.0-20250819170805-f6d41f060dd3
+	golang.org/x/exp v0.0.0-20250819193227-8b4c13bb791b
 )
 
 require (
@@ -40,13 +40,13 @@ require (
 	github.com/pkg/sftp v1.13.9 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/spf13/cobra v1.9.1 // indirect
-	github.com/spf13/pflag v1.0.7 // indirect
+	github.com/spf13/cobra v1.10.1 // indirect
+	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.65.0 // indirect
-	golang.org/x/crypto v0.41.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
-	golang.org/x/term v0.34.0 // indirect
-	golang.org/x/text v0.28.0 // indirect
+	golang.org/x/crypto v0.42.0 // indirect
+	golang.org/x/sys v0.36.0 // indirect
+	golang.org/x/term v0.35.0 // indirect
+	golang.org/x/text v0.29.0 // indirect
 )
