@@ -184,8 +184,14 @@ func checkRealized(ctx context.Context, rights BlockRights) (BlockRights, error)
 	validAttestations := lo.Reduce(ops, func(acc []string, g []rpc.Operation, _ int) []string {
 		for _, tx := range g {
 			for _, c := range tx.Contents {
-				if c.Kind() == tezos.OpTypeAttestation || c.Kind() == tezos.OpTypeAttestationWithDal {
+				switch c.Kind() {
+				case tezos.OpTypeAttestation, tezos.OpTypeAttestationWithDal:
 					acc = append(acc, c.Meta().Delegate.String())
+				case tezos.OpTypeAttestationsAggregate:
+					op := c.(*rpc.AttestationsAggregate)
+					for _, committee := range op.Metadata.CommitteeMetadata {
+						acc = append(acc, committee.Delegate.String())
+					}
 				}
 			}
 		}
@@ -201,11 +207,8 @@ func checkRealized(ctx context.Context, rights BlockRights) (BlockRights, error)
 			}
 
 			attestedBlock := 0
-			for _, attester := range validAttestations {
-				if attester == baker {
-					attestedBlock = 1
-					break
-				}
+			if slices.Contains(validAttestations, baker) {
+				attestedBlock = 1
 			}
 
 			rights.Rights[baker] = []int{blockRights, attestationRights, bakedBlock, attestedBlock}
