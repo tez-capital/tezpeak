@@ -35,17 +35,21 @@ func (s *WalletsStatus) GetData() any {
 	return s
 }
 
-func (s *WalletsStatus) DisconnectedWallets() []string {
-	result := make([]string, 0, len(*s))
+func (s *WalletsStatus) DisconnectedLedgerWallets() ([]string, []string) {
+	disconnectedLedgerWallets := make([]string, 0, len(*s))
+	protectedLedgerPaths := make([]string, 0)
 	for id, wallet := range *s {
 		if wallet.Kind != "ledger" {
 			continue
 		}
 		if wallet.LedgerStatus == "disconnected" {
-			result = append(result, id)
+			disconnectedLedgerWallets = append(disconnectedLedgerWallets, id)
+		}
+		if wallet.LedgerStatus == "connected" {
+			protectedLedgerPaths = append(protectedLedgerPaths, wallet.DevicePath)
 		}
 	}
-	return result
+	return disconnectedLedgerWallets, protectedLedgerPaths
 }
 
 const (
@@ -164,7 +168,7 @@ var (
 	isCollectingWalletInfo = atomic.Bool{}
 )
 
-func collectWalletInfo(signerPath string, walletIds ...string) (map[string]base.AmiWalletInfo, error) {
+func collectWalletInfo(signerPath string, walletIds []string, protectedDevicePaths []string) (map[string]base.AmiWalletInfo, error) {
 	isCollectingWalletInfo.Store(true)
 	defer isCollectingWalletInfo.Store(false)
 
@@ -175,6 +179,10 @@ func collectWalletInfo(signerPath string, walletIds ...string) (map[string]base.
 	}
 
 	args := []string{walletsArg}
+	if len(protectedDevicePaths) > 0 {
+		args = append(args, fmt.Sprintf("--skip-device-paths=%s", strings.Join(protectedDevicePaths, ",")))
+	}
+	slog.Info("collecting wallet info", "args", args)
 	infoBytes, _, err := ami.ExecuteInfo(signerPath, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to collect app info (%s)", err.Error())
@@ -191,7 +199,7 @@ func RefreshActiveWalletsStatus(signerPath string, wallets []string) error {
 		return nil
 	}
 
-	info, err := collectWalletInfo(signerPath)
+	info, err := collectWalletInfo(signerPath, nil, nil)
 	if err != nil {
 		slog.Error("failed to collect wallet info", "error", err.Error())
 		return err
@@ -245,7 +253,8 @@ func startWalletsStatusProvider(ctx context.Context, signerPath, arcPath string,
 				case "connected":
 					slog.Info("ledger connected", "path", event.Fields.Path)
 					// TODO: check directly
-					info, err := collectWalletInfo(signerPath, activeWalletStatus.DisconnectedWallets()...)
+					disconnectedWallets, protectedLedgerPaths := activeWalletStatus.DisconnectedLedgerWallets()
+					info, err := collectWalletInfo(signerPath, disconnectedWallets, protectedLedgerPaths)
 					if err != nil {
 						slog.Error("failed to collect wallet info", "error", err.Error())
 						continue
@@ -295,9 +304,9 @@ func startWalletsStatusProvider(ctx context.Context, signerPath, arcPath string,
 
 				sendWalletStatusUpdate(statusChannel)
 			case <-time.After(5 * time.Second):
-				disconnectedWallets := activeWalletStatus.DisconnectedWallets()
+				disconnectedWallets, protectedLedgerPaths := activeWalletStatus.DisconnectedLedgerWallets()
 				if len(disconnectedWallets) > 0 {
-					info, err := collectWalletInfo(signerPath, disconnectedWallets...)
+					info, err := collectWalletInfo(signerPath, disconnectedWallets, protectedLedgerPaths)
 					if err != nil {
 						slog.Error("failed to collect wallet info", "error", err.Error())
 						continue
