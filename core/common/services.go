@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -85,7 +86,7 @@ var (
 type GenericAmiApp struct{}
 type GenericAmiAppInfo struct {
 	base.InfoBase
-	Services map[string]base.AmiServiceInfo `json:"services"`
+	Services json.RawMessage
 }
 
 func GetServiceInfo(appPath string) (map[string]base.AmiServiceInfo, error) {
@@ -95,7 +96,20 @@ func GetServiceInfo(appPath string) (map[string]base.AmiServiceInfo, error) {
 	}
 
 	info, err := base.ParseInfoOutput[GenericAmiAppInfo](infoBytes)
-	return info.Services, err
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse app info (%s)", err.Error())
+	}
+
+	var services map[string]base.AmiServiceInfo
+	if err := json.Unmarshal(info.Services, &services); err != nil {
+		var arr []json.RawMessage
+		if err := json.Unmarshal(info.Services, &arr); err == nil {
+			return make(map[string]base.AmiServiceInfo), nil // no services
+		}
+		return nil, fmt.Errorf("failed to unmarshal services (%s)", err.Error())
+	}
+
+	return services, nil
 }
 
 func getApplicationServiceStatus(_ context.Context, application string) (result map[string]base.AmiServiceInfo) {
