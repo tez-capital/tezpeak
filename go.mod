@@ -8,9 +8,9 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hjson/hjson-go/v4 v4.5.0
 	github.com/samber/lo v1.52.0
-	github.com/tez-capital/tezbake v0.0.0-20260119204127-72b14ebda1b7
-	github.com/tez-capital/tezpay v0.0.0-20260122185132-fe6ce2e95ec8
-	github.com/trilitech/tzgo v1.24.0
+	github.com/tez-capital/tezbake v0.0.0-20260124093547-833cdfe3603c
+	github.com/tez-capital/tezpay v0.0.0-20260124192412-02b7b5b18a44
+	github.com/trilitech/tzgo v1.24.1
 	golang.org/x/exp v0.0.0-20260112195511-716be5621a96
 )
 
@@ -29,7 +29,7 @@ require (
 	github.com/charmbracelet/x/term v0.2.2 // indirect
 	github.com/clipperhouse/displaywidth v0.7.0 // indirect
 	github.com/clipperhouse/stringish v0.1.1 // indirect
-	github.com/clipperhouse/uax29/v2 v2.3.1 // indirect
+	github.com/clipperhouse/uax29/v2 v2.4.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
 	github.com/dghubble/oauth1 v0.7.3 // indirect
 	github.com/echa/bson v0.0.0-20220430141917-c0fbdf7f8b79 // indirect

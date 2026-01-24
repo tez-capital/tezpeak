@@ -38,6 +38,8 @@ github.com/clipperhouse/uax29/v2 v2.3.0 h1:SNdx9DVUqMoBuBoW3iLOj4FQv3dN5mDtuqwuh
 github.com/clipperhouse/uax29/v2 v2.3.0/go.mod h1:Wn1g7MK6OoeDT0vL+Q0SQLDz/KpfsVRgg6W7ihQeh4g=
 github.com/clipperhouse/uax29/v2 v2.3.1 h1:RjM8gnVbFbgI67SBekIC7ihFpyXwRPYWXn9BZActHbw=
 github.com/clipperhouse/uax29/v2 v2.3.1/go.mod h1:Wn1g7MK6OoeDT0vL+Q0SQLDz/KpfsVRgg6W7ihQeh4g=
+github.com/clipperhouse/uax29/v2 v2.4.0 h1:RXqE/l5EiAbA4u97giimKNlmpvkmz+GrBVTelsoXy9g=
+github.com/clipperhouse/uax29/v2 v2.4.0/go.mod h1:Wn1g7MK6OoeDT0vL+Q0SQLDz/KpfsVRgg6W7ihQeh4g=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/creack/pty v1.1.17 h1:QeVUsEDNrLBW4tMgZHvxy18sKtr6VI492kBhUfhDJNI=
 github.com/creack/pty v1.1.17/go.mod h1:MOBLtS5ELjhRRrroQr9kyvTxUAFNvYEK993ew/Vr4O4=
@@ -188,6 +190,8 @@ github.com/tez-capital/tezbake v0.0.0-20251206113924-ffd9f874c13c h1:SBRsukn0+bY
 github.com/tez-capital/tezbake v0.0.0-20251206113924-ffd9f874c13c/go.mod h1:O1gm5tV4RrfcfIYRgUmoOmqta//nOTudp7krEJiwkA4=
 github.com/tez-capital/tezbake v0.0.0-20260119204127-72b14ebda1b7 h1:rNyIzM5bbM8GJpSpWm/7oq1ZPX2IE1bY2KDNWbfetKA=
 github.com/tez-capital/tezbake v0.0.0-20260119204127-72b14ebda1b7/go.mod h1:cI8RypxaWitc72L9DuMpf7aC29sROCgw1BCdu8f5wL0=
+github.com/tez-capital/tezbake v0.0.0-20260124093547-833cdfe3603c h1:0dznK7Df9bJZMISTFwePz/uHGJ2AOJdc1SFur9QnqIs=
+github.com/tez-capital/tezbake v0.0.0-20260124093547-833cdfe3603c/go.mod h1:ic4gXxDaT08YE/4cZc8cxkejwKrp90rvBXKUZeTquqE=
 github.com/tez-capital/tezpay v0.0.0-20250216135703-9cbe923cae55 h1:orNg5Q8CItEfXpHY7VxQW7Xk0nU5S/b5qq5FFLGLnU0=
 github.com/tez-capital/tezpay v0.0.0-20250216135703-9cbe923cae55/go.mod h1:h0lygfoiG70NkCvL8SqipSu3cJPPZqI8Bw2v6w6SF0M=
 github.com/tez-capital/tezpay v0.0.0-20250817145216-6862452713e2 h1:Q5tjHmSZJ6M41gAF9wnRMG46mY9i0t4AdeVERVR0uws=
@@ -202,6 +206,8 @@ github.com/tez-capital/tezpay v0.0.0-20251218130053-c033ec90742e h1:38fy0F7pZ4lh
 github.com/tez-capital/tezpay v0.0.0-20251218130053-c033ec90742e/go.mod h1:Ue6mDyMf2DMB+jUdx8aE5pONYTeXaayaOuqvDyuspb0=
 github.com/tez-capital/tezpay v0.0.0-20260122185132-fe6ce2e95ec8 h1:PsMTPRz/v3ua6ycA1AATYv+77S06OX8Uiue6gcACccc=
 github.com/tez-capital/tezpay v0.0.0-20260122185132-fe6ce2e95ec8/go.mod h1:iBS9mfxPGbFeF7sstzwqcQ2ZykjBVYl5gUC8B5COVfY=
+github.com/tez-capital/tezpay v0.0.0-20260124192412-02b7b5b18a44 h1:oAv8eZUIDlTnfcZolOoaOzYy+1iMPy4aVdCew+HYE5I=
+github.com/tez-capital/tezpay v0.0.0-20260124192412-02b7b5b18a44/go.mod h1:8haffcHYdUc61o1apdv1DVDJqbzgZw1JuTiCrsvZ7eU=
 github.com/trilitech/tzgo v1.21.1 h1:YaLNvtXyNr69cl7EyQIAYWm3EUwZ6zB5jCfFW3VSU70=
 github.com/trilitech/tzgo v1.21.1/go.mod h1:YU8inIqQeOmGKAs4+t/l6aQ1SYWom1SMb3mpRnHj/MM=
 github.com/trilitech/tzgo v1.22.0 h1:J9fe6HdSebir04wt1PBX3LHqucgzLpYME81NWjhp30k=
@@ -214,6 +220,8 @@ github.com/trilitech/tzgo v1.23.3 h1:I5I/zwV6B/HN9B1Z1FZ3xQdILsghjpKP/fO1tiTbsbA
 github.com/trilitech/tzgo v1.23.3/go.mod h1:YU8inIqQeOmGKAs4+t/l6aQ1SYWom1SMb3mpRnHj/MM=
 github.com/trilitech/tzgo v1.24.0 h1:3OfNzTjLj8VBX6zNf0DULG+46An06sqbgTeynOcrDqs=
 github.com/trilitech/tzgo v1.24.0/go.mod h1:YU8inIqQeOmGKAs4+t/l6aQ1SYWom1SMb3mpRnHj/MM=
+github.com/trilitech/tzgo v1.24.1 h1:Ts81sRhIZ8lQFrlzmyNafo4n8tTiF5yxOSvOVRTjy28=
+github.com/trilitech/tzgo v1.24.1/go.mod h1:YU8inIqQeOmGKAs4+t/l6aQ1SYWom1SMb3mpRnHj/MM=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasthttp v1.59.0 h1:Qu0qYHfXvPk1mSLNqcFtEk6DpxgA26hy6bmydotDpRI=
