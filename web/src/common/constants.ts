@@ -4,7 +4,7 @@ export const TEZPEAK_VERSION = "<VERSION>"
 export const TEZPEAK_CODENAME = "<CODENAME>"
 
 export const DEPOSIT_LIMIT_DELEGATION_CAPACITY_MULTIPLIER = 9n
-export const BLOCK_TIME = 10 * 1000 // 15 seconds in milliseconds
+export const BLOCK_TIME = 6 * 1000 // 6 seconds in milliseconds
 
 export const EXPLORER_URL = "https://tzkt.io"
 
