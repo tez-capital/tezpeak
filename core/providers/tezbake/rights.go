@@ -53,13 +53,20 @@ func initRights(bakers []string) (map[string]int, map[string]int) {
 	return baking, attestations
 }
 
+type blockBakingRights []struct {
+	Level        int64  `json:"level"`
+	Delegate     string `json:"delegate"`
+	Round        int64  `json:"round"`
+	ConsensusKey string `json:"consensus_key"`
+}
+
 // [{"level":5026842,"delegates":[{"delegate":"tz1P6WKJu2rcbxKiKRZHKQKmKrpC9TfW1AwM","first_slot":2608,"attestation_power":1,"consensus_key":"tz1P6WKJu2rcbxKiKRZHKQKmKrpC9TfW1AwM"}]}]
-type rights struct {
+type blockAttestationRights struct {
 	Level     int64 `json:"level"`
 	Delegates []struct {
 		Delegate         string `json:"delegate"`
 		FirstSlot        int64  `json:"first_slot"`
-		AttestationPower int    `json:"attestation_power"`
+		AttestationPower int    `json:"attesting_power"`
 		ConsensusKey     string `json:"consensus_key"`
 	} `json:"delegates"`
 }
@@ -75,21 +82,22 @@ func attemptWithRightsRpcClients[T any](ctx context.Context, f func(client *comm
 	})
 }
 
-func getBlockRights(ctx context.Context, block int64) (rights, rights, error) {
-	bakingRights := rights{}
-	attestationRights := rights{}
+func getBlockRights(ctx context.Context, block int64) (blockBakingRights, blockAttestationRights, error) {
+	bakingRights := blockBakingRights{}
+	attestationRights := blockAttestationRights{}
 	var bakingRightsErr, attestationRightsErr error
 	bakingRightsChan := make(chan struct{})
 	attestationRightsChan := make(chan struct{})
 
 	go func() {
 		url := fmt.Sprintf("chains/main/blocks/head/helpers/baking_rights?all=true&max_priority=1&level=%d", block)
-		bakingRights, bakingRightsErr = attemptWithRightsRpcClients(ctx, func(client *common.ActiveRpcNode) (rights, error) {
-			bakingRights := make([]rights, 0)
+		bakingRights, bakingRightsErr = attemptWithRightsRpcClients(ctx, func(client *common.ActiveRpcNode) (blockBakingRights, error) {
+			bakingRights := blockBakingRights{}
 			err := client.Get(ctx, url, &bakingRights)
-			result := rights{Level: block}
+			result := blockBakingRights{}
+
 			if len(bakingRights) > 0 {
-				result = bakingRights[0]
+				result = bakingRights
 			}
 			return result, err
 		})
@@ -98,10 +106,10 @@ func getBlockRights(ctx context.Context, block int64) (rights, rights, error) {
 
 	go func() {
 		url := fmt.Sprintf("chains/main/blocks/head/helpers/attestation_rights?all=true&max_priority=1&level=%d", block)
-		attestationRights, attestationRightsErr = attemptWithRightsRpcClients(ctx, func(client *common.ActiveRpcNode) (rights, error) {
-			attestationRights := make([]rights, 0)
+		attestationRights, attestationRightsErr = attemptWithRightsRpcClients(ctx, func(client *common.ActiveRpcNode) (blockAttestationRights, error) {
+			attestationRights := make([]blockAttestationRights, 0)
 			err := client.Get(ctx, url, &attestationRights)
-			result := rights{Level: block}
+			result := blockAttestationRights{Level: block}
 			if len(attestationRights) > 0 {
 				result = attestationRights[0]
 			}
@@ -119,7 +127,7 @@ func getBlockRightsFor(ctx context.Context, block int64, bakers []string) (Block
 
 	bakingRights, attestationRights, err := getBlockRights(ctx, block-1)
 
-	for _, right := range bakingRights.Delegates {
+	for _, right := range bakingRights {
 		if _, ok := relevantBakingRights[right.Delegate]; !ok {
 			continue
 		}
