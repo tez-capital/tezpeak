@@ -94,12 +94,7 @@ func getBlockRights(ctx context.Context, block int64) (blockBakingRights, blockA
 		bakingRights, bakingRightsErr = attemptWithRightsRpcClients(ctx, func(client *common.ActiveRpcNode) (blockBakingRights, error) {
 			bakingRights := blockBakingRights{}
 			err := client.Get(ctx, url, &bakingRights)
-			result := blockBakingRights{}
-
-			if len(bakingRights) > 0 {
-				result = bakingRights
-			}
-			return result, err
+			return bakingRights, err
 		})
 		bakingRightsChan <- struct{}{}
 	}()
@@ -126,8 +121,10 @@ func getBlockRightsFor(ctx context.Context, block int64, bakers []string) (Block
 	relevantBakingRights, relevantAttestationRights := initRights(bakers)
 
 	bakingRights, attestationRights, err := getBlockRights(ctx, block-1)
-
 	for _, right := range bakingRights {
+		if right.Round > 0 {
+			continue
+		}
 		if _, ok := relevantBakingRights[right.Delegate]; !ok {
 			continue
 		}

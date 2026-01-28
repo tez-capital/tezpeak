@@ -12,8 +12,28 @@ export const APP_ID = derived(state, $state => {
 	return subId ? `TEZPEAK - ${subId}` : "TEZPEAK"
 })
 
+let paused = false
+let lastState: string | undefined
 const provider = new StatusProvider("/api/sse")
+document.onvisibilitychange = () => {
+	switch (document.visibilityState) {
+		case "visible":
+			paused = false
+			if (lastState) {
+				state.set(JSON.parse(lastState) as PeakStatus)
+				lastState = undefined
+			}
+			break
+		default:
+			paused = true
+			break
+	}
+}
 provider.onmessage = (event) => {
+	if (paused) {
+		lastState = event.data
+		return
+	}
 	const data = JSON.parse(event.data) as PeakStatus
 	state.set(data)
 }
