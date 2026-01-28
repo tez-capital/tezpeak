@@ -35,9 +35,12 @@ func autoDetectTezpayConfiguration(rootDir string) (json.RawMessage, error) {
 		return nil, errors.New("rootDir is empty")
 	}
 
-	if !ami.IsAppInstalled(path.Join(rootDir, constants.DEFAULT_TEZPAY_APP_PATH)) {
+	workingDir := path.Join(rootDir, constants.DEFAULT_TEZPAY_APP_PATH)
+	if !ami.IsAppInstalled(workingDir) {
 		return nil, errors.New("tezpay not found, skipping")
 	}
+
+	state.Init(workingDir, state.StateInitOptions{})
 
 	config, err := configuration.Load()
 	if err != nil {

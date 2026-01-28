@@ -68,6 +68,12 @@ func main() {
 		panic(err)
 	}
 
+	// // 11695267
+	// // tz1hZvgjekGo7DmQjWh7XnY5eLQD8wNYPczE
+	// common.StartNodeStatusProviders(context.Background(), config.Nodes, nil)
+	// fmt.Println(tezbake.GetBlockRightsFor(context.Background(), 11695742, []string{"tz1P6WKJu2rcbxKiKRZHKQKmKrpC9TfW1AwM"}))
+	// os.Exit(0)
+
 	app := fiber.New()
 	group, ok := app.Group("/api").(*fiber.Group)
 	if !ok {
