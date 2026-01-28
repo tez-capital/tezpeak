@@ -10,7 +10,7 @@ export type VotingPeriodInfo = {
 
 export type NodeStatus = {
 	address?: string
-	connection_status: "connected" | "disconnected" | "connecting"
+	connection_status: "connected" | "disconnected" | "connecting" | "paused"
 	block?: {
 		hash: string
 		timestamp: string

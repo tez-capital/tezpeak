@@ -1,4 +1,4 @@
-export type StatusProviderStatus = "connected" | "disconnected" | "reconnecting" ;
+export type StatusProviderStatus = "connected" | "disconnected" | "reconnecting" | "paused";
 
 export class StatusProvider {
 	private url: string;
@@ -12,6 +12,15 @@ export class StatusProvider {
 	constructor(url: string, retryDelay = 3000) {
 		this.url = url;
 		this.retryDelay = retryDelay;
+		this.connect();
+	}
+
+	public pause() {
+		this.eventSource?.close();
+		this.onstatuschange("paused");
+	}
+
+	public resume() {
 		this.connect();
 	}
 

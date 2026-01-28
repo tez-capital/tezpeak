@@ -23,6 +23,7 @@
 					class="connection-status-sign"
 					class:connected={$APP_CONNECTION_STATUS === 'connected'}
 					class:reconnecting={$APP_CONNECTION_STATUS === 'reconnecting'}
+					class:paused={$APP_CONNECTION_STATUS === 'paused'}
 				></div>
 				{$APP_CONNECTION_STATUS}
 			</div>
@@ -103,6 +104,9 @@
 					background-color: var(--success-color) !important
 				
 				&.reconnecting
+					background-color: var(--warning-color) !important
+				
+				&.paused
 					background-color: var(--warning-color) !important
 
 		.status-bar
