@@ -1,14 +1,15 @@
 package common
 
 import (
+	"cmp"
 	"context"
 	"log/slog"
+	"maps"
 	"net/http"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
-	"github.com/samber/lo"
 	"github.com/tez-capital/tezpeak/configuration"
 	"github.com/tez-capital/tezpeak/constants"
 	"github.com/trilitech/tzgo/rpc"
@@ -152,12 +153,12 @@ func AttemptWithRpcClients[T any](ctx context.Context, f func(client *ActiveRpcN
 	var err error
 	var result T
 
-	nodesByPriority := lo.Values(activeRpcNodes)
-	sort.Slice(nodesByPriority, func(i, j int) bool {
-		return nodesByPriority[i].Priority < nodesByPriority[j].Priority
+	nodesByPriority := slices.Collect(maps.Values(activeRpcNodes))
+	slices.SortFunc(nodesByPriority, func(a, b *ActiveRpcNode) int {
+		return cmp.Compare(a.Priority, b.Priority)
 	})
 
-	for _, node := range activeRpcNodes {
+	for _, node := range nodesByPriority {
 		if !isClientSynced(ctx, node.Client) {
 			continue
 		}

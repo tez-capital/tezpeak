@@ -2,12 +2,12 @@ package tezpay
 
 import (
 	"context"
+	"maps"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/tez-capital/tezpeak/configuration"
 	"github.com/tez-capital/tezpeak/core/common"
-	"golang.org/x/exp/maps"
 )
 
 type Status struct {

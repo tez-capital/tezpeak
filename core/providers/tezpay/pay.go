@@ -57,13 +57,13 @@ func (tezpayProvider *TezpayProvider) RegisterApi(app *fiber.Group) error {
 			configurationString = "{}"
 		}
 
-		var configuration map[string]interface{}
+		var configuration map[string]any
 		err = hjson.Unmarshal([]byte(configurationString), &configuration)
 		if err != nil {
 			slog.Error("failed to parse configuration", "error", err.Error())
 		}
 
-		return c.JSON(map[string]interface{}{
+		return c.JSON(map[string]any{
 			"version":       versions,
 			"configuration": configuration,
 		})

@@ -129,4 +129,9 @@ Refer to the [ami-tezpeak readme](https://github.com/tez-capital/ami-tezpeak) fo
 	# private - assumes private environment, all operations are allowed
     mode: auto
 }
-``` 
+```
+
+### Development
+
+Go 1.27.3 or newer is required. Release builds read the Go version from `go.mod`.
+Run `go test ./...` and `go vet ./...` to check the Go code, and `go build .` to build the server with the assets in `web/dist`.

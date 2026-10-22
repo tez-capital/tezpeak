@@ -22,7 +22,6 @@ func InitLog(logLevel string) {
 		os.Exit(1)
 	}
 
-	// replace next 4 lines with SetLogLoggerLevel in go 1.22
 	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: l,
 	})

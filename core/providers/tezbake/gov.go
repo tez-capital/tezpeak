@@ -85,16 +85,8 @@ func attemptWithGovernanceRpcClients[T any](ctx context.Context, f func(client *
 	})
 }
 
-func wrapInWaithGroup(wg *sync.WaitGroup, f func()) {
-	wg.Add(1)
-	go func() {
-		f()
-		wg.Done()
-	}()
-}
-
 func (governanceProvider *GovernanceProvider) startVotersCollector(ctx context.Context, detail *GovernancePeriodDetail, wg *sync.WaitGroup) {
-	wrapInWaithGroup(wg, func() {
+	wg.Go(func() {
 		voters, _ := attemptWithGovernanceRpcClients(ctx, func(client *common.ActiveRpcNode) (rpc.VoterList, error) {
 			voters, err := client.ListVoters(ctx, rpc.Head)
 			if err != nil {
@@ -109,7 +101,7 @@ func (governanceProvider *GovernanceProvider) startVotersCollector(ctx context.C
 }
 
 func (governanceProvider *GovernanceProvider) startProposalsCollector(ctx context.Context, detail *GovernancePeriodDetail, wg *sync.WaitGroup) {
-	wrapInWaithGroup(wg, func() {
+	wg.Go(func() {
 		proposals, _ := attemptWithGovernanceRpcClients(ctx, func(client *common.ActiveRpcNode) (rpc.ProposalList, error) {
 			proposals, err := client.ListProposals(ctx, rpc.Head)
 			if err != nil {
@@ -125,7 +117,7 @@ func (governanceProvider *GovernanceProvider) startProposalsCollector(ctx contex
 // [["Pt1JoinAscentToMountVinsonAGNqxgMLDAB8TqZpDwMTU5eCx",["tz1P6WKJu2rcbxKiKRZHKQKmKrpC9TfW1AwM","tz1LjZjdF1wFgUtVyNsrr8P1uYaoBJGTTPyr"]]]
 
 func (governanceProvider *GovernanceProvider) startVotesCollector(ctx context.Context, detail *GovernancePeriodDetail, wg *sync.WaitGroup) {
-	wrapInWaithGroup(wg, func() {
+	wg.Go(func() {
 		votes, _ := attemptWithGovernanceRpcClients(ctx, func(client *common.ActiveRpcNode) (VoteList, error) {
 			var rawVotes [][]any
 
@@ -161,7 +153,7 @@ func (governanceProvider *GovernanceProvider) startVotesCollector(ctx context.Co
 }
 
 func (governanceProvider *GovernanceProvider) startQuorumCollector(ctx context.Context, detail *GovernancePeriodDetail, wg *sync.WaitGroup) {
-	wrapInWaithGroup(wg, func() {
+	wg.Go(func() {
 		quorum, _ := attemptWithGovernanceRpcClients(ctx, func(client *common.ActiveRpcNode) (int, error) {
 			quorum, err := client.GetVoteQuorum(ctx, rpc.Head)
 			if err != nil {
@@ -174,7 +166,7 @@ func (governanceProvider *GovernanceProvider) startQuorumCollector(ctx context.C
 }
 
 func (governanceProvider *GovernanceProvider) startBallotsCollector(ctx context.Context, detail *GovernancePeriodDetail, wg *sync.WaitGroup) {
-	wrapInWaithGroup(wg, func() {
+	wg.Go(func() {
 		ballotList, _ := attemptWithGovernanceRpcClients(ctx, func(client *common.ActiveRpcNode) (rpc.BallotList, error) {
 			ballots, err := client.ListBallots(ctx, rpc.Head)
 			if err != nil {
@@ -187,7 +179,7 @@ func (governanceProvider *GovernanceProvider) startBallotsCollector(ctx context.
 }
 
 func (governanceProvider *GovernanceProvider) startSummaryCollector(ctx context.Context, detail *GovernancePeriodDetail, wg *sync.WaitGroup) {
-	wrapInWaithGroup(wg, func() {
+	wg.Go(func() {
 		summary, _ := attemptWithGovernanceRpcClients(ctx, func(client *common.ActiveRpcNode) (*rpc.BallotSummary, error) {
 			summary, err := client.GetVoteResult(ctx, rpc.Head)
 			if err != nil {
@@ -200,7 +192,7 @@ func (governanceProvider *GovernanceProvider) startSummaryCollector(ctx context.
 }
 
 func (governanceProvider *GovernanceProvider) startProtocolCollector(ctx context.Context, detail *GovernancePeriodDetail, wg *sync.WaitGroup) {
-	wrapInWaithGroup(wg, func() {
+	wg.Go(func() {
 		currentProposal, _ := attemptWithGovernanceRpcClients(ctx, func(client *common.ActiveRpcNode) (tezos.ProtocolHash, error) {
 			proposal, err := client.GetVoteProposal(ctx, rpc.Head)
 			if err != nil {
