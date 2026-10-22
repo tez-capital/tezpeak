@@ -1,66 +1,27 @@
 <script lang="ts">
-	import Separator from '../Separator.svelte';
-	import Card from '@components/starlight/components/Card.svelte';
-	import { createEventDispatcher, onDestroy } from 'svelte';
-	import Button from '../../starlight/components/Button.svelte';
+	import { Button, Card } from '@alis-is/starlight';
 
-	const dispatch = createEventDispatcher<{
-		test_notifications: void;
-		test_extensions: void;
-	}>();
+	interface Props {
+		ontestnotifications: () => void;
+		ontestextensions: () => void;
+	}
+	let { ontestnotifications, ontestextensions }: Props = $props();
 </script>
 
-<div class="test-wrap">
-	<Card class="test-card">
-		<div class="test">
-			<div class="title">
-				<h5>TEST</h5>
-			</div>
-			<Separator />
+<Card>
+	{#snippet header()}
+		<h3 class="sl-card-title">Test</h3>
+	{/snippet}
 
-			<div class="tools">
-				<Button on:click={() => dispatch('test_notifications')}>Notifications</Button>
-				<Button on:click={() => dispatch('test_extensions')}>Extensions</Button>
-			</div>
-		</div>
-	</Card>
-</div>
+	<p class="hint">Send a test notification or run the configured extensions without paying anything.</p>
+
+	{#snippet footer()}
+		<Button onclick={ontestnotifications}>Notifications</Button>
+		<Button onclick={ontestextensions}>Extensions</Button>
+	{/snippet}
+</Card>
 
 <style lang="sass">
-.test-wrap
-	display: grid
-	grid-template-rows: 1fr
-	width: 100%
-	height: 100%
-	user-select: none
-	// &:hover
-	// 	cursor: pointer
-	// 	transition: background-color 0.2s
-	// 	--card-background-color: #151515
-
-	:global(.test-card)
-		box-sizing: border-box
-		height: 100%
-
-.test
-	display: grid
-	grid-template-rows: auto auto 1fr
-	height: 100%
-	gap: var(--spacing)
-	.title
-		display: flex
-		justify-content: center
-		h5
-			font-size: 1.5rem
-			font-weight: 500
-			margin: 0
-	.tools
-		display: flex
-		flex-direction: column
-		justify-content: center
-		align-items: center
-		height: 100%
-		gap: var(--spacing)
-
-
+p
+	margin: 0
 </style>

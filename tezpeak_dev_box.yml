@@ -1,0 +1,62 @@
+# Setup: terra ./tezpeak_dev_box.yml setup
+# Start/attach: terra ./tezpeak_dev_box.yml
+# After changing on_create: stop the box, then setup --rebuild.
+# Inside the box: go mod download && cd /work/web && pnpm install --frozen-lockfile
+#   @alis-is/starlight comes from GitHub Packages; first run
+#   pnpm config set //npm.pkg.github.com/:_authToken <token with read:packages>
+# Frontend: cd /work/web && pnpm dev --host 0.0.0.0
+# Backend: cd /work && go run . (configure config.hjson for your nodes first)
+hw:
+  cpus: 4
+  mem_mib: 8192
+  rootfs_mib: 16384
+
+mounts:
+  - host: .
+    guest: /work
+    readonly: false
+
+# Caches and OpenCode login/session data stay in the guest's persistent disk.
+env:
+  # Large node_modules trees can exceed Terra's shared-directory watch limit.
+  CHOKIDAR_USEPOLLING: "true"
+  CHOKIDAR_INTERVAL: "500"
+  GOPATH: /home/terri/go
+  GOCACHE: /home/terri/.cache/go-build
+  GOTOOLCHAIN: go1.27.3+auto
+  PATH: /home/terri/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+network:
+  mode: unrestricted-public
+  ports:
+    - "5173:5173"
+    - "8733:8733"
+
+hooks:
+  on_create:
+    - |
+      set -eu
+      apk add --no-cache \
+        bash ca-certificates curl git openssh-client ripgrep jq \
+        build-base linux-headers pkgconf go nodejs npm python3 unzip zip
+      # Vite 7 requires Node 20.19+ or 22.12+; use a current supported line.
+      node -e 'const [major, minor] = process.versions.node.split(".").map(Number); if (major < 22 || (major === 22 && minor < 12)) throw new Error("Node 22.12+ required")'
+      go version
+      GOBIN=/usr/local/bin go install golang.org/x/tools/gopls@latest
+      GOBIN=/usr/local/bin go install github.com/go-delve/delve/cmd/dlv@latest
+      # pnpm enforces web/pnpm-workspace.yaml minimumReleaseAge (supply-chain delay); keep the pin itself a week old.
+      npm install --global --prefix /usr/local pnpm@12.13.0
+      /usr/local/bin/pnpm --version
+      # OpenCode v2 moved from opencode-ai to @opencode/cli.
+      npm install --global --prefix /usr/local @opencode/cli@2.1.3
+      /usr/local/bin/opencode --version
+      # The workload user is created after baking; use its fixed UID/GID.
+      chown -R 1000:1000 /home/terri
+
+# Project dependencies require /work, which is unavailable during on_create.
+# Start a terminal as terri; run `opencode` when needed.
+# Authenticate with /connect on the first OpenCode launch.
+workload:
+  entrypoint: /bin/bash
+  args: ["-i"]
+  workdir: /work

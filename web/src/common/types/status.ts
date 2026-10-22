@@ -119,11 +119,3 @@ export type StatusUpdate = {
 	kind: "full" | "diff"
 	data: PeakStatus
 }
-
-export type NormalizedBlockRights = {
-	baker: string,
-	blocks: number,
-	attestations: number,
-	realizedBlocks: number,
-	realizedAttestations: number,
-}

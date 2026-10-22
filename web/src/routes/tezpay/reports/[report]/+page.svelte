@@ -1,23 +1,25 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import Button from '@src/components/starlight/components/Button.svelte';
-	import Input from '@src/components/starlight/components/Input.svelte';
-	import Card from '@src/components/starlight/components/Card.svelte';
-	import Expander from '@src/components/starlight/components/Expander.svelte';
-	import DataTable from '@src/components/starlight/components/DataTable.svelte';
-	import ProgressBar from '@src/components/starlight/components/ProgressBar.svelte';
+	import {
+		Button,
+		Input,
+		Card,
+		Expander,
+		ProgressBar,
+		DataGrid,
+		type DataGridColumn
+	} from '@alis-is/starlight';
 	import Separator from '@src/components/app/Separator.svelte';
-	import BackIcon from '@components/la/icons/angle-left-solid.svelte';
+	import BackIcon from '@alis-is/starlight/la/icons/angle-left-solid.svelte';
 
 	import { onMount } from 'svelte';
 	import { getReport } from '@src/app/tezpay/client';
 	import type { PayoutReport, CycleReport } from '@src/common/types/tezpay';
 	import { formatAddress, formatBalance, formatPercentage } from '@src/util/format';
-	import type { DataTableColumn } from '@src/components/starlight/types';
 	import { writeToClipboard } from '@src/util/clipboard';
 
-	const reportId = $page.params.report;
+	const reportId = $page.params.report ?? '';
 	const dry = $page.url.searchParams.get('dry') === 'true';
 
 	$: dryTitlePrefix = dry ? 'DRY ' : '';
@@ -35,35 +37,43 @@
 		}
 	});
 
-	const columns: Array<DataTableColumn<PayoutReport>> = [
-		{
-			name: 'delegator',
-			getValue: (item) => formatAddress(item.delegator),
-			click: (item) => writeToClipboard(item.delegator)
-		},
-		{ name: 'delegator_balance', getValue: (item) => formatBalance(item.delegator_balance) },
-		{ name: 'kind' },
-		{ name: 'tx_kind' },
-		{
-			name: 'recipient',
-			getValue: (item) => formatAddress(item.recipient),
-			click: (item) => writeToClipboard(item.recipient)
-		},
-		{ name: 'amount', getValue: (item) => formatBalance(item.amount) },
-		{ name: 'fee_rate', getValue: (item) => formatPercentage(item.fee_rate), label: `Fee Rate` },
-		{ name: 'fee', getValue: (item) => formatBalance(item.fee) },
-		{ name: 'tx_fee', getValue: (item) => formatBalance(item.fee), label: `Tx Fee` },
-		{ name: 'op_hash', label: `Op Hash` },
-		{ name: 'note' }
-	];
+	const COPYABLE: Array<keyof PayoutReport> = ['delegator', 'recipient', 'op_hash'];
+	const columns: Array<DataGridColumn<PayoutReport>> = (
+		[
+			{ key: 'delegator', value: (item) => formatAddress(item.delegator) },
+			{ key: 'delegator_balance', value: (item) => formatBalance(item.delegator_balance) },
+			{ key: 'kind' },
+			{ key: 'tx_kind' },
+			{ key: 'recipient', value: (item) => formatAddress(item.recipient) },
+			{ key: 'amount', value: (item) => formatBalance(item.amount) },
+			{ key: 'fee_rate', value: (item) => formatPercentage(item.fee_rate), label: `Fee Rate` },
+			{ key: 'fee', value: (item) => formatBalance(item.fee) },
+			{ key: 'tx_fee', value: (item) => formatBalance(item.tx_fee), label: `Tx Fee` },
+			{ key: 'op_hash', label: `Op Hash` },
+			{ key: 'note' }
+		] as Array<DataGridColumn<PayoutReport>>
+	).map((c) => ({ sortable: true, width: 'minmax(max-content, 1fr)', ...c }));
 </script>
 
+{#snippet cell({ row, column }: { row: PayoutReport; column: DataGridColumn<PayoutReport> })}
+	{@const value = column.value ? column.value(row) : row[column.key]}
+	{#if COPYABLE.includes(column.key) && row[column.key]}
+		<button
+			class="unstyle-button copyable"
+			title="Copy to clipboard"
+			onclick={() => writeToClipboard(String(row[column.key]))}>{value}</button
+		>
+	{:else}
+		{value ?? '-'}
+	{/if}
+{/snippet}
+
 <div class="report-wrap">
-	<div class="navigation-wrap">
-		<Button on:click={() => goto('/tezpay/reports')}>
+	<nav class="page-navigation">
+		<Button onclick={() => goto('/tezpay/reports')}>
 			<div class="navigation-btn-content"><BackIcon /> BACK</div>
 		</Button>
-	</div>
+	</nav>
 	<div class="report">
 		{#if loading}
 			<ProgressBar message="Loading..." progress="indeterminate" />
@@ -203,11 +213,11 @@
 						</div>
 					</div>
 					<div class="separator"><Separator /></div>
-					<Expander title="Valid Payouts">
-						<DataTable data={report?.payouts ?? []} {columns} />
+					<Expander title="Valid Payouts ({report?.payouts?.length ?? 0})">
+						<DataGrid data={report?.payouts ?? []} {columns} {cell} />
 					</Expander>
-					<Expander title="Invalid Payouts">
-						<DataTable data={report?.invalid ?? []} {columns} />
+					<Expander title="Invalid Payouts ({report?.invalid?.length ?? 0})">
+						<DataGrid data={report?.invalid ?? []} {columns} {cell} />
 					</Expander>
 				</div>
 			</Card>
@@ -218,25 +228,25 @@
 <style lang="sass">
 .report-wrap
 	display: grid
-	grid-template-columns: 1fr minmax(0px, 1400px) 1fr
-	width: calc(100% - var(--spacing) * 2)
-	padding: var(--spacing)
 	gap: var(--spacing)
 
 	.report
 		display: grid
-		grid-column: 2
+		min-width: 0
 
 		.report-grid
 			display: grid
-			grid-template-columns: 1fr
+			grid-template-columns: minmax(0, 1fr)
 			gap: var(--spacing)
 			grid-auto-rows: min-content
 
 			.title
-				white-space: nowrap
 				display: flex
 				justify-content: center
+				text-align: center
+
+				h3, h5
+					margin: var(--spacing-f2) 0
 
 			.summary
 				display: grid
@@ -246,52 +256,30 @@
 
 				.summary-section
 					display: grid
-					grid-template-columns: repeat(auto-fill, minmax(250px, 1fr))
+					grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr))
 					pointer-events: none
-
 					gap: var(--spacing)
-					
-					*
-						min-width: 250px
 
 					.total
-						--input-background-color: rgba(255,215,0, 0.12)
+						--input-background-color: var(--accent-soft)
 						grid-column: 1 / -1
 
-	.title
-		display: grid
-		grid-template-columns: 25px auto
-		gap: var(--spacing)
-		fill: var(--text-color)
-		align-items: center
-
-
-.navigation-wrap 
-	display: grid
-	grid-template-columns: auto auto 1fr 
-	grid-column: 2
-	gap: var(--spacing)
-
-	.navigation-btn-content
-		display: grid
-		grid-template-columns: auto auto
-		align-items: center
-		gap: var(--spacing)
-		:global(svg)
-			fill: var(--text-color)
-			width: 30px
-			height: 30px
+.copyable
+	cursor: pointer
+	text-decoration: underline dotted
+	text-underline-offset: 3px
 
 .no-data
 	display: flex
 	justify-content: center
 	align-items: center
 	font-size: 1.2rem
-	color: var(--text-color)
+	color: var(--hint-color)
 	margin: var(--spacing)
 
 .separator
-	margin: var(--spacing) 0
-.error 
+	margin: var(--spacing-f2) 0
+
+.error
 	color: var(--error-color)
 </style>

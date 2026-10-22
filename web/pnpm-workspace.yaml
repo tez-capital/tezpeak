@@ -1,0 +1,10 @@
+# Supply-chain delay: only resolve package versions published at least 7 days ago.
+minimumReleaseAge: 10080 # minutes
+# our own packages (GitHub Packages) may be used right after release
+minimumReleaseAgeExclude:
+  - '@alis-is/*'
+# install scripts stay off; these ship prebuilt binaries (esbuild, @parcel/watcher) or only print a notice
+allowBuilds:
+  '@parcel/watcher': false
+  esbuild: false
+  svelte-preprocess: false

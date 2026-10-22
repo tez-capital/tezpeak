@@ -1,8 +1,5 @@
 <script lang="ts">
-	import Card from '@src/components/starlight/components/Card.svelte';
-	import OverlayDialog from '@src/components/starlight/dialogs/Overlay.svelte';
-	import Button from '@components/starlight/components/Button.svelte';
-	import ProgressBar from '@src/components/starlight/components/ProgressBar.svelte';
+	import { Card, Overlay as OverlayDialog, Button, ProgressBar } from '@alis-is/starlight';
 	import Separator from './Separator.svelte';
 	import type { TransactionStage } from '@src/common/types/events';
 
@@ -54,13 +51,13 @@
 						{/if}
 					{/if}
 					<div class="explore" class:disabled={stage === 'building'}>
-						<Button on:click={() => window.open(`https://better-call.dev/${opHash}`, '_blank')}>
+						<Button onclick={() => window.open(`https://better-call.dev/${opHash}`, '_blank')}>
 							Open Explorer
 						</Button>
 					</div>
 				{/if}
 				{#if allowClose || stage === 'applied' || error}
-					<Button label="close" on:click={() => (open = false)} />
+					<Button label="close" onclick={() => (open = false)} />
 				{/if}
 			</div>
 		</Card>
@@ -69,18 +66,12 @@
 
 <style lang="sass">
 .center
-	display: flex
-	justify-content: center
-	align-items: center
-	height: 100%
-	width: 100%
-	padding: var(--spacing-x2)
+	width: min(480px, 100%)
 
 .transaction-confirmation
 	display: grid
 	gap: var(--spacing)
 	align-items: center
-	min-width: 300px
 	--button-vertical-spacing: var(--spacing-f2)
 
 	.title
@@ -88,10 +79,9 @@
 		justify-content: center
 		font-size: 1.25rem
 		font-weight: 500
-		white-space: nowrap
-		text-overflow: ellipsis
-		overflow: hidden
-		margin-bottom: var(--spacing)
+		text-align: center
+		overflow-wrap: anywhere
+		margin: 0
 
 
 	.status
@@ -109,7 +99,7 @@
 		padding-top: var(--spacing-x2)
 
 	.note
-		color: var(--text-color-faded)
+		color: var(--hint-color)
 		text-align: center
 		padding-bottom: var(--spacing-x2)
 

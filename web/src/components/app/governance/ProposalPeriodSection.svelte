@@ -5,11 +5,11 @@
 		PROPOSAL_PERIOD_QUORUM_PERCENTAGE
 	} from '@src/common/constants';
 
-	import Button from '@src/components/starlight/components/Button.svelte';
+	import { Button } from '@alis-is/starlight';
 	import NewProposalDialog from './NewProposalDialog.svelte';
-	import ThumbsUpIcon from '@src/components/la/icons/thumbs-up-solid.svelte';
-	import BookOpenIcon from '@src/components/la/icons/book-open-solid.svelte';
-	import SearchIcon from '@src/components/la/icons/search-solid.svelte';
+	import ThumbsUpIcon from '@alis-is/starlight/la/icons/thumbs-up-solid.svelte';
+	import BookOpenIcon from '@alis-is/starlight/la/icons/book-open-solid.svelte';
+	import SearchIcon from '@alis-is/starlight/la/icons/search-solid.svelte';
 
 	import Separator from '../Separator.svelte';
 	import { createEventDispatcher } from 'svelte';
@@ -81,7 +81,7 @@
 
 					<div class="upvote-bar">
 						<svg width="100%" height="15">
-							<rect width="100%" y="5" height="5" fill="#e6e6e6" rx="2" ry="2"></rect>
+							<rect width="100%" y="5" height="5" fill="var(--progress-bar-background-color)" rx="2" ry="2"></rect>
 							<rect
 								width={proposal.percentageString}
 								y="5"
@@ -101,13 +101,13 @@
 						</svg>
 					</div>
 
-					<Button on:click={() => open_explorer(proposal.proposal)}>
+					<Button onclick={() => open_explorer(proposal.proposal)}>
 						<div class="button-content">
 							<div class="label">EXPLORER</div>
 							<div class="icon"><SearchIcon /></div>
 						</div>
 					</Button>
-					<Button on:click={() => open_agora(proposal.proposal)}>
+					<Button onclick={() => open_agora(proposal.proposal)}>
 						<div class="button-content">
 							<div class="label">AGORA</div>
 							<div class="icon"><BookOpenIcon /></div>
@@ -120,7 +120,7 @@
 								<div class="icon"><ThumbsUpIcon /></div>
 							</div>
 						{:else}
-							<Button on:click={() => upvote(proposal.proposal)}>
+							<Button onclick={() => upvote(proposal.proposal)}>
 								<div class="button-content">
 									<div class="label">UPVOTE</div>
 									<div class="icon"><ThumbsUpIcon /></div>
@@ -136,7 +136,7 @@
 		{/if}
 	</div>
 	<div class="new-proposal" class:disabled={!pkh}>
-		<Button label="New Proposal" on:click={() => (isNewProposalDialogOpen = true)} />
+		<Button label="New Proposal" onclick={() => (isNewProposalDialogOpen = true)} />
 	</div>
 </div>
 
@@ -144,6 +144,7 @@
 	{pkh}
 	{periodIndex}
 	bind:open={isNewProposalDialogOpen}
+	on:tx_building={(event) => dispatch('tx_building', event.detail)}
 	on:tx_broadcasted={(event) => dispatch('tx_broadcasted', event.detail)}
 	on:error={(event) => dispatch('error', event.detail)}
 />
@@ -152,13 +153,14 @@
 	.proposal-period-wrap
 		display: grid
 		gap: var(--spacing)
-		padding: var(--spacing)
+		padding: 0
+		--button-vertical-spacing: var(--spacing-f2)
 
 		.proposal-period
 			.proposal
 				display: grid
 				gap: var(--spacing-x2)
-				padding: var(--spacing)
+				padding: var(--spacing) 0
 				grid-template-columns: minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr)
 				--progress-color: var(--error-color)	
 				
@@ -171,13 +173,10 @@
 					justify-content: center
 					font-size: 1.25rem
 					font-weight: 500
-					grid-column: 1 / -1	
-
-					div
-						min-width: 0
-						white-space: nowrap
-						text-overflow: ellipsis
-						overflow: hidden
+					grid-column: 1 / -1
+					min-width: 0
+					overflow-wrap: anywhere
+					text-align: center
 				
 				.upvotes
 					display: flex
@@ -192,14 +191,14 @@
 					grid-column: 1 / -1	
 					overflow: hidden	
 				.upvote-btn
-					--button-background-color: rgb(0, 96, 0)
-					--button-hover-background-color: rgb(0, 128, 0)
+					--button-background-color: color-mix(in srgb, var(--success-color) 75%, #000)
+					--button-hover-background-color: var(--success-color)
 				
 				.upvoted
 					display: flex
 					justify-content: center
 					align-items: center
-					windth: 100%
+					width: 100%
 					height: 100%
 					color: var(--success-color)
 
@@ -221,4 +220,9 @@
 		width: 20px
 		fill: var(--button-text-color)
 		align-items: center
+
+@media (max-width: 600px)
+	.proposal-period-wrap .proposal-period .proposal
+		grid-template-columns: minmax(0, 1fr)
+		gap: var(--spacing)
 </style>

@@ -1,167 +1,79 @@
 <script lang="ts">
-	import Card from '@components/starlight/components/Card.svelte';
-	import type { AmiServiceInfo, ServicesStatus } from '@src/common/types/status';
-	import Separator from './Separator.svelte';
+	import { Badge, Card } from '@alis-is/starlight';
+	import type { ServicesStatus } from '@src/common/types/status';
 	import { formatTimestamp, formatTimestampAgo } from '@src/util/format';
-	import { onDestroy } from 'svelte';
+	import { now } from '@app/state/clock';
 
-	export let title = "Baker's Services";
-	export let services: ServicesStatus = {
-		timestamp: 0,
-		applications: {}
-	};
-	export let hideApplicationTitle = false;
+	interface Props {
+		title?: string;
+		services?: ServicesStatus;
+	}
+	let { title = 'Services', services = { timestamp: 0, applications: {} } }: Props = $props();
 
-	type ServiceInfo = AmiServiceInfo & { formattedTimestamp: string };
-
-	const interval = setInterval(() => {
-		for (const [_, app] of Object.entries(services.applications ?? {})) {
-			for (const [_, v] of Object.entries(app)) {
-				v.formattedTimestamp = formatTimestampAgo(v.started);
-			}
-		}
-	}, 500);
-
-	$: iterableServices = Object.entries(services.applications ?? {}).map(([id, appServices]) => {
-		return [id, Object.entries(appServices)];
-	}) as Array<[string, Array<[string, ServiceInfo]>]>;
-	onDestroy(() => {
-		clearInterval(interval);
-	});
+	const applications = $derived(
+		Object.entries(services.applications ?? {}).map(([id, appServices]) => [id, Object.entries(appServices)] as const)
+	);
+	const all = $derived(applications.flatMap(([, s]) => s));
+	const runningCount = $derived(all.filter(([, s]) => s.status === 'running').length);
 </script>
 
 <Card>
+	{#snippet header()}
+		<h3 class="sl-card-title">{title}</h3>
+		<Badge variant={runningCount === all.length ? 'success' : 'error'}>{runningCount}/{all.length} running</Badge>
+	{/snippet}
+
 	<div class="services">
-		<div class="title">
-			<h5>{title}</h5>
-		</div>
-		<div class="separator">
-			<Separator />
-		</div>
-
-		<div class="services-grid">
-			<div />
-			<div class="id">Service</div>
-			<div class="status">Status</div>
-			<div class="active">Active</div>
-
-			<div class="separator-inner">
-				<Separator />
-			</div>
-
-
-			{#each iterableServices as [id, appServices]}
-	
-				{#if !hideApplicationTitle}
-					<div class="application-title">{id}</div>
-				{:else}
-					<div class="application-title"/>
-				{/if}
-				{#if appServices.length === 0}
-					<div class="no-services">N/A</div>
-				{:else}
-					{#each appServices as [id, serviceInfo]}
-						<div class="service-status-color">
-							<div
-								class="service-status-color-sign"
-								class:success={serviceInfo.status === 'running'}
-							></div>
-						</div>
-						<div class="id">{id}</div>
-						<div class="status">{serviceInfo.status}</div>
-						<div class="active">
-							{serviceInfo.status === 'running' ? formatTimestampAgo(serviceInfo.started) : '-'}
-						</div>
-					{/each}
-				{/if}
+		{#each applications as [app, appServices] (app)}
+			<div class="app">{app}</div>
+			{#each appServices as [id, info] (id)}
+				{@const running = info.status === 'running'}
+				<span class="status-dot" class:ok={running} class:error={!running}></span>
+				<span class="id">{id}</span>
+				<span class="state" class:text-error={!running}>
+					{#key $now}{running ? formatTimestampAgo(info.started) : info.status}{/key}
+				</span>
+			{:else}
+				<span class="hint none">no services</span>
 			{/each}
-		</div>
-		<div class="timestamp">
-			<div class="separator">
-				<Separator />
-			</div>
-			<div class="value">{formatTimestamp(services.timestamp)}</div>
-			<!-- <div class="label">updated</div> -->
-		</div>
+		{/each}
 	</div>
+
+	{#snippet footer()}
+		<span class="hint">updated {formatTimestamp(services.timestamp)}</span>
+	{/snippet}
 </Card>
 
 <style lang="sass">
 .services
 	display: grid
-	gap: var(--spacing)
-	grid-template-rows: auto auto 1fr auto
-	height: 100%
+	grid-template-columns: auto minmax(0, 1fr) auto
+	align-items: center
+	column-gap: var(--spacing-f2)
+	row-gap: 6px
 
-	.title
-		display: flex
-		justify-content: center
-		margin-bottom: var(--spacing)
-		h5
-			font-size: 1.5rem
-			font-weight: 500
-			margin: 0
-	.services-grid
-		display: grid
-		gap: var(--spacing)
-		grid-template-columns: auto auto auto auto
-		margin: var(--spacing)
+.app
+	grid-column: 1 / -1
+	margin-top: var(--spacing-f2)
+	font-size: 0.8rem
+	letter-spacing: 0.08rem
+	text-transform: uppercase
+	color: var(--hint-color)
 
-		.id
-			text-transform: capitalize
-			white-space: nowrap
+	&:first-child
+		margin-top: 0
 
-		.status
-			text-transform: uppercase
-		
-		.active
-			display: inline-block
-			white-space: nowrap
-
-		.separator-inner
-			grid-column: 1/-1
-			justify-self: center
-			width: 90%
-			opacity: 0.5
-
-	.timestamp
-		grid-row: 4
-		grid-column: 1/-1
-		width: 100%
-		display: grid
-		grid-template-columns: auto auto 1fr
-		gap: var(--spacing-f2)
-		align-items: end
-
-		.value
-			grid-column: 1
-			font-size: 1.25rem
-			font-weight: 500
-			display: inline-block
-
-.separator
-	grid-column: 1/-1
-
-.application-title
-	grid-column: 1/-1
-	font-weight: bold
+.id
 	text-transform: capitalize
-	text-align: center
+	overflow: hidden
+	text-overflow: ellipsis
+	white-space: nowrap
 
-.no-services
-	grid-column: 1/-1
-	text-align: center
+.state
+	text-align: right
+	white-space: nowrap
+	font-variant-numeric: tabular-nums
 
-.service-status-color
-	.service-status-color-sign
-		display: inline-block
-		width: 12px
-		height: 12px
-		border-radius: 50%
-		margin-right: var(--spacing-f2)
-		background-color: var(--error-color)
-
-		&.success
-			background-color: var(--success-color) !important
-
+.none
+	grid-column: 2 / -1
 </style>

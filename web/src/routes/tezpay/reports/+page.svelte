@@ -1,11 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import Button from '@components/starlight/components/Button.svelte';
-	import FolderIcon from '@components/la/icons/folder-solid.svelte';
-	import Expander from '@components/starlight/components/Expander.svelte';
-	import HomeIcon from '@components/la/icons/home-solid.svelte';
-	import BackIcon from '@components/la/icons/angle-left-solid.svelte';
-	import ProgressBar from '@src/components/starlight/components/ProgressBar.svelte';
+	import { Button, Expander, ProgressBar } from '@alis-is/starlight';
+	import FolderIcon from '@alis-is/starlight/la/icons/folder-solid.svelte';
+	import HomeIcon from '@alis-is/starlight/la/icons/home-solid.svelte';
+	import BackIcon from '@alis-is/starlight/la/icons/angle-left-solid.svelte';
 	import { onMount } from 'svelte';
 	import { listReports } from '@src/app/tezpay/client';
 
@@ -33,44 +31,44 @@
 </script>
 
 <div class="reports-wrap">
-	<div class="navigation-wrap">
-		<Button on:click={() => goto('/tezpay')}>
+	<nav class="page-navigation">
+		<Button onclick={() => goto('/tezpay')}>
 			<div class="navigation-btn-content"><BackIcon /> BACK</div>
 		</Button>
-		<Button on:click={() => goto('/')}>
+		<Button onclick={() => goto('/')}>
 			<div class="navigation-btn-content"><HomeIcon /> HOME</div>
 		</Button>
-	</div>
+	</nav>
 	<div class="reports">
 		{#if isLoading}
 			<div class="progress-bar">
 				<ProgressBar message="Loading..." progress="indeterminate" />
 			</div>
 		{:else}
-			<Expander isOpen={true}>
-				<div class="title" slot="header-title">
-					<FolderIcon /> Reports
-				</div>
+			<Expander is_open={true}>
+				{#snippet header_title()}
+					<div class="title"><FolderIcon /> Reports</div>
+				{/snippet}
 				<div class="reports-list">
 					{#if sortedReports.length === 0}
 						<div class="no-data">NO DATA</div>
 					{:else}
 						{#each sortedReports as report}
-							<Button label={report} on:click={() => goto(`/tezpay/reports/${report}`)} />
+							<Button label={report} onclick={() => goto(`/tezpay/reports/${report}`)} />
 						{/each}
 					{/if}
 				</div>
 			</Expander>
 			<Expander>
-				<div class="title" slot="header-title">
-					<FolderIcon /> Dry-Run Reports
-				</div>
+				{#snippet header_title()}
+					<div class="title"><FolderIcon /> Dry-Run Reports</div>
+				{/snippet}
 				<div class="reports-list">
 					{#if sortedDryRunReports.length === 0}
 						<div class="no-data">NO DATA</div>
 					{:else}
 						{#each sortedDryRunReports as report}
-							<Button label={report} on:click={() => goto(`/tezpay/reports/${report}?dry=true`)} />
+							<Button label={report} onclick={() => goto(`/tezpay/reports/${report}?dry=true`)} />
 						{/each}
 					{/if}
 				</div>
@@ -82,50 +80,37 @@
 <style lang="sass">
 .reports-wrap
 	display: grid
-	grid-template-columns: 1fr minmax(0px, 1400px) 1fr
-	width: calc(100% - var(--spacing) * 2)
-	padding: var(--spacing)
 	gap: var(--spacing)
 
 	.reports
 		display: grid
-		grid-column: 2
+		gap: var(--spacing)
 
 	.title
-		display: grid
-		grid-template-columns: 25px auto
-		gap: var(--spacing)
-		fill: var(--text-color)
+		display: flex
 		align-items: center
+		gap: var(--spacing-f2)
 
-
-.navigation-wrap 
-	display: grid
-	grid-template-columns: auto auto 1fr 
-	grid-column: 2
-	gap: var(--spacing)
-
-	.navigation-btn-content
-		display: grid
-		grid-template-columns: auto auto
-		align-items: center
-		gap: var(--spacing)
 		:global(svg)
+			width: 24px
+			height: 24px
 			fill: var(--text-color)
-			width: 30px
-			height: 30px
 
 .reports-list
 	display: grid
-	grid-template-columns: 1fr
-	gap: var(--spacing)
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr))
+	gap: var(--spacing-f2)
+	padding: var(--spacing-f2) 0
+	--button-vertical-spacing: var(--spacing-f2)
+	--button-text-transform: none
 
 .no-data
+	grid-column: 1 / -1
 	display: flex
 	justify-content: center
 	align-items: center
 	font-size: 1.2rem
-	color: var(--text-color)
+	color: var(--hint-color)
 	margin: var(--spacing)
 
 .progress-bar

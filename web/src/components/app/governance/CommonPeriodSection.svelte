@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { AGORA_PROPOSAL_URL, EXPLORER_URL } from '@src/common/constants';
 
-	import Button from '@src/components/starlight/components/Button.svelte';
-	import BookOpenIcon from '@src/components/la/icons/book-open-solid.svelte';
-	import SearchIcon from '@src/components/la/icons/search-solid.svelte';
+	import { Button } from '@alis-is/starlight';
+	import BookOpenIcon from '@alis-is/starlight/la/icons/book-open-solid.svelte';
+	import SearchIcon from '@alis-is/starlight/la/icons/search-solid.svelte';
 
 	import type { CommonPeriodDetail } from '@src/common/types/governance';
 	import { writeToClipboard } from '@src/util/clipboard';
@@ -31,13 +31,13 @@
 				</button>
 			</div>
 
-			<Button on:click={() => open_explorer()}>
+			<Button onclick={() => open_explorer()}>
 				<div class="button-content">
 					<div class="label">EXPLORER</div>
 					<div class="icon"><SearchIcon /></div>
 				</div>
 			</Button>
-			<Button on:click={() => open_agora()}>
+			<Button onclick={() => open_agora()}>
 				<div class="button-content">
 					<div class="label">AGORA</div>
 					<div class="icon"><BookOpenIcon /></div>
@@ -51,13 +51,14 @@
 .period-wrap
 	display: grid
 	gap: var(--spacing)
-	padding: var(--spacing)
+	padding: 0
+	--button-vertical-spacing: var(--spacing-f2)
 	
 	.period
 		.proposal
 			display: grid
 			gap: var(--spacing)
-			padding: var(--spacing)
+			padding: 0
 			grid-template-columns: minmax(100px, 1fr) minmax(100px, 1fr) 
 
 			.title
@@ -65,13 +66,10 @@
 				justify-content: center
 				font-size: 1.25rem
 				font-weight: 500
-				grid-column: 1 / -1	
-
-				div
-					min-width: 0
-					white-space: nowrap
-					text-overflow: ellipsis
-					overflow: hidden
+				grid-column: 1 / -1
+				min-width: 0
+				overflow-wrap: anywhere
+				text-align: center
 
 .button-content
 	display: grid

@@ -8,14 +8,6 @@ export const state = derived(globalState, $state => {
 }) as Readable<PeakStatus["modules"]["tezbake"]>
 
 
-export const futureBakingRights = derived(state, $tezbakeState => {
-	return $tezbakeState?.rights?.rights.filter(right => right.level > $tezbakeState.rights.level).sort((a, b) => a.level - b.level) ?? []
-})
-
-export const pastBakingRights = derived(state, $tezbakeState => {
-	return $tezbakeState?.rights?.rights.filter(right => right.level <= $tezbakeState.rights.level).sort((a, b) => b.level - a.level) ?? []
-})
-
 export const bakers = derived(state, $tezbakeStatus => {
 	if ($tezbakeStatus?.bakers === undefined) {
 		return []

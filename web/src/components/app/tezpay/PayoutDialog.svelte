@@ -1,10 +1,6 @@
 <script lang="ts">
-	import OverlayDialog from '@src/components/starlight/dialogs/Overlay.svelte';
-	import Card from '@components/starlight/components/Card.svelte';
-	import Terminal from '@components/starlight/components/Terminal.svelte';
-	import Button from '@components/starlight/components/Button.svelte';
-	import ProgressBar from '@components/starlight/components/ProgressBar.svelte';
-	import { DataTableSelectMode, type DataTableColumn } from '@components/starlight/types';
+	import { Overlay as OverlayDialog, Card, Button, ProgressBar, Expander, DataGrid, type DataGridColumn } from '@alis-is/starlight';
+	import Terminal from '@alis-is/starlight/components/Terminal.svelte';
 	import { generatePayuts, executePayuts } from '@src/app/tezpay/client';
 	import { formatLogMessageForTerminal, type LogMessage } from '@src/util/log';
 	import { PHASE_MAPPING } from '@src/common/phases';
@@ -14,11 +10,9 @@
 		PayoutBlueprint,
 		PayoutRecipe
 	} from '@src/common/types/tezpay';
-	import DataTable from '@src/components/starlight/components/DataTable.svelte';
-	import Expander from '@src/components/starlight/components/Expander.svelte';
 	import { formatAddress, formatBalance, formatPercentage } from '@src/util/format';
 	import { writeToClipboard } from '@src/util/clipboard';
-	import TimesSolid from '@src/components/la/icons/times-solid.svelte';
+	import TimesSolid from '@alis-is/starlight/la/icons/times-solid.svelte';
 	import { status } from '@src/app/state/tezbake';
 
 	let terminal: Terminal;
@@ -30,53 +24,40 @@
 
 	let isOpen = false;
 	let generatedPayouts: PayoutBlueprint | undefined = undefined;
-	$: generatedPayoutsItems = (generatedPayouts?.payouts ?? []).map((x) => ({
-		...x,
-		selected: x.valid
-	}));
-
-	$: validPayouts = generatedPayoutsItems.filter((x) => x.valid);
-	$: invalidPayouts = generatedPayoutsItems.filter((x) => !x.valid);
+	$: validPayouts = (generatedPayouts?.payouts ?? []).filter((x) => x.valid);
+	$: invalidPayouts = (generatedPayouts?.payouts ?? []).filter((x) => !x.valid);
+	// all valid payouts are selected by default, the user can deselect to skip them
+	let selectedPayouts: Array<PayoutRecipe> = [];
+	$: selectedPayouts = validPayouts;
+	const payoutKey = (x: PayoutRecipe) => JSON.stringify(x);
 
 	let batchResults: BatchResults | undefined = [];
 
-	const invalidColumns: Array<DataTableColumn<PayoutRecipe>> = [
-		{
-			name: 'delegator',
-			getValue: (item) => formatAddress(item.delegator),
-			click: (item) => writeToClipboard(item.delegator)
-		},
-		{ name: 'cycle', getValue: (item) => `#${item.cycle}` },
-		{
-			name: 'recipient',
-			getValue: (item) => formatAddress(item.recipient),
-			click: (item) => writeToClipboard(item.recipient)
-		},
-		{ name: 'delegator_balance', getValue: (item) => formatBalance(item.delegator_balance) },
-		{ name: 'amount', getValue: (item) => formatBalance(item.amount) },
-		{ name: 'fee_rate', getValue: (item) => formatPercentage(item.fee_rate) },
-		{ name: 'fee', getValue: (item) => formatBalance(item.fee) },
-		{ name: 'note' }
-	];
+	const COPYABLE = ['delegator', 'recipient', 'hash'];
+	const toGridColumns = <T,>(columns: Array<DataGridColumn<T>>) =>
+		columns.map((c) => ({ width: 'minmax(max-content, 1fr)', ...c }));
 
-	const validColumns: Array<DataTableColumn<PayoutRecipe>> = [
-		{
-			name: 'delegator',
-			getValue: (item) => formatAddress(item.delegator),
-			click: (item) => writeToClipboard(item.delegator)
-		},
-		{ name: 'cycle', getValue: (item) => `#${item.cycle}` },
-		{
-			name: 'recipient',
-			getValue: (item) => formatAddress(item.recipient),
-			click: (item) => writeToClipboard(item.recipient)
-		},
-		{ name: 'kind' },
-		{ name: 'delegator_balance', getValue: (item) => formatBalance(item.delegator_balance) },
-		{ name: 'amount', getValue: (item) => formatBalance(item.amount) },
-		{ name: 'fee_rate', getValue: (item) => formatPercentage(item.fee_rate) },
-		{ name: 'fee', getValue: (item) => formatBalance(item.fee) }
-	];
+	const invalidColumns = toGridColumns<PayoutRecipe>([
+		{ key: 'delegator', value: (item) => formatAddress(item.delegator) },
+		{ key: 'cycle', value: (item) => `#${item.cycle}` },
+		{ key: 'recipient', value: (item) => formatAddress(item.recipient) },
+		{ key: 'delegator_balance', value: (item) => formatBalance(item.delegator_balance) },
+		{ key: 'amount', value: (item) => formatBalance(item.amount) },
+		{ key: 'fee_rate', value: (item) => formatPercentage(item.fee_rate) },
+		{ key: 'fee', value: (item) => formatBalance(item.fee) },
+		{ key: 'note' }
+	]);
+
+	const validColumns = toGridColumns<PayoutRecipe>([
+		{ key: 'delegator', value: (item) => formatAddress(item.delegator) },
+		{ key: 'cycle', value: (item) => `#${item.cycle}` },
+		{ key: 'recipient', value: (item) => formatAddress(item.recipient) },
+		{ key: 'kind' },
+		{ key: 'delegator_balance', value: (item) => formatBalance(item.delegator_balance) },
+		{ key: 'amount', value: (item) => formatBalance(item.amount) },
+		{ key: 'fee_rate', value: (item) => formatPercentage(item.fee_rate) },
+		{ key: 'fee', value: (item) => formatBalance(item.fee) }
+	]);
 
 	export async function generate(c: number | 'latest', dryRun: boolean = false) {
 		isOpen = true;
@@ -130,16 +111,12 @@
 
 	let batchStore: { [key: string]: boolean } = {};
 	let batches: Array<Batch> = [];
-	const batchColumns: Array<DataTableColumn<Batch>> = [
-		{ name: 'id' },
-		{
-			name: 'recipes',
-			label: 'number of transactions',
-			getValue: (item) => item.recipes.length
-		},
-		{ name: 'hash', click: (item) => writeToClipboard(item.hash) },
-		{ name: 'status' }
-	];
+	const batchColumns = toGridColumns<Batch>([
+		{ key: 'id' },
+		{ key: 'recipes', label: 'number of transactions', value: (item) => item.recipes.length },
+		{ key: 'hash' },
+		{ key: 'status' }
+	]);
 
 	async function execute_payouts() {
 		if (!generatedPayouts) {
@@ -147,13 +124,14 @@
 		}
 		phase = 'Executing payouts...';
 		stage = 'execute';
+		const selected = new Set(selectedPayouts.map(payoutKey));
 		const blueprint = {
 			...generatedPayouts,
 			payouts: [
-				...validPayouts.filter((x) => x.selected),
+				...validPayouts.filter((x) => selected.has(payoutKey(x))),
 				...invalidPayouts,
 				...validPayouts
-					.filter((x) => !x.selected)
+					.filter((x) => !selected.has(payoutKey(x)))
 					.map((x) => ({ ...x, valid: false, note: 'MANUALLY_SKIPPED' }))
 			]
 		};
@@ -249,73 +227,91 @@
 	}
 </script>
 
+{#snippet cell({ row, column }: { row: any; column: DataGridColumn<any> })}
+	{@const value = column.value ? column.value(row) : row[column.key]}
+	{#if COPYABLE.includes(column.key) && row[column.key]}
+		<button
+			class="unstyle-button copyable"
+			title="Copy to clipboard"
+			onclick={() => writeToClipboard(String(row[column.key]))}>{value}</button
+		>
+	{:else}
+		{value ?? '-'}
+	{/if}
+{/snippet}
+
 <OverlayDialog bind:open={isOpen} persistent>
 	<Card>
-		<div class="payout-wrap">
+		{#snippet header()}
+			<h3 class="sl-card-title">Payout · cycle {cycle}{dry ? ' · dry run' : ''}</h3>
 			{#if phase === 'execution_finished'}
-				<button class="unstyle-button close-icon" on:click={() => (isOpen = false)}>
+				<button class="unstyle-button close-icon" aria-label="Close" onclick={() => (isOpen = false)}>
 					<TimesSolid />
 				</button>
 			{/if}
-			<div class="title">
-				<h3>Payout for cycle #{cycle}</h3>
-			</div>
+		{/snippet}
+		<div class="payout-wrap">
 			<div class="content">
 				{#if stage === 'execute'}
 					{#if phase !== 'execution_finished'}
 						<div class="progress-wrap">
-							<div />
 							<ProgressBar progress={'indeterminate'} message={phase} />
 						</div>
 					{:else if error}
 						<div class="error">{error}</div>
-						<Button on:click={retry} label="Retry"></Button>
+						<Button onclick={retry} label="Retry"></Button>
 					{:else}
 						<div class="title">SUCCESS</div>
 					{/if}
 					{#if batches.length > 0}
-						<DataTable data={batches} columns={batchColumns}></DataTable>
+						<div class="data"><DataGrid data={batches} columns={batchColumns} {cell} /></div>
 					{:else if phase === 'execution_finished' && !error}
 						<div class="title">Nothing to pay out.</div>
 					{/if}
 				{:else if stage === 'generate'}
 					{#if phase !== 'execution_finished'}
 						<div class="progress-wrap">
-							<div />
 							<ProgressBar progress={'indeterminate'} message={phase} />
 						</div>
 					{:else if error}
 						<div class="error">{error}</div>
-						<Button on:click={retry} label="Retry"></Button>
+						<Button onclick={retry} label="Retry"></Button>
 					{:else}
-						<Expander title="Invalid Payouts">
+						<Expander title="Invalid Payouts ({invalidPayouts.length})">
 							<div class="data">
-								<DataTable
-									data={invalidPayouts}
-									columns={invalidColumns}
-									selectMode={DataTableSelectMode.none}
-								></DataTable>
+								<DataGrid data={invalidPayouts} columns={invalidColumns} {cell} />
 							</div>
 						</Expander>
-						<Expander title="Valid Payouts" isOpen={true}>
+						<Expander
+							title="Valid Payouts ({selectedPayouts.length}/{validPayouts.length} selected)"
+							is_open={true}
+						>
 							<div class="data">
-								<DataTable
+								<DataGrid
 									data={validPayouts}
 									columns={validColumns}
-									selectMode={DataTableSelectMode.multiple}
-								></DataTable>
+									selectMode="multiple"
+									rowKey={payoutKey}
+									bind:selected={selectedPayouts}
+									{cell}
+								/>
 							</div>
 						</Expander>
-						<Button on:click={execute_payouts} label="⚡ Execute ⚡"></Button>
 					{/if}
 				{:else}
 					UNEXPECTED STATE
 				{/if}
 			</div>
-			{#if phase === 'execution_finished'}
-				<Button on:click={() => (isOpen = false)} label="close"></Button>
-			{/if}
-			<Button on:click={toggle_log} label={showLogButtonLabel}></Button>
+			<div class="actions">
+				<div class="secondary"><Button onclick={toggle_log} label={showLogButtonLabel}></Button></div>
+				<span class="spacer"></span>
+				{#if phase === 'execution_finished'}
+					<div class="secondary"><Button onclick={() => (isOpen = false)} label="Close"></Button></div>
+					{#if stage === 'generate' && !error && generatedPayouts}
+						<Button onclick={execute_payouts} label="⚡ Execute"></Button>
+					{/if}
+				{/if}
+			</div>
 			<div class="terminal" class:hidden={!isLogVisible}>
 				<Terminal bind:this={terminal} options={{ convertEol: true }}></Terminal>
 			</div>
@@ -326,59 +322,76 @@
 <style lang="sass">
 .payout-wrap
 	position: relative
-	width: 90vw
-	height: auto
+	box-sizing: border-box
+	width: min(1200px, calc(100vw - var(--spacing) * 5))
 	display: grid
-	grid-template-: auto 1fr auto
-	gap: var(--spacing-x2)
-	--expanding-container-max-height: 25vh
+	grid-template-columns: minmax(0, 1fr)
+	gap: var(--spacing)
+	--expanding-container-max-height: 45vh
 	--expanding-container-overflow: auto
-	
+	--button-vertical-spacing: var(--spacing-f2)
+
 	.title
 		display: flex
 		justify-content: center
-		align-items: center
+		text-align: center
 
 	.content
-		max-height: 60vh
-		max-width: 100%
 		display: grid
-		grid-auto-rows: auto
+		grid-template-columns: minmax(0, 1fr)
 		gap: var(--spacing)
 
 		.data
 			overflow: auto
 			width: 100%
-			height: auto
 
 	.terminal
 		overflow: auto
 		height: 30vh
-	
+
 	.progress-wrap
 		display: grid
-		height: 100%
-		grid-template-rows: 1fr auto 1fr 
+		padding: var(--spacing-x2) 0
+
+.actions
+	display: flex
+	flex-wrap: wrap
+	align-items: center
+	gap: var(--spacing-f2)
+	--button-width: auto
+	--button-horizontal-spacing: var(--spacing-x2)
+
+	.spacer
+		flex: 1
+
+	.secondary
+		--button-background-color: transparent
+		--button-text-color: var(--text-color)
+		--button-hover-background-color: var(--accent-soft)
+		--button-hover-text-color: var(--text-color)
+		--button-border: 1px solid var(--frost-border-color)
+
+.copyable
+	cursor: pointer
+	text-decoration: underline dotted
+	text-underline-offset: 3px
 
 .error
 	display: flex
 	justify-content: center
+	text-align: center
 	color: var(--error-color)
 	font-weight: 700
 	font-size: 1.3rem
 	padding: var(--spacing-x2)
 
 .close-icon
-	position: absolute
-	top: var(--spacing)
-	right: var(--spacing)
-	background: transparent
-	border: none
+	flex: none
 	cursor: pointer
 	fill: var(--text-color)
-	width: 2rem
-	height: 2rem
-	transitions: 0.2s
+	width: 1.6rem
+	height: 1.6rem
+	transition: transform 0.2s
 
 	&:hover
 		transform: scale(1.1)

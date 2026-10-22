@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { AGORA_PROPOSAL_URL, EXPLORER_URL } from '@src/common/constants';
 
-	import Button from '@src/components/starlight/components/Button.svelte';
-	import ThumbsUpIcon from '@src/components/la/icons/thumbs-up-solid.svelte';
-	import ThumbsDownIcon from '@src/components/la/icons/thumbs-down-solid.svelte';
-	import FistRaisedIcon from '@src/components/la/icons/fist-raised-solid.svelte';
-	import BookOpenIcon from '@src/components/la/icons/book-open-solid.svelte';
-	import SearchIcon from '@src/components/la/icons/search-solid.svelte';
+	import { Button } from '@alis-is/starlight';
+	import ThumbsUpIcon from '@alis-is/starlight/la/icons/thumbs-up-solid.svelte';
+	import ThumbsDownIcon from '@alis-is/starlight/la/icons/thumbs-down-solid.svelte';
+	import FistRaisedIcon from '@alis-is/starlight/la/icons/fist-raised-solid.svelte';
+	import BookOpenIcon from '@alis-is/starlight/la/icons/book-open-solid.svelte';
+	import SearchIcon from '@alis-is/starlight/la/icons/search-solid.svelte';
 	import Separator from '../Separator.svelte';
 
 	import { createEventDispatcher } from 'svelte';
@@ -71,16 +71,16 @@
 			</div>
 
 			<div class="vote-summary">
-				<div class="yay value">
+				<div class="nay value" title="nay">
 					{period.summary.nay} ({period.summary.nayPercentage} %)
 					<div class="icon"><ThumbsDownIcon /></div>
 				</div>
-				<div class="pass value">
+				<div class="pass value" title="pass">
 					{period.summary.pass} ({period.summary.passPercentage} %)
 					<div class="icon"><FistRaisedIcon /></div>
 				</div>
-				<div class="nay value">
-					{period.summary.yayPercentage} ({period.summary.nayPercentage} %)
+				<div class="yay value" title="yay">
+					{period.summary.yay} ({period.summary.yayPercentage} %)
 					<div class="icon"><ThumbsUpIcon /></div>
 				</div>
 			</div>
@@ -99,7 +99,7 @@
 					{/if}
 				</div>
 				<svg width="100%" height="15">
-					<rect width="100%" height="5" y="5" fill="#e6e6e6" rx="2" ry="2"></rect>
+					<rect width="100%" height="5" y="5" fill="var(--progress-bar-background-color)" rx="2" ry="2"></rect>
 					<rect
 						width={`${period.summary.nayPercentage + period.summary.passPercentage + period.summary.yayPercentage}%`}
 						y="5"
@@ -146,7 +146,7 @@
 					{/if}
 				</div>
 				<svg width="100%" height="15">
-					<rect width="100%" height="5" y="5" fill="#e6e6e6" rx="2" ry="2"></rect>
+					<rect width="100%" height="5" y="5" fill="var(--progress-bar-background-color)" rx="2" ry="2"></rect>
 					<rect
 						width={`${period.majorityPercentage}%`}
 						y="5"
@@ -166,13 +166,13 @@
 				</svg>
 			</div>
 
-			<Button on:click={() => open_explorer()}>
+			<Button onclick={() => open_explorer()}>
 				<div class="button-content">
 					<div class="label">EXPLORER</div>
 					<div class="icon"><SearchIcon /></div>
 				</div>
 			</Button>
-			<Button on:click={() => open_agora()}>
+			<Button onclick={() => open_agora()}>
 				<div class="button-content">
 					<div class="label">AGORA</div>
 					<div class="icon"><BookOpenIcon /></div>
@@ -186,7 +186,7 @@
 					<div class="existing-vote">You voted: <div class="ballot">{existingVote.ballot}</div></div>
 				{:else}
 					<div class="nay">
-						<Button on:click={() => vote('nay')}>
+						<Button onclick={() => vote('nay')}>
 							<div class="button-content">
 								<div class="label">NAY</div>
 								<div class="icon"><ThumbsDownIcon /></div>
@@ -194,17 +194,17 @@
 						</Button>
 					</div>
 					<div class="pass">
-						<Button on:click={() => vote('pass')}>
+						<Button onclick={() => vote('pass')}>
 							<div class="button-content">
-								<div class="label">NAY</div>
+								<div class="label">PASS</div>
 								<div class="icon"><FistRaisedIcon /></div>
 							</div>
 						</Button>
 					</div>
 					<div class="yay">
-						<Button on:click={() => vote('yay')}>
+						<Button onclick={() => vote('yay')}>
 							<div class="button-content">
-								<div class="label">NAY</div>
+								<div class="label">YAY</div>
 								<div class="icon"><ThumbsUpIcon /></div>
 							</div>
 						</Button>
@@ -219,10 +219,11 @@
 .period-wrap
 	display: grid
 	gap: var(--spacing)
-	padding: var(--spacing)
+	padding: 0
+	--button-vertical-spacing: var(--spacing-f2)
 	--yay-color: var(--success-color)
 	--nay-color: var(--error-color)
-	--pass-color: rgb(100, 100, 256)
+	--pass-color: var(--accent)
 	--quorum-color: var(--error-color)
 	--majority-color: var(--error-color)
 
@@ -237,7 +238,7 @@
 		.proposal
 			display: grid
 			gap: var(--spacing)
-			padding: var(--spacing)
+			padding: 0
 			grid-template-columns: minmax(100px, 1fr) minmax(100px, 1fr) 	
 
 			.title
@@ -245,13 +246,10 @@
 				justify-content: center
 				font-size: 1.25rem
 				font-weight: 500
-				grid-column: 1 / -1	
-
-				div
-					min-width: 0
-					white-space: nowrap
-					text-overflow: ellipsis
-					overflow: hidden
+				grid-column: 1 / -1
+				min-width: 0
+				overflow-wrap: anywhere
+				text-align: center
 			
 			.vote-summary
 				display: grid
@@ -272,7 +270,7 @@
 						padding-left: var(--spacing-f2)
 						display: flex
 						width: 20px
-						fill: var(--button-text-color)
+						fill: var(--text-color)
 
 
 			.bar
@@ -304,17 +302,18 @@
 						text-transform: uppercase
 
 				.yay
-					--button-background-color: rgb(0, 96, 0)
-					--button-hover-background-color: rgb(0, 128, 0)
+					--button-background-color: color-mix(in srgb, var(--success-color) 75%, #000)
+					--button-hover-background-color: var(--success-color)
 				.nay
-					--button-background-color: rgb(96, 0, 0)
-					--button-hover-background-color: rgb(128, 0, 0)
+					--button-background-color: color-mix(in srgb, var(--error-color) 75%, #000)
+					--button-hover-background-color: var(--error-color)
 				.pass
-					--button-background-color: rgb(0, 0, 96)
-					--button-hover-background-color: rgb(0, 0, 128)
+					--button-background-color: var(--accent)
+					--button-hover-background-color: var(--accent-strong)
 
 		.separator
 			grid-column: 1 / -1
+			min-width: 0
 			padding-top: var(--spacing)
 			padding-bottom: var(--spacing)
 

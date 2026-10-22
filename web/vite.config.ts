@@ -1,21 +1,13 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import { join } from 'path'
+import { demoApi } from './demo-api';
 
-export default defineConfig({
-	plugins: [sveltekit()],
-	resolve: {
-		alias: {
-			'@src': join(__dirname, 'src'),
-			'@components': join(__dirname, 'src/components'),
-			'@starlight': join(__dirname, 'src/components/starlight'),
-			'@la': join(__dirname, 'src/components/la'),
-			'@app': join(__dirname, 'src/app'),
-		}
-	},
+export default defineConfig(({ mode }) => ({
+	plugins: [sveltekit(), mode === 'demo' && demoApi()],
 	server: {
 		host: "0.0.0.0",
-		proxy: {
+		// demo mode answers /api itself
+		proxy: mode === 'demo' ? undefined : {
 			"/api": {
 				target: "http://127.0.0.1:8733/",
 				changeOrigin: true,
@@ -29,4 +21,4 @@ export default defineConfig({
 			transformMixedEsModules: true,
 		},
 	},
-});
+}));

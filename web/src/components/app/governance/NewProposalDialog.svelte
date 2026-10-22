@@ -1,8 +1,5 @@
 <script lang="ts">
-	import Card from '@src/components/starlight/components/Card.svelte';
-	import Input from '@src/components/starlight/components/Input.svelte';
-	import Button from '@src/components/starlight/components/Button.svelte';
-	import OverlayDialog from '@src/components/starlight/dialogs/Overlay.svelte';
+	import { Card, Input, Button, Overlay as OverlayDialog } from '@alis-is/starlight';
 	import { upvote_proposal } from '@src/app/governance';
 	import { createEventDispatcher } from 'svelte';
 	import type { TransactionEventDispatcher } from '@src/common/types/events';
@@ -49,12 +46,11 @@
 	];
 </script>
 
-<OverlayDialog {open} persistent={true}>
+<OverlayDialog bind:open persistent={true}>
 	<div class="center">
 		<Card>
 			<div class="content">
 				<b class="title">New Proposal</b>
-				<div />
 				<div class="text">
 					If you want to make a statement, write it in the <b>statement</b> field; this will generate
 					a proposal hash for you.
@@ -70,8 +66,6 @@
 					**Remember that you can propose or vote for a proposal only <b>10 times per period</b>.
 				</div>
 
-				<div />
-
 				<Input bind:value={statement} label="Statement" />
 				<Input
 					bind:value={proposal}
@@ -81,9 +75,9 @@
 				/>
 
 				<div class="controls">
-					<Button label="Cancel" on:click={() => (open = false)}></Button>
+					<Button label="Cancel" onclick={() => (open = false)}></Button>
 					<div class:disabled={!canInject}>
-						<Button label="Inject" on:click={inject}></Button>
+						<Button label="Inject" onclick={inject}></Button>
 					</div>
 				</div>
 			</div>
@@ -93,11 +87,7 @@
 
 <style lang="sass">
 .center
-	display: flex
-	justify-content: center
-	align-items: center
-	height: 100%
-	width: 100%
+	width: min(560px, 100%)
 
 .content
 	display: grid
@@ -111,9 +101,14 @@
 		font-weight: 500
 		justify-content: center
 
+	.text
+		color: var(--hint-color)
+		font-size: 0.95rem
+
 	.controls
 		display: grid
 		grid-template-columns: 1fr 1fr
 		gap: var(--spacing)
+		--button-vertical-spacing: var(--spacing-f2)
 
 </style>

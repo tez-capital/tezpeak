@@ -5,8 +5,6 @@
 		bakers as tezbakeBakers,
 		services as tezbakeServices,
 		wallets as tezbakeWallets,
-		futureBakingRights,
-		pastBakingRights,
 		votingPeriodInfo
 	} from '@app/state/tezbake';
 	import { state as tezpayStatus } from '@app/state/tezpay';
@@ -14,76 +12,46 @@
 	import BakerStatusCard from '@components/app/BakerStatusCard.svelte';
 	import BakerRightsCard from '@components/app/BakerRightsCard.svelte';
 	import ServicesStatusCard from '@components/app/ServicesStatusCard.svelte';
+	import GovernancePeriodCard from '@components/app/GovernancePeriodCard.svelte';
+	import PayoutsCard from '@components/app/PayoutsCard.svelte';
+	import LedgerStatusCard from '@components/app/LedgerStatusCard.svelte';
 
-	import GovernancePeriodCard from '@src/components/app/GovernancePeriodCard.svelte';
-	import PayoutsCard from '@src/components/app/PayoutsCard.svelte';
-	import LedgerStatusCard from '@src/components/app/LedgerStatusCard.svelte';
-
-	$: showBakerColors = $tezbakeBakers.length > 1;
-	$: expandedBakingRights = $tezbakeBakers.length > 1;
+	const showBakerColors = $derived($tezbakeBakers.length > 1);
+	const hasServices = $derived(Object.keys($tezbakeServices.applications ?? {}).length > 0);
 </script>
 
-<div class="dashboard-grid-wrap">
-	<div class="dashboard-grid">
-		{#if $tezbakeStatus}
-			{#each $tezbakeBakers as [baker, info]}
-				<BakerStatusCard baker={baker ?? {}} status={info} showColor={showBakerColors} />
-			{/each}
-			{#each $tezbakeWallets as [walletId, info]}
-				<LedgerStatusCard id={walletId.toUpperCase()} {info} />
-			{/each}
-		{/if}
-		{#if $tezpayStatus}
-			<PayoutsCard />
-		{/if}
+<div class="dashboard">
+	{#if $tezbakeStatus && $tezbakeBakers.length}
+		<h2 class="section-label">Bakers</h2>
+		{#each $tezbakeBakers as [baker, info] (baker)}
+			<BakerStatusCard {baker} status={info} showColor={showBakerColors} />
+			<BakerRightsCard {baker} showColor={showBakerColors} />
+		{/each}
+	{/if}
+
+	{#if $tezpayStatus || $tezbakeStatus}
+		<h2 class="section-label">Operations</h2>
+		{#if $tezpayStatus}<PayoutsCard />{/if}
 		{#if $tezbakeStatus}
 			<GovernancePeriodCard votingPeriodInfo={$votingPeriodInfo} />
+			{#each $tezbakeWallets as [walletId, info] (walletId)}
+				<LedgerStatusCard id={walletId} {info} />
+			{/each}
 		{/if}
-		{#if Object.keys($tezbakeServices.applications ?? {}).length > 0}
-			<ServicesStatusCard title="Baker's Services" services={$tezbakeServices} />
-		{/if}
-		{#each $nodes as [node, info]}
-			<NodeStatusCard node={info} title={node} />
-		{/each}
-		{#if $tezbakeStatus}
-			<div class="baker-rights" class:expanded={expandedBakingRights}>
-				<BakerRightsCard
-					mode="upcoming"
-					rights={$futureBakingRights}
-					{showBakerColors}
-					title="Upcoming Baking Rights"
-				/>
-			</div>
-			<div class="baker-rights" class:expanded={expandedBakingRights}>
-				<BakerRightsCard
-					mode="past"
-					rights={$pastBakingRights}
-					{showBakerColors}
-					title="Past Baking Rights"
-				/>
-			</div>
-		{/if}
-	</div>
+	{/if}
+
+	<h2 class="section-label">Infrastructure</h2>
+	{#if hasServices}
+		<ServicesStatusCard title="Baker services" services={$tezbakeServices} />
+	{/if}
+	{#each $nodes as [node, info] (node)}
+		<NodeStatusCard node={info} title={node} />
+	{/each}
 </div>
 
 <style lang="sass">
-.dashboard-grid-wrap
+.dashboard
 	display: grid
-	grid-template-columns: 1fr minmax(0px, 1400px) 1fr
-	width: calc(100% - var(--spacing) * 2)
-	padding: var(--spacing)
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr))
 	gap: var(--spacing)
-
-	.dashboard-grid
-		display: grid
-		grid-column: 2
-		grid-template-columns: repeat(auto-fill, minmax(450px, 1fr))
-		gap: var(--spacing)
-
-		.baker-rights
-			display: grid
-			grid-template-rows: 1fr
-
-			&.expanded
-				grid-column: 1 / -1
 </style>

@@ -21,8 +21,6 @@ const config = {
 		alias: {
 			"@src": "./src",
 			"@root": ".",
-			"@starlight": "./src/components/starlight",
-			"@la": "./src/components/la",
 			"@components": "./src/components",
 			"@app":"./src/app",
 		}

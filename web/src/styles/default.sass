@@ -1,43 +1,29 @@
-@import './typography.sass'
-@import './scroll.sass'
-@import '@starlight/style.sass'
+@use './typography.sass'
+@use './scroll.sass'
+@use './themes.sass'
 
 :root
-	--spacing: 15px
-	--border-radius: 10px
-	--text-color: #eee
-	--error-color: #ff5575
-	--warning-color: rgb(255, 148, 66)
-	--success-color: lime
-	--header-height: 50px
-	
-	// overrides
-	--nav-menu-size: 49px
-	--nav-menu-expanded-size: 190px
-	--nav-menu-box-shadow: unset
-	--card-box-shadow: rgba(255,255,255, 0.09) 0px 3px 6px, rgba(255, 255, 255, 0.09) 0px 3px 6px
-	//--nav-menu-item-height: 39px
-	// --card-horizontal-spacing: var(--spacing-x2)
-	// --card-vertical-spacing: var(--spacing-x2)
-
-
+	--header-height: 56px
+	--content-max-width: 1400px
 
 	// fonts
 	--font-size: 1rem
-	--line-height: 1.25
-	--letter-spacing: 0.1rem
+	--line-height: 1.35
+	--letter-spacing: 0.03rem
 	--header-size-factor: 0.2rem
-	--background-color: #111
+
+html, body
+	font-family: 'Lato-Light', system-ui, -apple-system, sans-serif
+	letter-spacing: var(--letter-spacing)
 
 body
 	margin: 0px
 	font-size: var(--font-size)
 	line-height: var(--line-height)
-	background-color: var(--background-color)
-
-html, body, form, fieldset, table, tr, td, img
-	font-family: 'Lato-Light', sans-serif !important
-	letter-spacing: var(--letter-spacing)
+	color: var(--text-color)
+	background-color: var(--page-background-color)
+	background-image: var(--page-background-image)
+	background-attachment: fixed
 
 input, button, select, textarea, optgroup, option
 	font-family: inherit
@@ -56,6 +42,153 @@ h2
 
 h1
 	font-size: calc(var(--font-size) + var(--header-size-factor) * 5)
+
+// let card content fill the card so cards in one grid row line up their footers
+.sl-card-body
+	flex: 1 1 auto
+	display: grid
+	align-content: start
+	gap: var(--spacing-f2)
+
+// every card: one header line (title left, status right), divider, body, footer actions
+.sl-card-block
+	gap: var(--spacing) !important
+
+.sl-card-header
+	gap: var(--spacing-f2)
+	min-height: 28px
+	padding-bottom: var(--spacing-f2)
+	border-bottom: 1px solid var(--frost-border-color)
+
+	.sl-card-title
+		margin: 0
+		font-size: 1.05rem
+		font-weight: 500
+		letter-spacing: 0.06rem
+		text-transform: uppercase
+
+.sl-card-footer
+	padding-top: 0 !important
+	--button-width: auto
+	--button-vertical-spacing: 6px
+	--button-horizontal-spacing: var(--spacing-x2)
+
+	// a metric or note on the left, actions on the right
+	> .metric, > .hint
+		margin-right: auto
+
+// key / value rows inside cards
+dl.kv
+	display: grid
+	grid-template-columns: minmax(0, 1fr) auto
+	column-gap: var(--spacing)
+	row-gap: var(--spacing-f2)
+	margin: 0
+
+	dt
+		color: var(--hint-color)
+		min-width: 0
+		overflow: hidden
+		text-overflow: ellipsis
+		white-space: nowrap
+
+	dd
+		margin: 0
+		text-align: right
+		font-variant-numeric: tabular-nums
+		white-space: nowrap
+
+// big headline number in a card (level, delegators, ...)
+.metric
+	font-size: 1.6rem
+	font-weight: 500
+	font-variant-numeric: tabular-nums
+
+	small
+		font-size: 0.85rem
+		color: var(--hint-color)
+		font-weight: normal
+
+.hint
+	color: var(--hint-color)
+	font-size: 0.85rem
+
+.address
+	font-size: 0.85rem
+	color: var(--hint-color)
+	overflow-wrap: anywhere
+	text-align: left
+
+.status-dot
+	display: inline-block
+	flex: none
+	width: 9px
+	height: 9px
+	border-radius: 50%
+	background-color: var(--hint-color)
+
+	&.ok
+		background-color: var(--success-color)
+	&.warn
+		background-color: var(--warning-color)
+	&.error
+		background-color: var(--error-color)
+
+.text-ok
+	color: var(--success-color)
+.text-warn
+	color: var(--warning-color)
+.text-error
+	color: var(--error-color)
+
+// dashboard section label
+.section-label
+	grid-column: 1 / -1
+	margin: var(--spacing) 0 0
+	font-size: 0.8rem
+	font-weight: normal
+	letter-spacing: 0.12rem
+	text-transform: uppercase
+	color: var(--hint-color)
+
+	&:first-child
+		margin-top: 0
+
+// starlight workarounds (upstream bugs):
+// - Overlay <dialog> keeps the UA fit-content size, so `inset: 0` doesn't cover the viewport
+dialog[open]
+	width: auto
+	height: auto
+	max-width: none
+	max-height: none
+
+// - DataGrid "auto" select column collapses because CheckBox content is absolutely positioned
+.sl-data-grid .select-cell
+	min-width: var(--checkbox-box-size)
+
+// starlight paints unstyled buttons with the button text colour; app uses them inline in text
+.unstyle-button
+	color: inherit
+
+// page-level navigation bar (HOME / BACK / ...)
+.page-navigation
+	display: flex
+	flex-wrap: wrap
+	gap: var(--spacing)
+	--button-width: auto
+	--button-vertical-spacing: var(--spacing-f2)
+
+	.spacer
+		flex: 1
+
+	.navigation-btn-content
+		display: flex
+		align-items: center
+		gap: var(--spacing-f2)
+
+		svg
+			width: 24px
+			height: 24px
 
 .disabled
 	pointer-events: none

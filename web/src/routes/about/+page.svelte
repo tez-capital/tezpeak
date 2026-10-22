@@ -2,7 +2,7 @@
 
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import Button from '@components/starlight/components/Button.svelte';
+	import { Button } from '@alis-is/starlight';
 	import { TEZPEAK_VERSION, TEZPEAK_CODENAME } from '@src/common/constants';
 	import { DiscordIcon, TwitterIcon, TelegramIcon } from '@src/components/app/icons';
 </script>
@@ -30,14 +30,14 @@
 								<g transform="matrix(1,0,0,1,0,186.389)">
 									<path
 										d="M-242.435,225.841L-217.584,194.204L-192.829,225.841L-122.481,225.841L-162.243,158.839L-170.941,175.757L-217.584,95.66L-263.941,174.419L-273.308,158.839L-310.966,225.841L-242.435,225.841ZM-278.431,204.401L-268.093,185.682L-273.308,175.757L-298.254,220.202L-278.431,204.401ZM-201.877,158.513C-202.136,166.616 -179.445,208.658 -177.996,207.692L-172.417,197.98L-172.418,197.978L-171.196,195.653L-155.389,210.677L-161.751,189.634C-173.889,178.573 -187.388,168.268 -201.875,158.513L-201.877,158.51L-201.877,158.511L-201.879,158.51L-201.877,158.513ZM-161.8,175.757L-161.751,189.634L-143.644,207.692L-161.8,175.757ZM-266.869,197.98L-229.126,149.53L-223.499,158.644L-218.498,152.895L-206.29,170.274L-207.774,154.158L-217.621,140.452L-210.58,133.63L-198.835,145.101L-217.932,112.704L-266.869,197.98Z"
-										style="fill:#fff;"
+										style="fill:currentColor;"
 									/>
 								</g>
 								<g transform="matrix(1,0,0,1,0,186.389)">
 									<g opacity="0.75">
 										<path
 											d="M-273.308,175.757L-273.308,190.025L-298.254,220.202L-278.431,204.401L-268.093,185.682L-273.308,175.757Z"
-											style="fill:#fff;"
+											style="fill:currentColor;"
 										/>
 									</g>
 								</g>
@@ -45,7 +45,7 @@
 									<g opacity="0.75">
 										<path
 											d="M-198.835,145.101L-217.932,112.704L-217.621,140.452L-210.58,133.63L-198.835,145.101"
-											style="fill:#fff;"
+											style="fill:currentColor;"
 										/>
 									</g>
 								</g>
@@ -53,7 +53,7 @@
 									<g opacity="0.75">
 										<path
 											d="M-177.998,207.692C-179.448,208.658 -202.143,166.608 -201.879,158.51L-172.419,197.98L-177.998,207.692Z"
-											style="fill:#fff;"
+											style="fill:currentColor;"
 										/>
 									</g>
 								</g>
@@ -61,7 +61,7 @@
 									<g opacity="0.55">
 										<path
 											d="M-155.389,210.677L-161.751,189.634C-173.891,178.572 -187.39,168.266 -201.879,158.51L-172.419,197.98L-171.196,195.653L-155.389,210.677Z"
-											style="fill:#fff;"
+											style="fill:currentColor;"
 										/>
 									</g>
 								</g>
@@ -69,12 +69,12 @@
 									<g opacity="0.75">
 										<path
 											d="M-161.8,175.757L-161.751,189.634L-143.644,207.692L-161.8,175.757Z"
-											style="fill:#fff;"
+											style="fill:currentColor;"
 										/>
 									</g>
 								</g>
 								<g transform="matrix(1.02742,0,0,1.02742,6.17497,176.954)">
-									<circle cx="-216.95" cy="228.768" r="8.566" style="fill:#fff;" />
+									<circle cx="-216.95" cy="228.768" r="8.566" style="fill:currentColor;" />
 								</g>
 							</g>
 							<g transform="matrix(1.26998,0,0,1.57069,-671.943,-228.049)">
@@ -120,7 +120,7 @@
 		</div>
 		<div class="navigation">
 			<div class="home">
-				<Button label="Home" on:click={() => goto("/")} />
+				<Button label="Home" onclick={() => goto("/")} />
 			</div>
 		</div>
 	</div>
@@ -128,25 +128,24 @@
 
 <style lang="sass">
 	.about-wrap
-		height: 100%
-		margin: 0px !important
-		min-height: 300px !important
-		overflow: hidden
-		--footer-height: 30px
+		min-height: calc(100dvh - var(--header-height) - var(--spacing-x5))
+		display: flex
+		align-items: center
+		justify-content: center
 		color: var(--text-color)
-		
+
 		.about
 			display: flex
 			flex-direction: column
 			justify-content: center
 			align-items: center
-			height: calc(100% - var(--footer-height))
-			margin:0 !important
 			
 			.logo
 				width: 350px
-				max-width: 40vw
-				max-height: 20vh
+				max-width: 60vw
+				height: min(20vh, 235px)
+				color: var(--text-color)
+				fill: var(--text-color)
 			.title
 				margin-top: min(var(--spacing-x2), 3vh)
 				margin-bottom: min(var(--spacing), 3vh)
@@ -163,6 +162,7 @@
 				a
 					margin: 0 0.5rem
 					color: var(--text-color)
+					fill: var(--text-color)
 					transition: transform 0.1s ease-in-out
 					border-radius: var(--border-radius)
 					text-decoration: none
@@ -172,10 +172,6 @@
 						transform: scale(1.1)
 
 .navigation
-	display: grid
-	padding: var(--spacing-x3)
-	grid-template-columns: 1fr 200px 1fr
-
-	.home
-		grid-column: 2
+	padding: var(--spacing-x2)
+	width: min(200px, 100%)
 </style>

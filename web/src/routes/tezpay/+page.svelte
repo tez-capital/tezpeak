@@ -1,18 +1,14 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import Button from '@components/starlight/components/Button.svelte';
-	import AlertDialog from '@components/starlight/dialogs/Alert.svelte';
-	import ProgressDialog from '@components/starlight/dialogs/Progress.svelte';
-	import SelectDialog from '@components/starlight/dialogs/Select.svelte';
-	import TerminalDialog from '@components/starlight/dialogs/Terminal.svelte';
-	import ConfirmDialog from '@components/starlight/dialogs/Confirm.svelte';
+	import { Button, AlertDialog, ProgressDialog, SelectDialog, ConfirmDialog, USER_CANCELED } from '@alis-is/starlight';
+	import TerminalDialog from '@alis-is/starlight/dialogs/Terminal.svelte';
 
 	import ManualCard from '@src/components/app/tezpay/ManualCard.svelte';
 	import TestCard from '@src/components/app/tezpay/TestCard.svelte';
 	import InfoCard from '@src/components/app/tezpay/InfoCard.svelte';
 	import PayoutDialog from '@components/app/tezpay/PayoutDialog.svelte';
-	import HomeIcon from '@components/la/icons/home-solid.svelte';
-	import ScrollIcon from '@components/la/icons/scroll-solid.svelte';
+	import HomeIcon from '@alis-is/starlight/la/icons/home-solid.svelte';
+	import ScrollIcon from '@alis-is/starlight/la/icons/scroll-solid.svelte';
 	import {
 		disableContinual,
 		enableContinual,
@@ -26,7 +22,6 @@
 	import { onMount } from 'svelte';
 	import { EmptyTezpayInfo, type TezpayInfo } from '@src/common/types/tezpay';
 	import { formatLogMessageForTerminal } from '@src/util/log';
-	import { USER_CANCELED } from '@src/components/starlight/src/constants';
 
 	let info: TezpayInfo = EmptyTezpayInfo;
 	let payoutDialog: PayoutDialog;
@@ -102,7 +97,7 @@
 			});
 
 			progressDialog.show({
-				title: 'Enabling continual services...',
+				title: 'Disabling continual services...',
 				progress: 'indeterminate'
 			});
 			await disableContinual();
@@ -133,49 +128,46 @@
 
 		terminalDialog.show({
 			title: `Test Notifications - ${result}`,
-			allowClose: false
+			allow_close: false
 		});
 		try {
 			await testNotify(result, (msg) => {
 				terminalDialog.write(formatLogMessageForTerminal(msg));
 			});
 		} finally {
-			terminalDialog.update_state({ allowClose: true });
+			terminalDialog.update_context({ allow_close: true });
 		}
 	}
 
 	async function test_extensions() {
 		terminalDialog.show({
 			title: `Test Extensions`,
-			allowClose: false
+			allow_close: false
 		});
 		try {
 			await testExtensions((msg) => {
 				terminalDialog.write(formatLogMessageForTerminal(msg));
 			});
 		} finally {
-			terminalDialog.update_state({ allowClose: true });
+			terminalDialog.update_context({ allow_close: true });
 		}
 	}
 </script>
 
-<div class="dashboard-grid-wrap">
-	<div class="navigation-wrap">
-		<Button on:click={() => goto('/')}>
+<div class="tezpay">
+	<nav class="page-navigation">
+		<Button onclick={() => goto('/')}>
 			<div class="navigation-btn-content"><HomeIcon /> HOME</div>
 		</Button>
-		<div />
-		<Button on:click={() => goto('/tezpay/reports')}>
+		<div class="spacer"></div>
+		<Button onclick={() => goto('/tezpay/reports')}>
 			<div class="navigation-btn-content"><ScrollIcon /> REPORTS</div>
 		</Button>
-	</div>
+	</nav>
 	<div class="dashboard-grid">
-		<div class="info-card">
-			<InfoCard phase="" on:start={start} on:stop={stop} on:disable={disable} on:enable={enable} />
-		</div>
-		<!-- <AutomaticCard services={$services}  /> -->
-		<ManualCard on:pay={({ detail: { cycle, dry } }) => payoutDialog.generate(cycle, dry)} />
-		<TestCard on:test_extensions={test_extensions} on:test_notifications={test_notify} />
+		<InfoCard onstart={start} onstop={stop} ondisable={disable} onenable={enable} />
+		<ManualCard onpay={(cycle, dry) => payoutDialog.generate(cycle, dry)} />
+		<TestCard ontestextensions={test_extensions} ontestnotifications={test_notify} />
 
 		<!-- <div class="terminal-card">
 			<Terminal bind:this={terminal} />
@@ -190,33 +182,12 @@
 </div>
 
 <style lang="sass">
-.dashboard-grid-wrap
-	grid-column: 2
+.tezpay
 	display: grid
-	grid-template-columns: 1fr minmax(0px, 1400px) 1fr
-	width: calc(100% - var(--spacing) * 2)
-	padding: var(--spacing)
 	gap: var(--spacing)
 
 	.dashboard-grid
 		display: grid
-		grid-column: 2
-		grid-template-columns:  repeat(auto-fill, minmax(450px, 1fr))
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr))
 		gap: var(--spacing)
-
-
-.navigation-wrap 
-	display: grid
-	grid-template-columns: auto 1fr auto
-	grid-column: 2
-
-	.navigation-btn-content
-		display: grid
-		grid-template-columns: auto auto
-		align-items: center
-		gap: var(--spacing)
-		:global(svg)
-			fill: var(--text-color)
-			width: 30px
-			height: 30px
 </style>

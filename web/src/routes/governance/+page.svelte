@@ -1,13 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import Card from '@components/starlight/components/Card.svelte';
-	import Button from '@components/starlight/components/Button.svelte';
-	import Select from '@components/starlight/components/Select.svelte';
-	import Separator from '@components/app/Separator.svelte';
+	import { Card, Button, Select, ProgressBar, type SelectItem } from '@alis-is/starlight';
 	import ProposalPeriodSection from '@components/app/governance/ProposalPeriodSection.svelte';
 	import ExpPromPeriodSection from '@components/app/governance/ExpPromPeriodSection.svelte';
 	import TransactionDialog from '@components/app/TransactionDialog.svelte';
-	import HomeIcon from '@components/la/icons/home-solid.svelte';
+	import HomeIcon from '@alis-is/starlight/la/icons/home-solid.svelte';
 
 	import {
 		getGovernancePeriodBlocksLeft,
@@ -24,8 +21,6 @@
 		GovernanceExplorationOrPromotionPeriodDetail,
 		CommonPeriodDetail
 	} from '@src/common/types/governance';
-	import type { SelectItem } from '@src/components/starlight/types';
-	import ProgressBar from '@src/components/starlight/components/ProgressBar.svelte';
 	import CommonPeriodSection from '@src/components/app/governance/CommonPeriodSection.svelte';
 	import type {
 		TransactionErrorEvent,
@@ -164,93 +159,88 @@
 </script>
 
 <div class="governance-wrap">
-	<div class="navigation-wrap">
-		<Button on:click={() => goto('/')}>
+	<nav class="page-navigation">
+		<Button onclick={() => goto('/')}>
 			<div class="navigation-btn-content"><HomeIcon /> HOME</div>
 		</Button>
-	</div>
-	<div class="vote-as">
-		<Card>
-			<div class="vote-as-content">
-				{#if availablePkhsOptions.length >= 1}
-					<div class="vote-as-select" class:disabled={availablePkhsOptions.length == 1}>
-						<Select label="Vote As" bind:value={selectedPkh} options={availablePkhsOptions} />
-					</div>
-					<div class="open-tezgov">
-						<Button label="or vote with TEZGOV" on:click={() => openTezgov()} />
-					</div>
-				{:else if availablePkhsOptions.length === 0}
-					<div class="no-pkhs">❗You have no available PKH to vote with.❗</div>
-					<div class="open-tezgov">
-						<Button label="vote with TEZGOV" on:click={() => openTezgov()} />
-					</div>
-				{/if}
-			</div>
-		</Card>
-	</div>
+	</nav>
+	<Card>
+		{#snippet header()}
+			<h3 class="sl-card-title">Voting key</h3>
+			<span class="hint">{availablePkhsOptions.length} available</span>
+		{/snippet}
 
-	<div class="governance">
-		<Card>
-			<div class="governance-period">
-				{#if loading}
-					<ProgressBar progress="indeterminate" />
-				{:else if error}
-					<div class="error-message">
-						{error}
-					</div>
-				{:else if !canVote}
-					<div class="error-message">You are not eligible to vote</div>
-				{:else}
-					<div class="title">
-						<h5>
-							{periodDetail?.info.voting_period.kind} Period
-						</h5>
-					</div>
-					<div class="governance-period-header">
-						<div class="governance-period-number">
-							#{periodDetail.info.voting_period.index}
-						</div>
-						<div class="governance-period-remaining">
-							{#if ended}
-								ended
-							{:else}
-								ends in {remainingBlocks} blocks ~ {timeLeft}
-							{/if}
-						</div>
-					</div>
-					<Separator />
-					{#if proposalPeriod !== undefined}
-						<ProposalPeriodSection
-							period={proposalPeriod}
-							periodIndex={periodDetail.info.voting_period.index}
-							pkh={selectedPkh?.value}
-							on:tx_building={handle_tx_building}
-							on:error={handle_action_error}
-							on:tx_broadcasted={handle_tx_broadcasted}
-						/>
-					{:else if explorationOrPromotionPeriod !== undefined}
-						<ExpPromPeriodSection
-							period={explorationOrPromotionPeriod}
-							periodIndex={periodDetail.info.voting_period.index}
-							pkh={selectedPkh?.value}
-							on:tx_building={handle_tx_building}
-							on:error={handle_action_error}
-							on:tx_broadcasted={handle_tx_broadcasted}
-						/>
-					{:else if commonPeriod !== undefined}
-						<CommonPeriodSection
-							period={commonPeriod}
-							periodIndex={periodDetail.info.voting_period.index}
-						/>
-					{:else}
-						<div class="error-message">
-							{periodDetail.info.voting_period.kind} is not supported yet
-						</div>
-					{/if}
-				{/if}
+		{#if availablePkhsOptions.length >= 1}
+			<div class:disabled={availablePkhsOptions.length == 1}>
+				<Select label="Vote as" bind:value={selectedPkh} options={availablePkhsOptions} />
 			</div>
-		</Card>
-	</div>
+		{:else}
+			<p class="hint">None of your keys can vote in this period.</p>
+		{/if}
+
+		{#snippet footer()}
+			<span class="hint">Prefer a web wallet?</span>
+			<Button label="Vote with TezGov" onclick={() => openTezgov()} />
+		{/snippet}
+	</Card>
+
+	<Card>
+		{#snippet header()}
+			<h3 class="sl-card-title">
+				{periodDetail ? `${periodDetail.info.voting_period.kind} period` : 'Voting period'}
+			</h3>
+			{#if periodDetail}<span class="hint">#{periodDetail.info.voting_period.index}</span>{/if}
+		{/snippet}
+
+		<div class="governance-period">
+			{#if loading}
+				<ProgressBar progress="indeterminate" />
+			{:else if error}
+				<div class="error-message">
+					{error}
+				</div>
+			{:else if !canVote}
+				<div class="error-message">You are not eligible to vote</div>
+			{:else}
+				<dl class="kv">
+					<dt>Ends</dt>
+					<dd>{ended ? 'ended' : timeLeft}</dd>
+					{#if !ended}
+						<dt>Blocks remaining</dt>
+						<dd>{remainingBlocks}</dd>
+					{/if}
+				</dl>
+				{#if proposalPeriod !== undefined}
+					<ProposalPeriodSection
+						period={proposalPeriod}
+						periodIndex={periodDetail.info.voting_period.index}
+						pkh={selectedPkh?.value}
+						on:tx_building={handle_tx_building}
+						on:error={handle_action_error}
+						on:tx_broadcasted={handle_tx_broadcasted}
+					/>
+				{:else if explorationOrPromotionPeriod !== undefined}
+					<ExpPromPeriodSection
+						period={explorationOrPromotionPeriod}
+						periodIndex={periodDetail.info.voting_period.index}
+						pkh={selectedPkh?.value}
+						on:tx_building={handle_tx_building}
+						on:error={handle_action_error}
+						on:tx_broadcasted={handle_tx_broadcasted}
+					/>
+				{:else if commonPeriod !== undefined}
+					<CommonPeriodSection
+						period={commonPeriod}
+						periodIndex={periodDetail.info.voting_period.index}
+					/>
+				{:else}
+					<div class="error-message">
+						{periodDetail.info.voting_period.kind} is not supported yet
+					</div>
+				{/if}
+			{/if}
+		</div>
+	</Card>
 </div>
 
 <TransactionDialog
@@ -264,90 +254,16 @@
 <style lang="sass">
 .governance-wrap
 	display: grid
-	grid-template-columns: 1fr minmax(0px, 1400px) 1fr
-	width: calc(100% - var(--spacing) * 2)
-	padding: var(--spacing)
-	--button-vertical-spacing: var(--spacing-f2)
+	grid-template-columns: minmax(0, 1fr)
 	gap: var(--spacing)
 
-	.vote-as
-		padding: var(--spacing)
-		grid-column: 2
-		
-		.vote-as-content
-			display: grid
-			grid-template-columns: 1fr 1fr
-			--button-text-transform: none
-
-			.no-pkhs
-				display: flex
-				justify-content: center
-				padding: var(--spacing)
-				grid-column: 1 / -1
-				
-			.vote-as-select
-				display: flex
-				justify-content: center
-				align-items: center
-				height: 100%
-				color: var(--error-color)
-				grid-column: 1 / -1
-
-			.open-tezgov
-				display: flex
-				justify-content: end
-				align-items: center
-				padding-top: var(--spacing)
-				color: var(--error-color)
-				grid-column: 2
-
-	.governance
-		display: grid
-		grid-column: 2
-		grid-template-columns: 1fr
-		gap: var(--spacing)
-		padding: var(--spacing)
-
-		.governance-period
-			display: grid
-			gap: var(--spacing)
-			padding: var(--spacing)
-			grid-template-columns: minmax(200px, 1fr)
-
-			.title
-				display: flex
-				justify-content: center
-				position: relative
-				text-transform: capitalize
-
-				h5
-					font-size: 1.5rem
-					font-weight: 500
-					margin: 0
-
-			.governance-period-header
-				display: grid
-				grid-template-columns: auto 1fr auto
-				.governance-period-remaining
-					grid-column: 3
-
-				.governance-period-number
-					grid-column: 1
-
-.navigation-wrap 
+.governance-period
 	display: grid
-	grid-template-columns: auto 1fr
-	grid-column: 2
+	grid-template-columns: minmax(0, 1fr)
+	gap: var(--spacing)
 
-	.navigation-btn-content
-		display: grid
-		grid-template-columns: auto auto
-		align-items: center
-		gap: var(--spacing)
-		:global(svg)
-			fill: var(--text-color)
-			width: 30px
-			height: 30px
+p
+	margin: 0
 
 .error-message
 	display: flex
@@ -356,6 +272,4 @@
 	color: var(--error-color)
 	text-align: center
 	padding: var(--spacing)
-
-
 </style>
