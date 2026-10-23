@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { Badge, Button, Card } from '@alis-is/starlight';
+	import { Badge, Card } from '@alis-is/starlight';
 	import { services, wallet } from '@app/state/tezpay';
-	import { formatBalance } from '@src/util/format';
+	import { formatBalance, formatTez } from '@src/util/format';
 	import { extractContinualServiceInfo } from '@src/util/tezpay';
 
 	const continual = $derived(extractContinualServiceInfo($services.applications?.tezpay));
@@ -11,30 +10,31 @@
 
 <Card>
 	{#snippet header()}
-		<h3 class="sl-card-title">Payouts</h3>
+		<a class="title-link" href="/tezpay"
+			><h3 class="sl-card-title">Payouts</h3>
+			 →</a
+		>
 		{#if !continual}
-			<Badge>disabled</Badge>
+			<Badge>manual</Badge>
 		{:else if running}
-			<Badge variant="success">active</Badge>
+			<Badge variant="success">automatic</Badge>
 		{:else}
-			<Badge variant="warning">inactive</Badge>
+			<Badge variant="warning">automatic · stopped</Badge>
 		{/if}
 	{/snippet}
 
-	<dl class="kv">
-		<dt>Automatic payouts</dt>
-		<dd class:text-ok={running} class:text-warn={continual && !running}>
-			{!continual ? 'disabled' : running ? 'active' : 'inactive'}
-		</dd>
-		{#if $wallet !== undefined}
-			<dt>Wallet balance</dt>
-			<dd class:text-error={$wallet.level === 'error'} class:text-warn={$wallet.level === 'warning'}>
-				{formatBalance($wallet.balance)}
-			</dd>
-		{/if}
-	</dl>
-
-	{#snippet footer()}
-		<Button onclick={() => goto('/tezpay')}>Open</Button>
-	{/snippet}
+	{#if $wallet !== undefined}
+		<div
+			class="metric"
+			class:text-error={$wallet.level === 'error'}
+			class:text-warn={$wallet.level === 'warning'}
+			title={formatBalance($wallet.balance)}
+		>
+			{formatTez($wallet.balance)}
+		</div>
+		<div class="hint">
+			payout wallet{#if $wallet.level !== 'ok'}
+				· balance low{/if}
+		</div>
+	{/if}
 </Card>

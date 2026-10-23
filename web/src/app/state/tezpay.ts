@@ -21,24 +21,3 @@ export const wallet = derived(state, $state => {
 
 	return $state.wallet ?? { address: "", balance: 0, level: "ok" }
 })
-
-export const status = derived([services, wallet], ([$services, $wallet]) => {
-	// TODO: warnings?
-	if ($services !== undefined) {
-		for (const app of Object.values($services.applications ?? {})) {
-			for (const service of Object.values(app)) {
-				if (service.status !== "running") {
-					return "error"
-				}
-			}
-		}
-	}
-
-	if ($wallet !== undefined && $wallet.level !== "ok") {
-		return $wallet.level
-	}
-
-
-	return "ok"
-})
-

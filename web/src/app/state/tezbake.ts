@@ -34,26 +34,3 @@ export const services = derived(state, $tezbakeStatus => {
 
 	return $tezbakeStatus.services ?? {}
 })
-
-export const status = derived([services, wallets], ([$services, $wallets]) => {
-	if ($services === undefined) {
-		return "ok"
-	}
-
-	for (const [walletId, wallet] of $wallets) {
-		if (wallet.ledger_status !== "connected" || !wallet.authorized) {
-			return "error"
-		}
-	}
-
-	// TODO: warnings?
-	for (const app of Object.values($services?.applications ?? {})) {
-		for (const service of Object.values(app)) {
-			if (service.status !== "running") {
-				return "error"
-			}
-		}
-	}
-
-	return "ok"
-})

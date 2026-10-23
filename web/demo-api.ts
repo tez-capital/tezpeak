@@ -4,6 +4,11 @@ import type { Plugin } from 'vite';
 
 const BAKER = 'tz1P6WKJu2rcbxKiKRZHKQKmKrpC9TfW1AwM';
 const BAKER2 = 'tz1hZvgjekGo7DmQjWh7XnY5eLQD8wNYPczE';
+// most operators run a single baker; the footer switch (GET /api/demo?bakers=1|2) or DEMO_BAKERS=2 adds a second one
+const demo = { bakers: process.env.DEMO_BAKERS === '2' ? 2 : 1 };
+const tracked = <T>(byBaker: Record<string, T>) => (demo.bakers > 1 ? byBaker : { [BAKER]: byBaker[BAKER] });
+// open status streams, pushed to right away when the demo changes
+const streams = new Set<() => void>();
 const PAYOUT_WALLET = 'tz1gXWW1q8NcXtVy2oVVcc2s4XKNzv9CryWd';
 const BLOCK_TIME = 6_000;
 const CYCLE_BLOCKS = 10_800;
@@ -34,10 +39,10 @@ function rights(current: number) {
 		result.push({
 			level: l,
 			realized_checked: past,
-			rights: {
+			rights: tracked({
 				[BAKER]: past ? [blocks, 14, blocks, l % 13 === 0 ? 0 : 1] : [blocks, 14],
 				[BAKER2]: past ? [blocks2, 3, blocks2, 1] : [blocks2, 3]
-			}
+			})
 		});
 	}
 	return result;
@@ -81,7 +86,7 @@ function status() {
 				},
 				bakers: {
 					level: l,
-					bakers: {
+					bakers: tracked({
 						[BAKER]: {
 							deactivated: false,
 							balance: '412345678901',
@@ -98,7 +103,7 @@ function status() {
 							external_delegated_balance: '42000000000',
 							delegators_count: 17
 						}
-					}
+					})
 				},
 				wallets: {
 					baker: { app_version: '2.4.7', authorized: true, ledger: 'Nano S Plus', ledger_status: 'connected', pkh: BAKER }
@@ -220,9 +225,17 @@ export function demoApi(): Plugin {
 						const send = () => res.write(`data: ${JSON.stringify(status())}\n\n`);
 						send();
 						const timer = setInterval(send, 2_000);
-						req.on('close', () => clearInterval(timer));
+						streams.add(send);
+						req.on('close', () => {
+							clearInterval(timer);
+							streams.delete(send);
+						});
 						return;
 					}
+					case '/api/demo':
+						demo.bakers = url.searchParams.get('bakers') === '2' ? 2 : 1;
+						streams.forEach((send) => send());
+						return json(demo);
 					case '/api/tezpay/info':
 						return json({
 							version: { 'ami-tezpay': '0.12.0', tezpay: '0.24.1' },

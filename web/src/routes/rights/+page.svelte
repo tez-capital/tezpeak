@@ -1,97 +1,142 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { Badge, Button, Card, Tabs } from '@alis-is/starlight';
+	import { Button, Card, Tabs, Toggle } from '@alis-is/starlight';
 	import HomeIcon from '@alis-is/starlight/la/icons/home-solid.svelte';
 	import { bakers, state as tezbakeState } from '@app/state/tezbake';
-	import RightsStrip from '@components/app/RightsStrip.svelte';
+	import { now } from '@app/state/clock';
+	import RightsLanes from '@components/app/RightsLanes.svelte';
 	import {
-		bakerRightsTimeline,
+		bakerRights,
+		bakerRightsAt,
 		getBakerColor,
-		mergeByLevel,
 		summarizeRights,
+		worstStatus,
 		type BakerLevelRights,
 		type RightStatus
 	} from '@src/util/baker';
-	import { formatAddress } from '@src/util/format';
-	import { writeToClipboard } from '@src/util/clipboard';
+	import { formatAddress, formatBlocksEta, formatShortAddress } from '@src/util/format';
 
 	const ALL = 'all';
-	type Row = BakerLevelRights & { baker: string };
 
 	const bakerIds = $derived($bakers.map(([id]) => id));
 	const requested = $derived(page.url.searchParams.get('baker') ?? '');
 	// combined view by default when there is more than one baker
 	const selected = $derived(
-		bakerIds.includes(requested) || (requested === ALL && bakerIds.length > 1)
-			? requested
-			: bakerIds.length > 1
-				? ALL
-				: (bakerIds[0] ?? '')
+		bakerIds.includes(requested) ? requested : bakerIds.length > 1 ? ALL : (bakerIds[0] ?? '')
 	);
-	const combined = $derived(selected === ALL);
-	const shown = $derived(combined ? bakerIds : [selected]);
+	const shown = $derived(selected === ALL ? bakerIds : [selected]);
+	const combined = $derived(shown.length > 1);
 
 	const level = $derived($tezbakeState?.rights?.level ?? 0);
-	const timelines = $derived(
+	const rights = $derived($tezbakeState?.rights?.rights ?? []);
+	// newest first, upcoming levels above "now"; consecutive routine levels (no block, nothing missed, same status
+	// per baker) fold into one row with summed slots, so blocks and misses stand out
+	let everyLevel = $state(false);
+	type Row = {
+		from: number;
+		to: number;
+		count: number;
+		cells: Array<BakerLevelRights | undefined>;
+	};
+	const rows = $derived.by(() => {
+		const result = [] as Array<Row & { key: string }>;
+		for (const r of [...rights].sort((a, b) => b.level - a.level)) {
+			const cells = shown.map((b) => bakerRightsAt(r, b, level));
+			const routine =
+				!everyLevel && cells.every((c) => !c || (!c.blocks && worstStatus(c) !== 'missed'));
+			const key = routine
+				? `${r.level > level}:${cells.map((c) => (c ? worstStatus(c) : '-'))}`
+				: '';
+			const last = result.at(-1);
+			if (key && last?.key === key) {
+				last.to = r.level;
+				last.count++;
+				last.cells = last.cells.map(
+					(c, i) => c && { ...c, attestations: c.attestations + (cells[i]?.attestations ?? 0) }
+				);
+			} else {
+				result.push({ from: r.level, to: r.level, count: 1, cells, key });
+			}
+		}
+		return result;
+	});
+	const nowIndex = $derived(rows.findIndex((r) => r.from <= level));
+	const span = (r: Row) =>
+		r.to > level
+			? `in ${r.to - level}–${r.from - level}`
+			: `${r.from === level ? 'now' : level - r.from}–${level - r.to} ago`;
+	// 9123549–67, like page ranges
+	function levelRange(r: Row) {
+		const [to, from] = [String(r.to), String(r.from)];
+		let same = 0;
+		while (same < from.length - 2 && to[same] === from[same]) same++;
+		return `${to}–${from.slice(same)}`;
+	}
+	const pastCount = $derived(rights.filter((r) => r.level <= level).length);
+
+	const perBaker = $derived(
 		shown.map((baker) => {
-			const t = bakerRightsTimeline($tezbakeState?.rights?.rights ?? [], baker, level);
-			const tag = (r: BakerLevelRights): Row => ({ ...r, baker });
-			return { upcoming: t.upcoming.map(tag), past: t.past.map(tag) };
+			const rows = bakerRights(rights, baker, level);
+			return { baker, rows, summary: summarizeRights(rows) };
 		})
 	);
-	const byLevelThenBaker = (dir: 1 | -1) => (a: Row, b: Row) =>
-		(a.level - b.level) * dir || bakerIds.indexOf(a.baker) - bakerIds.indexOf(b.baker);
-	const upcoming = $derived(timelines.flatMap((t) => t.upcoming).sort(byLevelThenBaker(1)));
-	const past = $derived(timelines.flatMap((t) => t.past).sort(byLevelThenBaker(-1)));
-
-	const summary = $derived(summarizeRights(past));
-	const nextBlock = $derived(upcoming.find((r) => r.blocks > 0));
-	const upcomingSlots = $derived(upcoming.reduce((sum, r) => sum + r.attestations, 0));
-	const strip = $derived(mergeByLevel([...[...past].reverse(), ...upcoming]));
+	const byLevel = (a: { level: number }, b: { level: number }) => a.level - b.level;
+	const upcomingBlocks = $derived(
+		perBaker
+			.flatMap(({ baker, rows }) =>
+				rows.filter((r) => r.blockStatus === 'upcoming').map((r) => ({ ...r, baker }))
+			)
+			.sort(byLevel)
+	);
+	const missed = $derived(
+		perBaker
+			.flatMap(({ baker, rows }) =>
+				rows
+					.filter((r) => r.blockStatus === 'missed' || r.attestationStatus === 'missed')
+					.map((r) => ({ ...r, baker }))
+			)
+			.sort((a, b) => b.level - a.level)
+	);
 
 	function select(baker: string) {
 		goto(`?baker=${baker}`, { replaceState: true, noScroll: true, keepFocus: true });
 	}
 
-	const BADGE: Record<RightStatus, 'accent' | 'default' | 'success' | 'error'> = {
-		upcoming: 'accent',
-		pending: 'default',
-		done: 'success',
-		missed: 'error'
-	};
-	const LABEL: Record<RightStatus, string> = {
+	const WORD: Record<RightStatus, string> = {
 		upcoming: 'scheduled',
 		pending: 'checking',
 		done: 'ok',
 		missed: 'missed'
 	};
-	const BLOCK_LABEL: Record<RightStatus, string> = { ...LABEL, done: 'baked' };
-	const ATTESTATION_LABEL: Record<RightStatus, string> = { ...LABEL, done: 'attested' };
+	const relative = (l: number) =>
+		l > level ? `in ${l - level}` : l === level ? 'now' : `${level - l} ago`;
 </script>
 
 {#snippet bakerTag(baker: string)}
 	<span class="baker-tag" title={baker}>
-		<span class="color" style:background-color={getBakerColor(baker)}></span>{formatAddress(baker)}
+		<span class="swatch" style:background-color={getBakerColor(baker)}></span>{formatShortAddress(
+			baker
+		)}
 	</span>
 {/snippet}
 
-{#snippet row(r: Row, sameLevel: boolean)}
-	<!-- further bakers on the same level leave level/when blank so a level reads as one group -->
-	<div class="level" class:has-block={r.blocks > 0}>{sameLevel ? '' : r.level}</div>
-	<div class="when hint" class:has-block={r.blocks > 0}>
-		{#if !sameLevel}{r.level > level ? `in ${r.level - level}` : r.level === level ? 'now' : `${level - r.level} ago`}{/if}
-	</div>
-	{#if combined}<div class="who" class:has-block={r.blocks > 0}>{@render bakerTag(r.baker)}</div>{/if}
-	<div class="block" class:has-block={r.blocks > 0}>
-		{#if r.blockStatus}<Badge variant={BADGE[r.blockStatus]}>{BLOCK_LABEL[r.blockStatus]}</Badge>{/if}
-	</div>
-	<div class="attestation" class:has-block={r.blocks > 0}>
-		{#if r.attestationStatus}
-			<span class="slots">{r.attestations}</span>
-			<Badge variant={BADGE[r.attestationStatus]} outline>{ATTESTATION_LABEL[r.attestationStatus]}</Badge>
+{#snippet cell(r: BakerLevelRights | undefined)}
+	{#if r}
+		{#if r.blockStatus}
+			<span class="block status-{r.blockStatus}"
+				>block {r.blockStatus === 'done' ? 'baked' : WORD[r.blockStatus]}</span
+			>
 		{/if}
-	</div>
+		{#if r.attestationStatus}
+			<span class="status-{r.attestationStatus}">
+				{r.attestations} <span class="hint slots">slots</span>
+				{r.attestationStatus === 'done' ? 'attested' : WORD[r.attestationStatus]}
+			</span>
+		{/if}
+	{:else}
+		<span class="hint">—</span>
+	{/if}
 {/snippet}
 
 <div class="rights-page">
@@ -103,6 +148,12 @@
 
 	{#if bakerIds.length === 0}
 		<Card><p class="hint">No bakers are tracked.</p></Card>
+	{:else if !rights.length}
+		<Card
+			><p class="hint">
+				No rights data yet. Rights are tracked once the node reports a new block.
+			</p></Card
+		>
 	{:else}
 		{#if bakerIds.length > 1}
 			<Tabs
@@ -117,69 +168,132 @@
 
 		<Card>
 			{#snippet header()}
-				<h3 class="sl-card-title">Baking rights</h3>
+				<h3 class="sl-card-title">Rights window</h3>
 				{#if combined}
-					<span class="hint">{bakerIds.length} bakers combined</span>
+					<span class="hint">{pastCount} past · {rights.length - pastCount} upcoming levels</span>
 				{:else}
-					<button class="unstyle-button baker" title="Copy {selected}" onclick={() => writeToClipboard(selected)}>
-						<span class="color" style:background-color={getBakerColor(selected)}></span>
-						{formatAddress(selected)}
-					</button>
+					{@const s = perBaker[0].summary}
+					<span class="hint">
+						<span class:text-error={s.attestationsMissed > 0}
+							>{s.attestationsDone}/{s.attestationsDone + s.attestationsMissed} attested</span
+						>
+						{#if s.blocksDone + s.blocksMissed}
+							· <span class:text-error={s.blocksMissed > 0}
+								>{s.blocksDone}/{s.blocksDone + s.blocksMissed} baked</span
+							>{/if}
+					</span>
 				{/if}
 			{/snippet}
-
-			<div class="metrics">
-				<div><div class="metric">{level}</div><div class="hint">current level</div></div>
-				<div>
-					<div class="metric">{nextBlock?.level ?? '—'}</div>
-					<div class="hint">
-						{#if nextBlock}next block · in {nextBlock.level - level}
-							{#if combined}{@render bakerTag(nextBlock.baker)}{/if}
-						{:else}no block in window{/if}
-					</div>
-				</div>
-				<div><div class="metric">{upcomingSlots}</div><div class="hint">upcoming attestation slots</div></div>
-				<div>
-					<div class="metric" class:text-error={summary.blocksMissed > 0}>
-						{summary.blocksDone}<small>/{summary.blocksDone + summary.blocksMissed}</small>
-					</div>
-					<div class="hint">blocks baked</div>
-				</div>
-				<div>
-					<div class="metric" class:text-error={summary.attestationsMissed > 0}>
-						{summary.attestationsDone}<small>/{summary.attestationsDone + summary.attestationsMissed}</small>
-					</div>
-					<div class="hint">levels attested</div>
-				</div>
+			<RightsLanes {rights} {level} bakers={shown} labels={combined} />
+			<div class="legend hint">
+				<span><i class="dot done"></i>attested</span>
+				<span><i class="dot missed"></i>missed</span>
+				<span><i class="dot pending"></i>checking</span>
+				<span><i class="dot upcoming"></i>scheduled</span>
+				<span><i class="dot done tall"></i>block</span>
 			</div>
-			<RightsStrip rows={strip} {level} />
 		</Card>
+
+		<div class="columns">
+			{#if combined}
+				<Card>
+					{#snippet header()}
+						<h3 class="sl-card-title">Performance</h3>
+						<span class="hint">last {pastCount} levels</span>
+					{/snippet}
+					<div class="table perf" class:combined>
+						<div class="head">
+							{#if combined}<div>Baker</div>{/if}
+							<div>Attested</div>
+							<div>Baked</div>
+						</div>
+						{#each perBaker as { baker, summary } (baker)}
+							{@const attestations = summary.attestationsDone + summary.attestationsMissed}
+							{@const blocks = summary.blocksDone + summary.blocksMissed}
+							{#if combined}<div>{@render bakerTag(baker)}</div>{/if}
+							<div class:text-error={summary.attestationsMissed > 0}>
+								{summary.attestationsDone}/{attestations}
+								{#if attestations}<span class="hint"
+										>{Math.floor((summary.attestationsDone / attestations) * 100)}%</span
+									>{/if}
+							</div>
+							<div class:text-error={summary.blocksMissed > 0}>
+								{#if blocks}{summary.blocksDone}/{blocks}{:else}<span class="hint">none due</span
+									>{/if}
+							</div>
+						{/each}
+					</div>
+				</Card>
+			{/if}
+
+			<Card>
+				{#snippet header()}
+					<h3 class="sl-card-title">Upcoming blocks</h3>
+					<span class="hint">next {rights.length - pastCount} levels</span>
+				{/snippet}
+				{#each upcomingBlocks as r (`${r.baker}-${r.level}`)}
+					{@const eta = formatBlocksEta(r.level - level, $now)}
+					<div class="event">
+						<span class="level">{r.level}</span>
+						{#if combined}{@render bakerTag(r.baker)}{/if}
+						<span class="when">{eta.in} <span class="hint">· {eta.at}</span></span>
+					</div>
+				{:else}
+					<span class="hint">No block rights in the window.</span>
+				{/each}
+			</Card>
+
+			<Card>
+				{#snippet header()}
+					<h3 class="sl-card-title">Missed</h3>
+					<span class="hint">last {pastCount} levels</span>
+				{/snippet}
+				{#each missed as r (`${r.baker}-${r.level}`)}
+					<div class="event">
+						<span class="level">{r.level}</span>
+						{#if combined}{@render bakerTag(r.baker)}{/if}
+						<span class="text-error"
+							>{r.blockStatus === 'missed'
+								? 'block'
+								: `attestation · ${r.attestations} slots`}</span
+						>
+						<span class="when hint">{relative(r.level)}</span>
+					</div>
+				{:else}
+					<span class="text-ok">Nothing missed.</span>
+				{/each}
+			</Card>
+		</div>
 
 		<Card>
 			{#snippet header()}
-				<h3 class="sl-card-title">Timeline</h3>
-				<span class="hint">levels with rights in the tracked window</span>
+				<h3 class="sl-card-title">Levels</h3>
+				<label class="hint every">every level <Toggle bind:checked={everyLevel} /></label>
 			{/snippet}
-
-			<div class="timeline" class:combined role="table">
+			<div class="table levels" style:--bakers={shown.length} role="table">
 				<div class="head" role="row">
 					<div>Level</div>
-					<div class="when">When</div>
-					{#if combined}<div class="who">Baker</div>{/if}
-					<div>Block</div>
-					<div>Attestation slots</div>
+					{#each shown as baker (baker)}<div>
+							{#if combined}{@render bakerTag(baker)}{:else}Rights{/if}
+						</div>{/each}
 				</div>
-
-				<div class="group" role="row">Upcoming · {upcoming.length}</div>
-				{#each upcoming as r, i (`${r.baker}-${r.level}`)}{@render row(r, i > 0 && upcoming[i - 1].level === r.level)}{:else}
-					<div class="empty hint">no upcoming rights in the window</div>
-				{/each}
-
-				<div class="now-marker" role="row"><span>now · level {level}</span></div>
-
-				<div class="group" role="row">Past · {past.length}</div>
-				{#each past as r, i (`${r.baker}-${r.level}`)}{@render row(r, i > 0 && past[i - 1].level === r.level)}{:else}
-					<div class="empty hint">no past rights in the window</div>
+				{#each rows as r, i (r.from)}
+					{#if i === nowIndex}<div class="now" role="row"><span>now</span></div>{/if}
+					<div
+						class="row"
+						class:has-block={r.cells.some((c) => c && c.blocks > 0)}
+						class:future={r.to > level}
+						role="row"
+					>
+						<div class="level">
+							{#if r.from === r.to}{r.from}
+								<div class="hint">{relative(r.from)}</div>
+							{:else}<span title="{r.count} levels">{levelRange(r)}</span>
+								<div class="hint">{span(r)} · {r.count} levels</div>
+							{/if}
+						</div>
+						{#each r.cells as c, i (shown[i])}<div class="cell">{@render cell(c)}</div>{/each}
+					</div>
 				{/each}
 			</div>
 		</Card>
@@ -192,16 +306,7 @@
 	grid-template-columns: minmax(0, 1fr)
 	gap: var(--spacing)
 
-.baker
-	display: flex
-	align-items: center
-	gap: var(--spacing-f2)
-	font-size: 0.85rem
-	color: var(--hint-color)
-	overflow-wrap: anywhere
-	text-align: right
-
-.color
+.swatch
 	flex: none
 	width: 10px
 	height: 10px
@@ -211,55 +316,100 @@
 	display: inline-flex
 	align-items: center
 	gap: var(--spacing-f2)
-	font-size: 0.85rem
+	white-space: nowrap
+	text-transform: none
+	letter-spacing: normal
+
+.every
+	display: flex
+	align-items: center
+	gap: var(--spacing-f2)
 	white-space: nowrap
 
-.metrics
-	display: grid
-	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr))
-	gap: var(--spacing)
-	padding-bottom: var(--spacing-f2)
+.legend
+	display: flex
+	flex-wrap: wrap
+	gap: var(--spacing-f2) var(--spacing)
 
-.timeline
+	span
+		display: inline-flex
+		align-items: center
+		gap: 6px
+
+.dot
+	width: 8px
+	height: 8px
+	border-radius: 50%
+
+	&.tall
+		width: 6px
+		height: 14px
+		border-radius: 2px
+
+	&.done
+		background-color: var(--success-color)
+	&.missed
+		background-color: var(--error-color)
+	&.pending
+		background-color: var(--hint-color)
+		opacity: 0.6
+	&.upcoming
+		box-shadow: inset 0 0 0 1.5px var(--accent)
+
+.columns
 	display: grid
-	grid-template-columns: minmax(90px, auto) minmax(80px, auto) minmax(110px, 1fr) minmax(170px, 2fr)
-	align-items: stretch
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr))
+	align-items: start
+	gap: var(--spacing)
+
+.event
+	display: flex
+	align-items: baseline
+	flex-wrap: wrap
+	gap: 0 var(--spacing)
 	font-variant-numeric: tabular-nums
 
-	&.combined
-		grid-template-columns: minmax(90px, auto) minmax(80px, auto) minmax(170px, auto) minmax(110px, 1fr) minmax(170px, 2fr)
+	.when
+		margin-left: auto
+		white-space: nowrap
 
-	// no column gap: cell padding keeps the row borders continuous
-	> div
-		display: flex
-		align-items: center
-		min-height: 24px
+.level
+	font-variant-numeric: tabular-nums
+
+.table
+	display: grid
+	font-variant-numeric: tabular-nums
+
+	> div, .row > div
 		padding: 6px var(--spacing) 6px 0
 		border-bottom: 1px solid var(--frost-border-color)
 
-	.head
+	.head, .row
 		display: contents
 
-		> div
-			padding: 0 0 var(--spacing-f2)
-			font-size: 0.8rem
-			letter-spacing: 0.08rem
-			text-transform: uppercase
-			color: var(--hint-color)
-			border-bottom: 1px solid var(--frost-border-color)
-
-	.group, .empty, .now-marker
-		grid-column: 1 / -1
-
-	.group
-		padding-top: var(--spacing)
+	.head > div
 		font-size: 0.8rem
 		letter-spacing: 0.08rem
 		text-transform: uppercase
 		color: var(--hint-color)
 
-	// block rights are rare (a few per cycle), so their rows stand out from the attestation-only ones
-	.has-block
+.perf
+	grid-template-columns: auto auto
+
+	&.combined
+		grid-template-columns: auto auto auto
+
+	.hint
+		margin-left: var(--spacing-f2)
+
+.levels
+	grid-template-columns: auto repeat(var(--bakers), minmax(0, 1fr))
+
+	.row.future > div
+		color: var(--hint-color)
+
+	// block rights are rare (a few per cycle), so their rows stand out
+	.row.has-block > div
 		background-color: color-mix(in srgb, var(--accent) 12%, transparent)
 
 		&.level
@@ -267,20 +417,19 @@
 			box-shadow: inset 3px 0 0 var(--accent)
 			padding-left: var(--spacing-f2)
 
-	.attestation
+	.cell
+		display: flex
+		flex-wrap: wrap
+		gap: 0 var(--spacing)
+
+	.block
+		font-weight: 600
+
+	.now
+		grid-column: 1 / -1
 		display: flex
 		align-items: center
 		gap: var(--spacing-f2)
-
-		.slots
-			min-width: 2ch
-			text-align: right
-
-	.now-marker
-		display: flex
-		align-items: center
-		gap: var(--spacing-f2)
-		padding: var(--spacing-f2) 0
 		border-bottom: none
 		color: var(--accent)
 		font-size: 0.85rem
@@ -293,21 +442,14 @@
 			background-color: var(--accent)
 			opacity: 0.6
 
+.status-done
+	color: var(--success-color)
+.status-missed
+	color: var(--error-color)
+.status-upcoming
+	color: var(--accent)
+
 @media (max-width: 600px)
-	.timeline, .timeline.combined
-		grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.4fr)
-
-		.when
-			display: none
-
-	// on phones the baker shows as a coloured mark next to the level
-	.timeline.combined
-		grid-template-columns: auto auto minmax(0, 1fr) minmax(0, 1.4fr)
-
-		.baker-tag
-			font-size: 0
-			gap: 0
-
-		.head .who
-			font-size: 0
+	.levels .slots
+		display: none
 </style>

@@ -141,18 +141,29 @@ dl.kv
 .text-error
 	color: var(--error-color)
 
-// dashboard section label
-.section-label
-	grid-column: 1 / -1
-	margin: var(--spacing) 0 0
-	font-size: 0.8rem
-	font-weight: normal
-	letter-spacing: 0.12rem
-	text-transform: uppercase
-	color: var(--hint-color)
+// card title that opens the card's page
+.title-link
+	display: flex
+	align-items: center
+	gap: var(--spacing-f2)
+	color: var(--text-color)
+	text-decoration: none
 
-	&:first-child
-		margin-top: 0
+	&:hover
+		color: var(--accent)
+
+// thin progress meter
+.meter
+	height: 6px
+	border-radius: 3px
+	overflow: hidden
+	background-color: var(--progress-bar-background-color)
+
+	span
+		display: block
+		height: 100%
+		border-radius: inherit
+		background-color: var(--accent)
 
 // starlight workarounds (upstream bugs):
 // - Overlay <dialog> keeps the UA fit-content size, so `inset: 0` doesn't cover the viewport
@@ -204,3 +215,8 @@ dialog[open]
 
 .hidden
 	display: none
+
+// starlight halves the spacing below 400px, which crams cards on phones
+@media screen and (max-width: 400px)
+	:root
+		--spacing: 12px

@@ -31,55 +31,50 @@ function rightStatus(assigned: number, future: boolean, checked: boolean, realiz
 	return realized > 0 ? "done" : "missed"
 }
 
-// levels where `baker` has rights, split around `currentLevel`: upcoming ascending, past descending
-export function bakerRightsTimeline(rights: Array<BlockRights>, baker: string, currentLevel: number) {
-	const upcoming = [] as Array<BakerLevelRights>
-	const past = [] as Array<BakerLevelRights>
-	for (const r of rights) {
-		const [blocks = 0, attestations = 0, baked, attested] = r.rights[baker] ?? []
-		if (!blocks && !attestations) continue
-		const future = r.level > currentLevel
-		const row = {
-			level: r.level,
-			blocks,
-			attestations,
-			blockStatus: rightStatus(blocks, future, r.realized_checked, baked),
-			attestationStatus: rightStatus(attestations, future, r.realized_checked, attested),
-		}
-		;(future ? upcoming : past).push(row)
+// `baker`'s rights at one level, undefined when it has none
+export function bakerRightsAt(r: BlockRights, baker: string, currentLevel: number): BakerLevelRights | undefined {
+	const [blocks = 0, attestations = 0, baked, attested] = r.rights[baker] ?? []
+	if (!blocks && !attestations) return undefined
+	const future = r.level > currentLevel
+	return {
+		level: r.level,
+		blocks,
+		attestations,
+		blockStatus: rightStatus(blocks, future, r.realized_checked, baked),
+		attestationStatus: rightStatus(attestations, future, r.realized_checked, attested),
 	}
-	upcoming.sort((a, b) => a.level - b.level)
-	past.sort((a, b) => b.level - a.level)
-	return { upcoming, past }
 }
 
-// counts over the checked past levels
-export function summarizeRights(past: Array<BakerLevelRights>) {
-	const count = (key: "blockStatus" | "attestationStatus", status: RightStatus) => past.filter((r) => r[key] === status).length
+// levels where `baker` has rights, ascending
+export function bakerRights(rights: Array<BlockRights>, baker: string, currentLevel: number) {
+	return rights
+		.map((r) => bakerRightsAt(r, baker, currentLevel))
+		.filter((r) => r !== undefined)
+		.sort((a, b) => a.level - b.level)
+}
+
+// counts over checked past levels and the nearest upcoming block
+export function summarizeRights(rows: Array<BakerLevelRights>) {
+	const count = (key: "blockStatus" | "attestationStatus", status: RightStatus) => rows.filter((r) => r[key] === status).length
 	return {
 		blocksDone: count("blockStatus", "done"),
 		blocksMissed: count("blockStatus", "missed"),
 		attestationsDone: count("attestationStatus", "done"),
 		attestationsMissed: count("attestationStatus", "missed"),
+		nextBlock: rows.find((r) => r.blockStatus === "upcoming"),
 	}
 }
 
 const STATUS_PRIORITY: Array<RightStatus> = ["missed", "pending", "upcoming", "done"]
-const worst = (a?: RightStatus, b?: RightStatus) =>
-	!a ? b : !b ? a : STATUS_PRIORITY[Math.min(STATUS_PRIORITY.indexOf(a), STATUS_PRIORITY.indexOf(b))]
 
-// rights of all `bakers` folded into one row per level (counts summed, worst status wins), same order as input
-export function mergeByLevel(rows: Array<BakerLevelRights>) {
-	const byLevel = new Map<number, BakerLevelRights>()
-	for (const r of rows) {
-		const m = byLevel.get(r.level)
-		byLevel.set(r.level, !m ? { ...r } : {
-			level: r.level,
-			blocks: m.blocks + r.blocks,
-			attestations: m.attestations + r.attestations,
-			blockStatus: worst(m.blockStatus, r.blockStatus),
-			attestationStatus: worst(m.attestationStatus, r.attestationStatus),
-		})
-	}
-	return [...byLevel.values()]
+// one status for a level: a miss wins, then pending, then upcoming
+export function worstStatus(r: BakerLevelRights): RightStatus {
+	return STATUS_PRIORITY.find((s) => r.blockStatus === s || r.attestationStatus === s) ?? "done"
+}
+
+export function describeRights(r: BakerLevelRights) {
+	const parts = []
+	if (r.blocks) parts.push(`block ${r.blockStatus === "done" ? "baked" : r.blockStatus}`)
+	if (r.attestations) parts.push(`${r.attestations} attestation slots ${r.attestationStatus === "done" ? "attested" : r.attestationStatus}`)
+	return parts.join(", ")
 }

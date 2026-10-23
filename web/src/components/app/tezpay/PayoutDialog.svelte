@@ -13,7 +13,6 @@
 	import { formatAddress, formatBalance, formatPercentage } from '@src/util/format';
 	import { writeToClipboard } from '@src/util/clipboard';
 	import TimesSolid from '@alis-is/starlight/la/icons/times-solid.svelte';
-	import { status } from '@src/app/state/tezbake';
 
 	let terminal: Terminal;
 	let cycle: number | 'latest' = 0;

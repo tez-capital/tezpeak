@@ -5,6 +5,7 @@
 
 	import { APP_STATUS_LEVEL } from '@app/state/status';
 	import { APP_ID, APP_CONNECTION_STATUS } from '@app/state/index';
+	import { bakers } from '@app/state/tezbake';
 	import { theme, cycleTheme } from '@app/theme';
 	import { SunIcon, MoonIcon } from '@alis-is/starlight/la';
 
@@ -50,6 +51,20 @@
 	</main>
 	<footer>
 		© {new Date().getFullYear()} tez.capital
+		<!-- shown only under `pnpm demo`: switch between the single and multi baker layouts -->
+		{#if import.meta.env.MODE === 'demo'}
+			<span class="demo-switch">
+				demo:
+				{#each [1, 2] as count (count)}
+					<button
+						class="unstyle-button"
+						class:active={$bakers.length === count}
+						onclick={() => fetch(`/api/demo?bakers=${count}`)}
+						>{count} {count === 1 ? 'baker' : 'bakers'}</button
+					>
+				{/each}
+			</span>
+		{/if}
 	</footer>
 </div>
 
@@ -161,10 +176,24 @@ main
 
 footer
 	display: flex
+	flex-wrap: wrap
 	justify-content: center
+	gap: var(--spacing-f2) var(--spacing-x2)
 	padding: var(--spacing)
 	color: var(--hint-color)
 	font-size: 0.85rem
+
+.demo-switch
+	display: flex
+	gap: var(--spacing-f2)
+
+	button
+		text-decoration: underline
+		cursor: pointer
+
+		&.active
+			color: var(--accent)
+			text-decoration: none
 
 @media (max-width: 600px)
 	header
