@@ -74,14 +74,13 @@ export function formatBalance(mutez: string | bigint | number) {
 export function formatPercentage(percentage: number | string) {
   return `${Number(percentage).toFixed(2)}%`
 }
-// tez for reading at a glance: grouped with at most 2 decimals, or compact (3.5M ꜩ); formatBalance keeps exact mutez
-export function formatTez(mutez: string | number | bigint, compact = false) {
+// tez for reading at a glance: grouped with at most 2 decimals; formatBalance keeps exact mutez
+export function formatTez(mutez: string | number | bigint) {
   const tez = Number(mutez) / 1e6
   if (mutez === "" || !Number.isFinite(tez)) {
     return "N/A"
   }
-  const format = compact ? { notation: "compact", maximumFractionDigits: 1 } as const : { maximumFractionDigits: 2 }
-  return `${new Intl.NumberFormat(undefined, format).format(tez)} ꜩ`
+  return `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(tez)} ꜩ`
 }
 
 // rough estimate for `blocks` levels from now: { in: "~3 min", at: "14:52" }

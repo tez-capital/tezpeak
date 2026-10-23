@@ -201,16 +201,16 @@
 						<h3 class="sl-card-title">Performance</h3>
 						<span class="hint">last {pastCount} levels</span>
 					{/snippet}
-					<div class="table perf" class:combined>
+					<div class="table perf">
 						<div class="head">
-							{#if combined}<div>Baker</div>{/if}
+							<div>Baker</div>
 							<div>Attested</div>
 							<div>Baked</div>
 						</div>
 						{#each perBaker as { baker, summary } (baker)}
 							{@const attestations = summary.attestationsDone + summary.attestationsMissed}
 							{@const blocks = summary.blocksDone + summary.blocksMissed}
-							{#if combined}<div>{@render bakerTag(baker)}</div>{/if}
+							<div>{@render bakerTag(baker)}</div>
 							<div class:text-error={summary.attestationsMissed > 0}>
 								{summary.attestationsDone}/{attestations}
 								{#if attestations}<span class="hint"
@@ -295,6 +295,8 @@
 						{#each r.cells as c, i (shown[i])}<div class="cell">{@render cell(c)}</div>{/each}
 					</div>
 				{/each}
+				<!-- every row upcoming: now is below them -->
+				{#if nowIndex === -1}<div class="now" role="row"><span>now</span></div>{/if}
 			</div>
 		</Card>
 	{/if}
@@ -394,10 +396,7 @@
 		color: var(--hint-color)
 
 .perf
-	grid-template-columns: auto auto
-
-	&.combined
-		grid-template-columns: auto auto auto
+	grid-template-columns: auto auto auto
 
 	.hint
 		margin-left: var(--spacing-f2)

@@ -16,9 +16,10 @@
 	import PayoutsCard from '@components/app/PayoutsCard.svelte';
 	import { formatTimestampAgoStrict } from '@src/util/format';
 
-	// chain head from the most advanced connected node
+	// chain head from the most advanced connected node; a disconnected node keeps reporting its last block
 	const head = $derived(
 		$nodes
+			.filter(([, n]) => n.connection_status === 'connected')
 			.map(([, n]) => n.block)
 			.filter((b) => b !== undefined)
 			.sort((a, b) => b.level_info.level - a.level_info.level)[0]

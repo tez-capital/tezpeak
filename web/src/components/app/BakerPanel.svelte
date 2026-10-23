@@ -34,9 +34,9 @@
 				mutez: status.external_delegated_balance,
 				color: 'color-mix(in srgb, var(--text-color) 22%, transparent)'
 			}
-		].map((s) => ({ ...s, tez: Math.max(0, Number(s.mutez) / 1e6 || 0) }))
+		].map((s) => ({ ...s, amount: Math.max(0, Number(s.mutez) || 0) }))
 	);
-	const total = $derived(stake.reduce((sum, s) => sum + s.tez, 0));
+	const total = $derived(stake.reduce((sum, s) => sum + s.amount, 0));
 
 	const level = $derived(rights?.level ?? 0);
 	const tracked = $derived(rights?.rights ?? []);
@@ -68,7 +68,7 @@
 	<div class="figures">
 		<div class="figure wide">
 			<div class="caption">Staking balance</div>
-			<div class="value" title={formatBalance(total * 1e6)}>{formatTez(total * 1e6)}</div>
+			<div class="value" title={formatBalance(total)}>{formatTez(total)}</div>
 		</div>
 		{#if rights}
 			<div class="figure wide">
@@ -122,8 +122,8 @@
 		<div class="caption">Stake composition</div>
 		<div class="bar" role="img" aria-label="staking balance composition">
 			{#each stake as s (s.label)}
-				{#if s.tez > 0}<span
-						style:flex={s.tez}
+				{#if s.amount > 0}<span
+						style:flex={s.amount}
 						style:background-color={s.color}
 						title="{s.label} {formatTez(s.mutez)}"
 					></span>{/if}

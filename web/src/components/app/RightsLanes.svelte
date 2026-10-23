@@ -37,7 +37,9 @@
 	class:labels
 	bind:clientWidth={width}
 	role="img"
-	aria-label="baking rights from level {levels[0]} to {levels.at(-1)}"
+	aria-label={levels.length
+		? `baking rights from level ${levels[0]} to ${levels.at(-1)}`
+		: 'no baking rights in the tracked window'}
 >
 	{#each bakers as baker (baker)}
 		<div class="lane">
