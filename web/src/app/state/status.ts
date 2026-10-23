@@ -23,9 +23,9 @@ export const issues = derived([state, APP_CONNECTION_STATUS], ([$state, $connect
 		else if (!wallet.authorized) error(`ledger ${id} not authorized`)
 	}
 	for (const services of [tezbake?.services, tezpay?.services]) {
-		for (const app of Object.values(services?.applications ?? {})) {
-			for (const [id, service] of Object.entries(app)) {
-				if (service.status !== "running") error(`${id} ${service.status}`)
+		for (const [app, appServices] of Object.entries(services?.applications ?? {})) {
+			for (const [id, service] of Object.entries(appServices)) {
+				if (service.status !== "running") error(`${app === id ? id : `${app}/${id}`} ${service.status}`)
 			}
 		}
 	}

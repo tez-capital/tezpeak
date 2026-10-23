@@ -11,10 +11,15 @@
 	}
 	let { nodes, services, wallets }: Props = $props();
 
-	const allServices = $derived(
-		Object.values(services?.applications ?? {}).flatMap((app) => Object.entries(app))
-	);
-	const running = $derived(allServices.filter(([, s]) => s.status === 'running').length);
+	// service ids are unique only within an application; the app is named only where an id repeats
+	const allServices = $derived.by(() => {
+		const list = Object.entries(services?.applications ?? {}).flatMap(([app, appServices]) =>
+			Object.entries(appServices).map(([id, s]) => ({ key: `${app}/${id}`, app, id, s }))
+		);
+		const repeated = (id: string) => list.filter((x) => x.id === id).length > 1;
+		return list.map((x) => ({ ...x, label: repeated(x.id) && x.app !== x.id ? x.key : x.id }));
+	});
+	const running = $derived(allServices.filter(({ s }) => s.status === 'running').length);
 </script>
 
 <Card>
@@ -61,14 +66,14 @@
 			>
 		</div>
 		<div class="chips">
-			{#each allServices as [id, s] (id)}
+			{#each allServices as { key, label, s } (key)}
 				{@const ok = s.status === 'running'}
 				<span
 					class="chip"
 					class:failed={!ok}
-					title={ok ? `running since ${formatTimestamp(s.started)}` : s.status}
+					title="{key} · {ok ? `running since ${formatTimestamp(s.started)}` : s.status}"
 				>
-					<span class="status-dot" class:ok class:error={!ok}></span>{id}{#if !ok}<span
+					<span class="status-dot" class:ok class:error={!ok}></span>{label}{#if !ok}<span
 							>· {s.status}</span
 						>{/if}
 				</span>

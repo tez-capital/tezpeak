@@ -81,7 +81,9 @@ function status() {
 					applications: {
 						node: { node: service },
 						signer: { signer: service },
-						baker: { baker: service, accuser: service, 'dal-node': service }
+						baker: { baker: service, accuser: service },
+						// service ids are unique only within an application
+						'dal-node': { node: service }
 					}
 				},
 				bakers: {

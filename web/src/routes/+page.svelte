@@ -42,7 +42,7 @@
 					{$issues.length}
 					{$issues.length === 1 ? 'issue needs' : 'issues need'} attention
 					<ul>
-						{#each $issues as issue (issue.text)}
+						{#each $issues as issue, i (i)}
 							<li
 								class:text-error={issue.level === 'error'}
 								class:text-warn={issue.level === 'warning'}
