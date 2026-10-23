@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"slices"
 
-	"github.com/samber/lo"
 	"github.com/tez-capital/tezpeak/core/common"
 	"github.com/trilitech/tzgo/rpc"
 	"github.com/trilitech/tzgo/tezos"
@@ -69,6 +68,20 @@ type blockAttestationRights struct {
 		AttestationPower int    `json:"attesting_power"`
 		ConsensusKey     string `json:"consensus_key"`
 	} `json:"delegates"`
+}
+
+// consensus operations only (validation pass 0); decoded locally because tzgo's
+// OperationList decoder overflows the stack on manager ops under go1.27 encoding/json
+type blockConsensusOperations []struct {
+	Contents []struct {
+		Kind     string `json:"kind"`
+		Metadata struct {
+			Delegate  string `json:"delegate"`
+			Committee []struct {
+				Delegate string `json:"delegate"`
+			} `json:"committee"`
+		} `json:"metadata"`
+	} `json:"contents"`
 }
 
 func attemptWithRightsRpcClients[T any](ctx context.Context, f func(client *common.ActiveRpcNode) (T, error)) (T, error) {
@@ -178,30 +191,28 @@ func checkRealized(ctx context.Context, rights BlockRights) (BlockRights, error)
 		return rights, err
 	}
 
-	ops, err := attemptWithRightsRpcClients(ctx, func(client *common.ActiveRpcNode) ([][]rpc.Operation, error) {
-		ops, err := client.GetBlockOperations(ctx, rpc.BlockLevel(rights.Level))
+	ops, err := attemptWithRightsRpcClients(ctx, func(client *common.ActiveRpcNode) (blockConsensusOperations, error) {
+		ops := blockConsensusOperations{}
+		err := client.Get(ctx, fmt.Sprintf("chains/main/blocks/%d/operations/0", rights.Level), &ops)
 		return ops, err
 	})
 	if err != nil {
 		return rights, err
 	}
 
-	validAttestations := lo.Reduce(ops, func(acc []string, g []rpc.Operation, _ int) []string {
-		for _, tx := range g {
-			for _, c := range tx.Contents {
-				switch c.Kind() {
-				case tezos.OpTypeAttestation, tezos.OpTypeAttestationWithDal:
-					acc = append(acc, c.Meta().Delegate.String())
-				case tezos.OpTypeAttestationsAggregate:
-					op := c.(*rpc.AttestationsAggregate)
-					for _, committee := range op.Metadata.CommitteeMetadata {
-						acc = append(acc, committee.Delegate.String())
-					}
+	validAttestations := []string{}
+	for _, op := range ops {
+		for _, c := range op.Contents {
+			switch tezos.ParseOpType(c.Kind) {
+			case tezos.OpTypeAttestation, tezos.OpTypeAttestationWithDal:
+				validAttestations = append(validAttestations, c.Metadata.Delegate)
+			case tezos.OpTypeAttestationsAggregate:
+				for _, committee := range c.Metadata.Committee {
+					validAttestations = append(validAttestations, committee.Delegate)
 				}
 			}
 		}
-		return acc
-	}, []string{})
+	}
 
 	for baker, r := range rights.Rights {
 		if len(r) > 1 {

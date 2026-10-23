@@ -41,7 +41,7 @@ func TestAttemptWithRpcClientsPriorityAndFallback(t *testing.T) {
 	var attempts []int
 	result, err := AttemptWithRpcClients(t.Context(), func(node *ActiveRpcNode) (int, error) {
 		attempts = append(attempts, node.Priority)
-		if node.Priority < 30 {
+		if node.Priority > 20 {
 			return 0, errors.New("RPC failed")
 		}
 		return node.Priority, nil
@@ -49,10 +49,10 @@ func TestAttemptWithRpcClientsPriorityAndFallback(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result != 30 {
-		t.Errorf("result = %d, want 30", result)
+	if result != 20 {
+		t.Errorf("result = %d, want 20", result)
 	}
-	if want := []int{10, 20, 30}; !slices.Equal(attempts, want) {
+	if want := []int{40, 30, 20}; !slices.Equal(attempts, want) {
 		t.Errorf("attempted priorities = %v, want %v", attempts, want)
 	}
 }

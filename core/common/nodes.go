@@ -155,7 +155,7 @@ func AttemptWithRpcClients[T any](ctx context.Context, f func(client *ActiveRpcN
 
 	nodesByPriority := slices.Collect(maps.Values(activeRpcNodes))
 	slices.SortFunc(nodesByPriority, func(a, b *ActiveRpcNode) int {
-		return cmp.Compare(a.Priority, b.Priority)
+		return cmp.Compare(b.Priority, a.Priority) // higher priority first (baker node 100, TzC 50, public 0)
 	})
 
 	for _, node := range nodesByPriority {
