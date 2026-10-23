@@ -46,7 +46,7 @@
 	const past = $derived(timelines.flatMap((t) => t.past).sort(byLevelThenBaker(-1)));
 
 	const summary = $derived(summarizeRights(past));
-	const upcomingBlocks = $derived(upcoming.filter((r) => r.blocks > 0).length);
+	const nextBlock = $derived(upcoming.find((r) => r.blocks > 0));
 	const upcomingSlots = $derived(upcoming.reduce((sum, r) => sum + r.attestations, 0));
 	const strip = $derived(mergeByLevel([...[...past].reverse(), ...upcoming]));
 
@@ -78,15 +78,15 @@
 
 {#snippet row(r: Row, sameLevel: boolean)}
 	<!-- further bakers on the same level leave level/when blank so a level reads as one group -->
-	<div class="level">{sameLevel ? '' : r.level}</div>
-	<div class="when hint">
+	<div class="level" class:has-block={r.blocks > 0}>{sameLevel ? '' : r.level}</div>
+	<div class="when hint" class:has-block={r.blocks > 0}>
 		{#if !sameLevel}{r.level > level ? `in ${r.level - level}` : r.level === level ? 'now' : `${level - r.level} ago`}{/if}
 	</div>
-	{#if combined}<div class="who">{@render bakerTag(r.baker)}</div>{/if}
-	<div class="block">
+	{#if combined}<div class="who" class:has-block={r.blocks > 0}>{@render bakerTag(r.baker)}</div>{/if}
+	<div class="block" class:has-block={r.blocks > 0}>
 		{#if r.blockStatus}<Badge variant={BADGE[r.blockStatus]}>{BLOCK_LABEL[r.blockStatus]}</Badge>{/if}
 	</div>
-	<div class="attestation">
+	<div class="attestation" class:has-block={r.blocks > 0}>
 		{#if r.attestationStatus}
 			<span class="slots">{r.attestations}</span>
 			<Badge variant={BADGE[r.attestationStatus]} outline>{ATTESTATION_LABEL[r.attestationStatus]}</Badge>
@@ -130,7 +130,14 @@
 
 			<div class="metrics">
 				<div><div class="metric">{level}</div><div class="hint">current level</div></div>
-				<div><div class="metric">{upcomingBlocks}</div><div class="hint">upcoming blocks</div></div>
+				<div>
+					<div class="metric">{nextBlock?.level ?? '—'}</div>
+					<div class="hint">
+						{#if nextBlock}next block · in {nextBlock.level - level}
+							{#if combined}{@render bakerTag(nextBlock.baker)}{/if}
+						{:else}no block in window{/if}
+					</div>
+				</div>
 				<div><div class="metric">{upcomingSlots}</div><div class="hint">upcoming attestation slots</div></div>
 				<div>
 					<div class="metric" class:text-error={summary.blocksMissed > 0}>
@@ -250,6 +257,15 @@
 		letter-spacing: 0.08rem
 		text-transform: uppercase
 		color: var(--hint-color)
+
+	// block rights are rare (a few per cycle), so their rows stand out from the attestation-only ones
+	.has-block
+		background-color: color-mix(in srgb, var(--accent) 12%, transparent)
+
+		&.level
+			font-weight: 600
+			box-shadow: inset 3px 0 0 var(--accent)
+			padding-left: var(--spacing-f2)
 
 	.attestation
 		display: flex

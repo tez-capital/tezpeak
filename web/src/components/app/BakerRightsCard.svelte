@@ -14,14 +14,12 @@
 
 	const level = $derived($tezbakeState?.rights?.level ?? 0);
 	const timeline = $derived(bakerRightsTimeline($tezbakeState?.rights?.rights ?? [], baker, level));
-	const nextBlock = $derived(timeline.upcoming.find((r) => r.blocks > 0));
-	const nextAttestation = $derived(timeline.upcoming.find((r) => r.attestations > 0));
-	const upcomingBlocks = $derived(timeline.upcoming.filter((r) => r.blocks > 0).length);
+	const nextBlock = $derived(timeline.upcoming.find((r) => r.blocks > 0)?.level);
 	const summary = $derived(summarizeRights(timeline.past));
 	const pastBlocks = $derived(summary.blocksDone + summary.blocksMissed);
 	const pastAttestations = $derived(summary.attestationsDone + summary.attestationsMissed);
 	// the strip shows the most recent past and nearest upcoming levels around "now"
-	const strip = $derived([...timeline.past.slice(0, 12).reverse(), ...timeline.upcoming.slice(0, 12)]);
+	const strip = $derived([...timeline.past.slice(0, 10).reverse(), ...timeline.upcoming.slice(0, 10)]);
 </script>
 
 <Card>
@@ -36,19 +34,10 @@
 	<dl class="kv">
 		<dt>Next block</dt>
 		<dd>
-			{#if nextBlock}{nextBlock.level} <span class="hint">in {nextBlock.level - level}</span>{:else}<span
-					class="hint">none in window</span
-				>{/if}
-		</dd>
-		<dt>Next attestation</dt>
-		<dd>
-			{#if nextAttestation}{nextAttestation.level}
-				<span class="hint">in {nextAttestation.level - level}</span>{:else}<span class="hint"
+			{#if nextBlock}{nextBlock} <span class="hint">in {nextBlock - level}</span>{:else}<span class="hint"
 					>none in window</span
 				>{/if}
 		</dd>
-		<dt>Upcoming blocks</dt>
-		<dd>{upcomingBlocks}</dd>
 		<dt>Recent blocks</dt>
 		<dd class:text-error={summary.blocksMissed > 0}>{summary.blocksDone}/{pastBlocks}</dd>
 		<dt>Recent attestations</dt>

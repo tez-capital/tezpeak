@@ -25,10 +25,12 @@ const address = (i: number) => fakeHash('tz1', i, 36);
 
 function rights(current: number) {
 	const result = [];
-	for (let l = current - 8; l <= current + 8; l++) {
+	// same window as the backend default (rights_block_window 50)
+	for (let l = current - 24; l <= current + 25; l++) {
 		const past = l <= current;
-		const blocks = l % 5 === 0 ? 1 : 0;
-		const blocks2 = l % 7 === 0 ? 1 : 0;
+		// block rights are rare on mainnet (a few per cycle); keep a couple inside the window
+		const blocks = l % 23 === 0 ? 1 : 0;
+		const blocks2 = l % 31 === 0 ? 1 : 0;
 		result.push({
 			level: l,
 			realized_checked: past,
